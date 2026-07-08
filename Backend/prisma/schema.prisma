@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum RoleScope {
+  GLOBAL
+  TENANT
+}
+
+// ==========================================
+// RBAC SYSTEM MODELS
+// ==========================================
+
+// User Model
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  firstName String
+  lastName  String
+  isActive  Boolean  @default(true)
+  
+  // Tenant isolation (optional for Platform Admins)
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+  
+  // A user can have multiple roles in a large enterprise
+  roles     Role[]   @relation("UserRoles")
+  
+  // Profile Relations
+  hospitalAdmin HospitalAdmin?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Role Model (e.g., "Doctor", "Admin")
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  defaultPath String?      // e.g., "/platformAdmin", "/dashboard"
+  scope       RoleScope    @default(TENANT)
+  
+  users       User[]       @relation("UserRoles")
+  permissions Permission[] @relation("RolePermissions")
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// Permission Model (e.g., "CREATE_USER", "DELETE_PATIENT")
+model Permission {
+  id          String   @id @default(uuid())
+  action      String   @unique // e.g., "users:create"
+  description String?
+  
+  roles       Role[]   @relation("RolePermissions")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Hospital {
+  id                    String   @id @default(cuid())
+
+  // Basic Information
+  hospitalCode          String   @unique
+  hospitalName          String
+  legalName             String?
+  hospitalType          String      // General, Multi-Speciality, Clinic, Diagnostic, Dental
+  ownershipType         String?     // Private, Government, Trust, NGO
+
+  // Contact Information
+  email                 String   @unique
+  phone                 String
+  alternatePhone        String?
+
+  // Address
+  addressLine1          String
+  addressLine2          String?
+  city                  String
+  state                 String
+  country               String
+  postalCode            String
+
+  // Registration
+  registrationNumber    String?  @unique
+  taxNumber             String?
+  licenseNumber         String?
+  accreditation         String?  // NABH, JCI, ISO
+
+  // Branding
+  logo                  String?
+  website               String?
+
+  // Timezone
+  timezone              String   @default("Asia/Kolkata")
+  currency              String   @default("INR")
+
+
+  // Status
+  isActive              Boolean  @default(true)
+  isDeleted             Boolean  @default(false)
+
+  users                 User[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model HospitalAdmin {
+  id                    String   @id @default(cuid())
+
+  // Link to Global Identity
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Identity
+  employeeCode          String?  @unique
+  middleName            String?
+  displayName           String?
+
+  // Contact
+  phone                 String
+  alternatePhone        String?
+  profileImageUrl       String?
+
+  // Account Status
+  status                AccountStatus @default(PENDING)
+  isEmailVerified       Boolean  @default(false)
+  isPhoneVerified       Boolean  @default(false)
+
+  // Login Security
+  lastLoginAt           DateTime?
+  lastLoginIp           String?
+  failedLoginAttempts   Int       @default(0)
+  lockedUntil           DateTime?
+
+  // MFA
+  mfaEnabled            Boolean   @default(false)
+
+  // Audit
+  createdBy             String?
+  updatedBy             String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
