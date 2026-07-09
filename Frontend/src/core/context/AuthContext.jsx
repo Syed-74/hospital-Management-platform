@@ -206,6 +206,42 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: error.response?.data?.message || "Failed to delete hospital admin" };
     }
   };
+
+  const createHospitalTheme = async (themeData) => {
+    try {
+      const response = await axios.post("/hospital-themes", themeData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.hospitalTheme };
+      }
+      return { success: false, message: response.data.message || "Failed to create theme" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to create theme" };
+    }
+  };
+
+  const getHospitalTheme = async (hospitalId) => {
+    try {
+      const response = await axios.get(`/hospital-themes/${hospitalId}`);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.hospitalTheme };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch theme" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch theme" };
+    }
+  };
+
+  const updateHospitalTheme = async (hospitalId, themeData) => {
+    try {
+      const response = await axios.patch(`/hospital-themes/${hospitalId}`, themeData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.hospitalTheme };
+      }
+      return { success: false, message: response.data.message || "Failed to update theme" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update theme" };
+    }
+  };
   
   // Authentication Action: Terminate Session Footprint
   const logout = () => {
@@ -236,7 +272,10 @@ export const AuthProvider = ({ children }) => {
     UpdateHospAdmin,
     getHospAdminById,
     deleteHospAdmin,
-    getAllHospAdmins
+    getAllHospAdmins,
+    createHospitalTheme,
+    getHospitalTheme,
+    updateHospitalTheme
   };
 
   return (

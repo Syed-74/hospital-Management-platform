@@ -28,6 +28,7 @@ export const protect = catchAsync(async (req, res, next) => {
     where: { id: decoded.id },
     include: {
       hospital: true,
+      hospitalAdmin: true,
       roles: {
         include: {
           permissions: true,

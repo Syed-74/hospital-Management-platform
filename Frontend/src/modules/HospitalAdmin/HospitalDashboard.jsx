@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../core/context/AuthContext';
+import { useTheme } from '../../core/context/ThemeProvider';
 import { 
   LayoutDashboard, 
   Users, 
@@ -18,7 +19,8 @@ export default function HospitalDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const { logout, userPermissions, user } = useAuth();
-  const [hospitalLogo, setHospitalLogo] = useState("")
+  const { theme } = useTheme();
+  const [hospitalLogo, setHospitalLogo] = useState("");
 
   React.useEffect(() => {
     if (user?.hospital?.logo) {
@@ -73,7 +75,7 @@ export default function HospitalDashboard() {
   const isActive = (path) => location.pathname.startsWith(path);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-theme-bg flex font-sans">
       
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
@@ -85,22 +87,30 @@ export default function HospitalDashboard() {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 flex flex-col
+        fixed inset-y-0 left-0 z-50 w-64 bg-theme-sidebar border-r border-theme-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 flex flex-col
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          {hospitalLogo ? (
-            <img src={hospitalLogo} alt="Hospital Logo" className="h-8 w-8 object-contain mr-2 rounded" />
-          ) : (
-            <Hospital className="h-8 w-8 text-indigo-600 mr-2" />
+        <div className="h-16 flex items-center px-6 border-b border-theme-border/50">
+          
+          {/* Theme setting: Show Logo */}
+          {(theme?.showHospitalLogo ?? true) && (
+            hospitalLogo ? (
+              <img src={hospitalLogo} alt="Hospital Logo" className="h-8 w-8 object-contain mr-2 rounded" />
+            ) : (
+              <Hospital className="h-8 w-8 text-theme-primary mr-2" />
+            )
           )}
           
-          <div className="flex flex-col">
-            <span className="text-xl font-bold text-gray-900 tracking-tight leading-tight">Hospital Admin</span>
-            <span className="text-xs text-indigo-600 font-semibold truncate max-w-[150px]">{user?.hospital?.hospitalName || 'Hospital Admin'}</span>
-          </div>
+          {/* Theme setting: Show Name */}
+          {(theme?.showHospitalName ?? true) && (
+            <div className="flex flex-col overflow-hidden">
+              <span className="text-xl font-bold text-theme-sidebar-text tracking-tight leading-tight truncate">Tenant Portal</span>
+              <span className="text-xs text-theme-primary font-semibold truncate max-w-[150px]">{user?.hospital?.hospitalName || 'Hospital Admin'}</span>
+            </div>
+          )}
+          
           <button 
-            className="ml-auto lg:hidden text-gray-500 hover:text-gray-700"
+            className="ml-auto lg:hidden text-theme-sidebar-text/70 hover:text-theme-sidebar-text"
             onClick={() => setSidebarOpen(false)}
           >
             <X size={20} />
@@ -114,24 +124,24 @@ export default function HospitalDashboard() {
               to={item.href}
               onClick={() => setSidebarOpen(false)}
               className={`
-                flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                flex items-center px-3 py-2.5 rounded-theme text-sm font-medium transition-colors
                 ${isActive(item.href) 
-                  ? 'bg-indigo-50 text-indigo-700' 
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'}
+                  ? 'bg-theme-primary/10 text-theme-primary' 
+                  : 'text-theme-sidebar-text/80 hover:bg-theme-primary/5 hover:text-theme-sidebar-text'}
               `}
             >
               <item.icon 
-                className={`mr-3 h-5 w-5 ${isActive(item.href) ? 'text-indigo-700' : 'text-gray-400'}`} 
+                className={`mr-3 h-5 w-5 ${isActive(item.href) ? 'text-theme-primary' : 'text-theme-sidebar-text/50'}`} 
               />
               {item.name}
             </Link>
           ))}
         </div>
 
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-theme-border/50">
           <button 
             onClick={logout}
-            className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+            className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-theme-error rounded-theme hover:bg-theme-error/10 transition-colors"
           >
             <LogOut className="mr-3 h-5 w-5" />
             Sign Out
@@ -142,21 +152,29 @@ export default function HospitalDashboard() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-30">
+        <header className="h-16 bg-theme-header border-b border-theme-border flex items-center justify-between px-4 sm:px-6 lg:px-8 z-30">
           <button
-            className="lg:hidden text-gray-500 hover:text-gray-700 focus:outline-none"
+            className="lg:hidden text-theme-header-text/70 hover:text-theme-header-text focus:outline-none"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu size={24} />
           </button>
 
           <div className="flex items-center space-x-4 ml-auto">
-            <button className="p-2 text-gray-400 hover:text-gray-500 transition-colors relative">
+            <button className="p-2 text-theme-header-text/70 hover:text-theme-header-text transition-colors relative">
               <Bell size={20} />
             </button>
-            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 border border-indigo-200 font-bold uppercase">
-              {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-            </div>
+            {user?.hospitalAdmin?.profileImageUrl ? (
+              <img 
+                src={user.hospitalAdmin.profileImageUrl} 
+                alt="Admin Avatar" 
+                className="h-8 w-8 rounded-full object-cover border border-theme-primary/30 shadow-sm"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-theme-primary/10 flex items-center justify-center text-theme-primary border border-theme-primary/30 font-bold uppercase">
+                {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
+              </div>
+            )}
           </div>
         </header>
 

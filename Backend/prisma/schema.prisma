@@ -121,6 +121,7 @@ model Hospital {
   isDeleted             Boolean  @default(false)
 
   users                 User[]
+  hospitalTheme         HospitalTheme?
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -163,4 +164,52 @@ model HospitalAdmin {
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+model HospitalTheme {
+  id                  String   @id @default(cuid())
+
+  // Relationship
+  hospitalId          String   @unique
+  hospital            Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  // Branding
+  hospitalLogo        String?
+  favicon             String?
+  loginBackground     String?
+
+  // Theme Colors
+  primaryColor        String   @default("#2563EB")
+  secondaryColor      String   @default("#1E40AF")
+  accentColor         String   @default("#10B981")
+  sidebarColor        String   @default("#FFFFFF")
+  sidebarTextColor    String   @default("#1F2937")
+  headerColor         String   @default("#FFFFFF")
+  headerTextColor     String   @default("#111827")
+  backgroundColor     String   @default("#F8FAFC")
+  cardColor           String   @default("#FFFFFF")
+  borderColor         String   @default("#E5E7EB")
+  buttonColor         String   @default("#2563EB")
+  buttonTextColor     String   @default("#FFFFFF")
+  linkColor           String   @default("#2563EB")
+  successColor        String   @default("#22C55E")
+  warningColor        String   @default("#F59E0B")
+  errorColor          String   @default("#EF4444")
+
+  // Typography
+  fontFamily          String   @default("Inter")
+  fontSize            String   @default("medium")
+
+  // Theme Settings
+  themeMode           String   @default("light") // light | dark | auto
+  borderRadius        String   @default("8px")
+
+  // Features
+  showHospitalLogo    Boolean  @default(true)
+  showHospitalName    Boolean  @default(true)
+  enableAnimations    Boolean  @default(true)
+
+  // Audit
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

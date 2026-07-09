@@ -16,6 +16,7 @@ import rolesRoutes from "./modules/roles/roles.routes.js";
 import permissionsRoutes from "./modules/permissions/permissions.routes.js";
 import hospitalRoutes from "./modules/createHospital/hospital.routes.js";
 import hospitalAdminRoutes from "./modules/ManageHospAdmin/hospitalAdmin.routes.js";
+import hospitalThemeRoutes from "./modules/hospitalTheme/hospitalTheme.routes.js";
 
 const app = express();
 
@@ -64,6 +65,7 @@ app.use("/api/v1/roles", rolesRoutes);
 app.use("/api/v1/permissions", permissionsRoutes);
 app.use("/api/v1/hospitals", hospitalRoutes);
 app.use("/api/v1/hospital-admins", hospitalAdminRoutes);
+app.use("/api/v1/hospital-themes", hospitalThemeRoutes);
 
 // Define other routes here...
 // app.use("/api/v1/users", userRoutes);

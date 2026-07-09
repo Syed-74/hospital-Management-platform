@@ -20,6 +20,8 @@ import StaffManagement from './modules/HospitalAdmin/StaffManagement';
 // import DoctorDashboard from './pages/Dashboard/Doctor/DoctorDashboard';
 // import NurseDashboard from './pages/Dashboard/Nurse/NurseDashboard';
 import { useAuth } from './core/context/AuthContext';
+import ThemeManagement from './modules/PlatformAdmin/ThemeManagement';
+import { ThemeProvider } from './core/context/ThemeProvider';
 
 const RootRedirect = () => {
   const { user, token, loading } = useAuth();
@@ -54,6 +56,7 @@ function App() {
             <Route path="company-management" element={<CreatingHospital/>} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/platformAdmin/overview" replace />} />
+            <Route path="theme-management" element={<ThemeManagement/>} />
           </Route>
 
           {/* Hospital / Tenant Admin Routes */}
@@ -61,7 +64,9 @@ function App() {
             path="/company" 
             element={
               <ProtectedRoute requiredPermissions={['hospital:access']}>
-                <HospitalDashboard />
+                <ThemeProvider>
+                  <HospitalDashboard />
+                </ThemeProvider>
               </ProtectedRoute>
             } 
           >

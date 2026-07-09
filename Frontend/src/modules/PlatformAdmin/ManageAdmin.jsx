@@ -152,7 +152,7 @@ export default function ManageAdmin() {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50/50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
     );
   }
@@ -188,13 +188,13 @@ export default function ManageAdmin() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50/50">
+            <thead className="bg-gray-50/80 border-b border-gray-200/60">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin Name</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Hospital & Role</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Admin Name</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Contact</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Hospital & Role</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
@@ -206,8 +206,8 @@ export default function ManageAdmin() {
                 </tr>
               ) : (
                 admins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <tr key={admin.id} className="hover:bg-teal-50/50 transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
                           {admin.firstName?.charAt(0) || ''}{admin.lastName?.charAt(0) || ''}
@@ -218,11 +218,11 @@ export default function ManageAdmin() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{admin.email}</div>
                       <div className="text-sm text-gray-500">{admin.hospitalAdmin?.phone}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex flex-col text-sm text-gray-900">
                         <div className="flex items-center font-medium">
                           <Building2 className="w-4 h-4 mr-2 text-gray-400" />
@@ -233,7 +233,7 @@ export default function ManageAdmin() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex flex-col gap-1 items-start">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           admin.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -245,8 +245,8 @@ export default function ManageAdmin() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button onClick={() => openEditModal(admin)} className="text-indigo-600 hover:text-indigo-900 transition-colors p-2 rounded-lg hover:bg-indigo-50 mr-2">
+                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                      <button onClick={() => openEditModal(admin)} className="text-teal-600 hover:text-teal-600 transition-colors p-2 rounded-lg hover:bg-teal-50 mr-2">
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button onClick={() => handleDelete(admin.id)} className="text-red-600 hover:text-red-900 transition-colors p-2 rounded-lg hover:bg-red-50">
@@ -302,7 +302,7 @@ export default function ManageAdmin() {
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input required type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none" placeholder="John" />
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="John" />
                         </div>
                       </div>
                       
@@ -311,7 +311,7 @@ export default function ManageAdmin() {
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input required type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none" placeholder="Doe" />
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="Doe" />
                         </div>
                       </div>
 
@@ -320,7 +320,7 @@ export default function ManageAdmin() {
                         <div className="relative">
                           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input required={!isEditMode} disabled={isEditMode} type="email" name="email" value={formData.email} onChange={handleInputChange}
-                            className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600'}`} placeholder="admin@hospital.com" />
+                            className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`} placeholder="admin@hospital.com" />
                         </div>
                       </div>
 
@@ -329,7 +329,7 @@ export default function ManageAdmin() {
                           <label className="text-sm font-semibold text-gray-900">Temporary Password <span className="text-red-500">*</span></label>
                           <div className="relative">
                             <input required type="password" name="password" value={formData.password} onChange={handleInputChange}
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none" placeholder="••••••••" />
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="••••••••" />
                           </div>
                         </div>
                       )}
@@ -339,7 +339,7 @@ export default function ManageAdmin() {
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input required type="text" name="phone" value={formData.phone} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none" placeholder="+1 (555) 000-0000" />
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="+1 (555) 000-0000" />
                         </div>
                       </div>
 
@@ -348,7 +348,7 @@ export default function ManageAdmin() {
                         <div className="relative">
                           <BadgeInfo className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                           <input type="text" name="employeeCode" value={formData.employeeCode} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none" placeholder="EMP-12345" />
+                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="EMP-12345" />
                         </div>
                       </div>
                     </div>
@@ -358,7 +358,7 @@ export default function ManageAdmin() {
                       <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <select required name="hospitalId" value={formData.hospitalId} onChange={handleInputChange} disabled={isEditMode}
-                          className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600'}`}>
+                          className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`}>
                           <option value="">Select a Hospital</option>
                           {hospitals.map(h => (
                             <option key={h.id} value={h.id}>{h.hospitalName} ({h.hospitalCode})</option>
@@ -372,7 +372,7 @@ export default function ManageAdmin() {
                         <div className="space-y-2">
                           <label className="text-sm font-semibold text-gray-900">Account Status</label>
                           <select name="status" value={formData.status} onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all outline-none appearance-none">
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none appearance-none">
                             <option value="PENDING">Pending</option>
                             <option value="ACTIVE">Active</option>
                             <option value="INACTIVE">Inactive</option>
@@ -382,7 +382,7 @@ export default function ManageAdmin() {
 
                         <div className="flex items-center space-x-3 pt-8">
                           <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleInputChange}
-                            className="w-5 h-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-600" />
+                            className="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-indigo-600" />
                           <label htmlFor="isActive" className="text-sm font-semibold text-gray-900">User is Login Active</label>
                         </div>
                       </div>
@@ -409,7 +409,7 @@ export default function ManageAdmin() {
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                         <select required name="roleId" value={formData.roleId} onChange={handleInputChange} disabled={isEditMode}
-                          className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600'}`}>
+                          className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`}>
                           <option value="">Select a Role</option>
                           {roles.map(r => (
                             <option key={r.id} value={r.id}>{r.name} {r.description ? `(${r.description})` : ''}</option>
