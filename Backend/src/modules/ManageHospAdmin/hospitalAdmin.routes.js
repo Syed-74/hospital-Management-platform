@@ -5,7 +5,7 @@ import {
     getHospitalAdminById, 
     updateHospitalAdmin, 
     deleteHospitalAdmin 
-} from "./HospitalAdmin.controllers.js";
+} from "./hospitalAdmin.controllers.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../middlewares/rbac.middleware.js";
 
