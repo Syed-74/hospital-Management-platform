@@ -33,12 +33,12 @@ class RolesService {
       throw new AppError("Role not found", 404);
     }
 
-    // Connect permissions to the role
+    // Set (overwrite) permissions on the role
     const updatedRole = await prisma.role.update({
       where: { id: roleId },
       data: {
         permissions: {
-          connect: permissionIds.map((id) => ({ id })),
+          set: permissionIds.map((id) => ({ id })),
         },
       },
       include: {
@@ -47,6 +47,26 @@ class RolesService {
     });
 
     return updatedRole;
+  }
+
+  async getRolePermissions(roleId) {
+    const role = await prisma.role.findUnique({
+      where: { id: roleId },
+      include: {
+        permissions: true,
+      },
+    });
+
+    if (!role) {
+      throw new AppError("Role not found", 404);
+    }
+
+    const allPermissions = await prisma.permission.findMany();
+
+    return {
+      role,
+      allPermissions,
+    };
   }
 }
 

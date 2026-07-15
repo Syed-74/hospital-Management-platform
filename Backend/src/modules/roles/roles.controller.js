@@ -23,3 +23,9 @@ export const assignPermissions = catchAsync(async (req, res, next) => {
   const role = await rolesService.assignPermissionsToRole(roleId, permissionIds);
   res.status(200).json({ status: "success", data: { role } });
 });
+
+export const getRolePermissions = catchAsync(async (req, res, next) => {
+  const { roleId } = req.params;
+  const result = await rolesService.getRolePermissions(roleId);
+  res.status(200).json({ status: "success", data: result });
+});

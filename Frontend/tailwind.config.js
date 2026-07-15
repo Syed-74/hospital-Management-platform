@@ -8,22 +8,22 @@ export default {
     extend: {
       colors: {
         theme: {
-          primary: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
-          secondary: 'rgb(var(--color-secondary-rgb) / <alpha-value>)',
-          accent: 'rgb(var(--color-accent-rgb) / <alpha-value>)',
-          sidebar: 'rgb(var(--color-sidebar-rgb) / <alpha-value>)',
-          'sidebar-text': 'rgb(var(--color-sidebar-text-rgb) / <alpha-value>)',
-          header: 'rgb(var(--color-header-rgb) / <alpha-value>)',
-          'header-text': 'rgb(var(--color-header-text-rgb) / <alpha-value>)',
-          bg: 'rgb(var(--color-bg-rgb) / <alpha-value>)',
-          card: 'rgb(var(--color-card-rgb) / <alpha-value>)',
-          border: 'rgb(var(--color-border-rgb) / <alpha-value>)',
-          button: 'rgb(var(--color-button-rgb) / <alpha-value>)',
-          'button-text': 'rgb(var(--color-button-text-rgb) / <alpha-value>)',
-          link: 'rgb(var(--color-link-rgb) / <alpha-value>)',
-          success: 'rgb(var(--color-success-rgb) / <alpha-value>)',
-          warning: 'rgb(var(--color-warning-rgb) / <alpha-value>)',
-          error: 'rgb(var(--color-error-rgb) / <alpha-value>)'
+          primary: 'var(--color-primary, #0D9488)',
+          secondary: 'var(--color-secondary, #0F766E)',
+          accent: 'var(--color-accent, #10B981)',
+          sidebar: 'var(--color-sidebar, #FFFFFF)',
+          'sidebar-text': 'var(--color-sidebar-text, #374151)',
+          header: 'var(--color-header, #FFFFFF)',
+          'header-text': 'var(--color-header-text, #111827)',
+          bg: 'var(--color-bg, #F8FAFC)',
+          card: 'var(--color-card, #FFFFFF)',
+          border: 'var(--color-border, #E5E7EB)',
+          button: 'var(--color-button, #0D9488)',
+          'button-text': 'var(--color-button-text, #FFFFFF)',
+          link: 'var(--color-link, #0D9488)',
+          success: 'var(--color-success, #22C55E)',
+          warning: 'var(--color-warning, #F59E0B)',
+          error: 'var(--color-error, #EF4444)'
         }
       },
       fontFamily: {

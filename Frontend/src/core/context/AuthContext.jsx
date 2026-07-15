@@ -242,6 +242,91 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: error.response?.data?.message || "Failed to update theme" };
     }
   };
+
+
+  const createBranch = async (hospitalId, branchData) => {
+    try {
+      const response = await axios.post(`/branches/hospital/${hospitalId}`, branchData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branch };
+      }
+      return { success: false, message: response.data.message || "Failed to create branch" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to create branch" };
+    }
+  };
+
+  const getAllBranches = async (hospitalId) => {
+    try {
+      const response = await axios.get(`/branches/hospital/${hospitalId}`);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branches };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch branches" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch branches" };
+    }
+  };
+
+  const updateBranch = async (branchId, branchData) => {
+    try {
+      const response = await axios.patch(`/branches/${branchId}`, branchData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branch };
+      }
+      return { success: false, message: response.data.message || "Failed to update branch" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update branch" };
+    }
+  };
+
+  const deleteBranch = async (branchId) => {
+    try {
+      const response = await axios.delete(`/branches/${branchId}`);
+      if (response.data?.status === "success" || response.status === 204) {
+        return { success: true };
+      }
+      return { success: false, message: response.data.message || "Failed to delete branch" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to delete branch" };
+    }
+  };
+
+  const getAllBranchesByCompanyId = async (companyId) => {
+    try {
+      const response = await axios.get(`/branches/company/${companyId}`);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branches };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch branches" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch branches" };
+    }
+  };
+
+  const createBranchAdmin = async (branchAdminData) => {
+    try {
+      const response = await axios.post("/branch-admins", branchAdminData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branchAdmin };
+      }
+      return { success: false, message: response.data.message || "Failed to create branch admin" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to create branch admin" };
+    }
+  };
+
+  const getBranchAdminById = async (id) => {
+    try {
+      const response = await axios.get(`/branch-admins/${id}`);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branchAdmin };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch branch admin" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch branch admin" };
+    }
+  };
   
   // Authentication Action: Terminate Session Footprint
   const logout = () => {
@@ -275,7 +360,14 @@ export const AuthProvider = ({ children }) => {
     getAllHospAdmins,
     createHospitalTheme,
     getHospitalTheme,
-    updateHospitalTheme
+    updateHospitalTheme,
+    createBranch,
+    getAllBranches,
+    updateBranch,
+    deleteBranch,
+    getAllBranchesByCompanyId,
+    createBranchAdmin,
+    getBranchAdminById
   };
 
   return (

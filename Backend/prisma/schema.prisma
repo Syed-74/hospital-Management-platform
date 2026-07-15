@@ -122,6 +122,7 @@ model Hospital {
 
   users                 User[]
   hospitalTheme         HospitalTheme?
+  branches              BranchManage[]
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -212,4 +213,39 @@ model HospitalTheme {
   // Audit
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+}
+
+model BranchManage {
+  id                    String   @id @default(cuid())
+  hospitalId            String
+  hospital              Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  
+  // Basic Info
+  branchName            String
+  branchCode            String   @unique // Unique code per branch (e.g. OWAISI-SEC-01)
+  isMainBranch          Boolean  @default(false)
+
+  // Contact Info
+  email                 String
+  phone                 String
+  alternatePhone        String?
+
+  // Address
+  addressLine1          String
+  addressLine2          String?
+  city                  String
+  state                 String
+  country               String
+  postalCode            String
+
+  // Localization
+  timezone              String   @default("Asia/Kolkata")
+  currency              String   @default("INR")
+
+  // Regulatory & Auditing
+  licenseNumber         String?
+  isActive              Boolean  @default(true)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

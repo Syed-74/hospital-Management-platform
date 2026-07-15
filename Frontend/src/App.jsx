@@ -14,14 +14,16 @@ import ProtectedRoute from './core/components/ProtectedRoute';
 // Hospital Admin / Tenant Modules
 import HospitalDashboard from './modules/HospitalAdmin/HospitalDashboard';
 import HospitalOverview from './modules/HospitalAdmin/Overview';
-import StaffManagement from './modules/HospitalAdmin/StaffManagement';
 
 // Role Dashboards (To be implemented for HMS)
 // import DoctorDashboard from './pages/Dashboard/Doctor/DoctorDashboard';
 // import NurseDashboard from './pages/Dashboard/Nurse/NurseDashboard';
 import { useAuth } from './core/context/AuthContext';
-import ThemeManagement from './modules/PlatformAdmin/ThemeManagement';
+// import ThemeManagement from './modules/PlatformAdmin/ThemeManagement';
 import { ThemeProvider } from './core/context/ThemeProvider';
+import ManageBranch from './modules/HospitalAdmin/ManageBranch';
+import RolesPermissions from './modules/HospitalAdmin/RolesPermissions';
+import AssignPermissionsPage from './modules/PlatformAdmin/AssignPermissionsPage';
 
 const RootRedirect = () => {
   const { user, token, loading } = useAuth();
@@ -54,9 +56,10 @@ function App() {
             <Route path="overview" element={<Overview />} />
             <Route path="manage-admin" element={<ManageAdmin />} />
             <Route path="company-management" element={<CreatingHospital/>} />
+            <Route path="roles/:roleId/permissions" element={<AssignPermissionsPage />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/platformAdmin/overview" replace />} />
-            <Route path="theme-management" element={<ThemeManagement/>} />
+            {/* <Route path="theme-management" element={<ThemeManagement/>} /> */}
           </Route>
 
           {/* Hospital / Tenant Admin Routes */}
@@ -72,8 +75,8 @@ function App() {
           >
             <Route index element={<Navigate to="/company/overview" replace />} />
             <Route path="overview" element={<HospitalOverview />} />
-            <Route path="staff" element={<StaffManagement />} />
-            {/* Additional placeholders can be added here as needed, matching the NAVIGATION_CONFIG */}
+            <Route path="roles-permissions" element={<RolesPermissions />} />
+            <Route path="branch/manage" element={<ManageBranch />} />
             <Route path="*" element={<Navigate to="/company/overview" replace />} />
           </Route>
 

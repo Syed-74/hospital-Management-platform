@@ -1,5 +1,5 @@
 import express from "express";
-import { createRole, getRoles, assignPermissions } from "./roles.controller.js";
+import { createRole, getRoles, assignPermissions, getRolePermissions } from "./roles.controller.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../middlewares/rbac.middleware.js";
 
@@ -12,6 +12,8 @@ router.route("/")
   .post(createRole)
   .get(getRoles);
 
-router.post("/:roleId/permissions", assignPermissions);
+router.route("/:roleId/permissions")
+  .get(getRolePermissions)
+  .post(assignPermissions);
 
 export default router;

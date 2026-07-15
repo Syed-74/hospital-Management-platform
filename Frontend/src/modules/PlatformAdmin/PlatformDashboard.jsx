@@ -24,7 +24,8 @@ export default function PlatformDashboard() {
     { name: 'Overview', href: '/platformAdmin/overview', icon: LayoutDashboard },
     { name: 'Manage Hospital', href: '/platformAdmin/company-management', icon: Building2 },
     { name: 'Manage Admin ', href: '/platformAdmin/manage-admin', icon: Building2 },
-    { name: 'Theme Management', href: '/platformAdmin/theme-management', icon: Palette },
+    { name: 'Permission ', href: '/platformAdmin/roles/:roleId/permissions', icon: Building2 },
+    // { name: 'Theme Management', href: '/platformAdmin/theme-management', icon: Palette },
     { name: 'Subscription', href: '/platformAdmin/companies', icon: Building2 },
     { name: 'Settings', href: '/platformAdmin/settings', icon: Settings },
   ];
