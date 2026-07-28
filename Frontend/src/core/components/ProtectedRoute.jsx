@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children, requiredPermissions }) {
   if (requiredPermissions && requiredPermissions.length > 0) {
     // Extract all permission actions from the user's assigned roles
     const userPermissions = user.roles?.flatMap(role => 
-      role.permissions?.map(p => p.action) || []
+      role.rolePermissions?.map(p => p.permission.action) || []
     ) || [];
     
     const hasPermission = requiredPermissions.some(permission => userPermissions.includes(permission));
@@ -28,8 +28,8 @@ export default function ProtectedRoute({ children, requiredPermissions }) {
     if (!hasPermission) {
       // User is authenticated but lacks required permission.
       // Redirect to a safe fallback defined in the database (defaultPath).
-      const roleWithDefaultPath = user.roles?.find(role => role.defaultPath);
-      const redirectPath = roleWithDefaultPath?.defaultPath || '/login';
+      const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
+      const redirectPath = roleWithDashboard?.roleDashboards[0]?.dashboard?.path || '/login';
       
       // Prevent infinite redirect loop if they are already on their default path but lack specific permissions
       if (location.pathname.startsWith(redirectPath) || location.pathname === redirectPath) {

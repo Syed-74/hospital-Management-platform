@@ -52,7 +52,8 @@ class AuthService {
         hospital: true,
         roles: {
           include: {
-            permissions: true,
+            rolePermissions: { include: { permission: true } },
+            roleDashboards: { include: { dashboard: true } },
           },
         },
       },

@@ -22,15 +22,14 @@ import { useAuth } from './core/context/AuthContext';
 // import ThemeManagement from './modules/PlatformAdmin/ThemeManagement';
 import { ThemeProvider } from './core/context/ThemeProvider';
 import ManageBranch from './modules/HospitalAdmin/ManageBranch';
-import RolesPermissions from './modules/HospitalAdmin/RolesPermissions';
-import AssignPermissionsPage from './modules/PlatformAdmin/AssignPermissionsPage';
+import Permission from './modules/auth/Permission';
 
 const RootRedirect = () => {
   const { user, token, loading } = useAuth();
   if (loading) return null;
   if (!token || !user) return <Navigate to="/login" replace />;
-  const roleWithDefaultPath = user.roles?.find(role => role.defaultPath);
-  return <Navigate to={roleWithDefaultPath?.defaultPath || "/login"} replace />;
+  const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
+  return <Navigate to={roleWithDashboard?.roleDashboards[0]?.dashboard?.path || "/login"} replace />;
 };
 
 function App() {
@@ -55,8 +54,8 @@ function App() {
             <Route index element={<Navigate to="/platformAdmin/overview" replace />} />
             <Route path="overview" element={<Overview />} />
             <Route path="manage-admin" element={<ManageAdmin />} />
-            <Route path="company-management" element={<CreatingHospital/>} />
-            <Route path="roles/:roleId/permissions" element={<AssignPermissionsPage />} />
+            <Route path="hospital-management" element={<CreatingHospital/>} />
+            <Route path="roles/:roleId/permissions" element={<Permission mode="platform" />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/platformAdmin/overview" replace />} />
             {/* <Route path="theme-management" element={<ThemeManagement/>} /> */}
@@ -64,7 +63,7 @@ function App() {
 
           {/* Hospital / Tenant Admin Routes */}
           <Route 
-            path="/company" 
+            path="/hospital" 
             element={
               <ProtectedRoute requiredPermissions={['hospital:access']}>
                 <ThemeProvider>
@@ -73,11 +72,11 @@ function App() {
               </ProtectedRoute>
             } 
           >
-            <Route index element={<Navigate to="/company/overview" replace />} />
+            <Route index element={<Navigate to="/hospital/overview" replace />} />
             <Route path="overview" element={<HospitalOverview />} />
-            <Route path="roles-permissions" element={<RolesPermissions />} />
+            <Route path="roles-permissions" element={<Permission mode="tenant" />} />
             <Route path="branch/manage" element={<ManageBranch />} />
-            <Route path="*" element={<Navigate to="/company/overview" replace />} />
+            <Route path="*" element={<Navigate to="/hospital/overview" replace />} />
           </Route>
 
 

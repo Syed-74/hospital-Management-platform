@@ -21,39 +21,51 @@ class RolesService {
     return await prisma.role.findMany({
       where: whereClause,
       include: {
-        permissions: true,
+        rolePermissions: { include: { permission: true } },
+        roleDashboards: { include: { dashboard: true } },
       },
     });
   }
 
-  async assignPermissionsToRole(roleId, permissionIds) {
+  async assignPermissionsToRole(roleId, permissionIds, dashboardId) {
     // Validate role exists
     const role = await prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
       throw new AppError("Role not found", 404);
     }
 
-    // Set (overwrite) permissions on the role
-    const updatedRole = await prisma.role.update({
-      where: { id: roleId },
-      data: {
-        permissions: {
-          set: permissionIds.map((id) => ({ id })),
-        },
-      },
-      include: {
-        permissions: true,
-      },
+    // Use a transaction to ensure atomic replacement
+    await prisma.$transaction(async (tx) => {
+      // 1. Clear old dashboard mapping
+      await tx.roleDashboard.deleteMany({ where: { roleId } });
+
+      // 2. Set new dashboard if provided
+      if (dashboardId) {
+        await tx.roleDashboard.create({
+          data: { roleId, dashboardId },
+        });
+      }
+
+      // 3. Clear old permission mapping
+      await tx.rolePermission.deleteMany({ where: { roleId } });
+
+      // 4. Set new permissions
+      if (permissionIds && permissionIds.length > 0) {
+        await tx.rolePermission.createMany({
+          data: permissionIds.map((pid) => ({ roleId, permissionId: pid })),
+        });
+      }
     });
 
-    return updatedRole;
+    return await this.getRolePermissions(roleId);
   }
 
   async getRolePermissions(roleId) {
     const role = await prisma.role.findUnique({
       where: { id: roleId },
       include: {
-        permissions: true,
+        rolePermissions: { include: { permission: true } },
+        roleDashboards: { include: { dashboard: true } },
       },
     });
 

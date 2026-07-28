@@ -31,7 +31,8 @@ export const protect = catchAsync(async (req, res, next) => {
       hospitalAdmin: true,
       roles: {
         include: {
-          permissions: true,
+          rolePermissions: { include: { permission: true } },
+          roleDashboards: { include: { dashboard: true } },
         },
       },
     },

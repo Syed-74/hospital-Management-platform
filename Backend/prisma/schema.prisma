@@ -56,23 +56,58 @@ model Role {
   id          String       @id @default(uuid())
   name        String       @unique
   description String?
-  defaultPath String?      // e.g., "/platformAdmin", "/dashboard"
   scope       RoleScope    @default(TENANT)
   
   users       User[]       @relation("UserRoles")
-  permissions Permission[] @relation("RolePermissions")
+  roleDashboards RoleDashboard[]
+  rolePermissions RolePermission[]
   
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
 
-// Permission Model (e.g., "CREATE_USER", "DELETE_PATIENT")
+// Dashboard Model
+model Dashboard {
+  id    String @id @default(uuid())
+  name  String
+  path  String @unique
+  
+  roleDashboards RoleDashboard[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// RoleDashboard Mapping Table
+model RoleDashboard {
+  id          String @id @default(uuid())
+  roleId      String
+  dashboardId String
+  
+  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, dashboardId])
+}
+
+// RolePermission Mapping Table
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+  
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
 model Permission {
   id          String   @id @default(uuid())
   action      String   @unique // e.g., "users:create"
   description String?
   
-  roles       Role[]   @relation("RolePermissions")
+  rolePermissions RolePermission[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

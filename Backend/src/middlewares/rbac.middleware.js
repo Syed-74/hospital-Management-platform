@@ -16,9 +16,11 @@ export const requirePermission = (requiredPermission) => {
 
     // Extract all permissions from user's roles
     const userPermissions = new Set();
-    user.roles.forEach((role) => {
-      role.permissions.forEach((permission) => {
-        userPermissions.add(permission.action);
+    user.roles?.forEach((role) => {
+      role.rolePermissions?.forEach((rp) => {
+        if (rp.permission?.action) {
+          userPermissions.add(rp.permission.action);
+        }
       });
     });
 

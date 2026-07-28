@@ -71,19 +71,18 @@ export default function HospitalDashboard() {
       category: 'Overview Dashboard',
       isSingle: true,
       name: 'Hospital Dashboard',
-      href: '/company/overview',
+      href: '/hospital/overview',
       icon: LayoutDashboard
     },
     {
       category: 'Manage Branch & Access',
       icon: Building2,
       items: [
-        { name: 'Branch Management', href: '/company/branch/manage' },
-        { name: 'Manage Branch Admin', href: '/company/branch/org-structure' },
-        { name: 'Roles & Permissions', href: '/company/roles-permissions' },
-        { name: 'Users', href: '/company/iam/users' },
+        { name: 'Branch Management', href: '/hospital/branch/manage' },
+        { name: 'Manage Branch Admin', href: '/hospital/branch/org-structure' },
+        { name: 'Roles & Permissions', href: '/hospital/roles-permissions' },
         
-        // { name: 'Permission Management', href: '/company/iam/permissions' },
+        // { name: 'Permission Management', href: '/hospital/iam/permissions' },
        
       ]
     },
@@ -98,151 +97,151 @@ export default function HospitalDashboard() {
       category: 'Clinical Administration',
       icon: Stethoscope,
       items: [
-        { name: 'Doctors', href: '/company/clinical/doctors' },
-        { name: 'Nursing', href: '/company/clinical/nursing' },
-        { name: 'Patient Services', href: '/company/clinical/patients' },
-        { name: 'Appointment Configuration', href: '/company/clinical/appointments' },
-        { name: 'Admission Configuration', href: '/company/clinical/admission' },
-        { name: 'Discharge Configuration', href: '/company/clinical/discharge' },
-        { name: 'Bed Configuration', href: '/company/clinical/beds' },
-        { name: 'Ward Configuration', href: '/company/clinical/wards' },
-        { name: 'ICU Configuration', href: '/company/clinical/icu' },
-        { name: 'OT Configuration', href: '/company/clinical/ot' }
+        { name: 'Doctors', href: '/hospital/clinical/doctors' },
+        { name: 'Nursing', href: '/hospital/clinical/nursing' },
+        { name: 'Patient Services', href: '/hospital/clinical/patients' },
+        { name: 'Appointment Configuration', href: '/hospital/clinical/appointments' },
+        { name: 'Admission Configuration', href: '/hospital/clinical/admission' },
+        { name: 'Discharge Configuration', href: '/hospital/clinical/discharge' },
+        { name: 'Bed Configuration', href: '/hospital/clinical/beds' },
+        { name: 'Ward Configuration', href: '/hospital/clinical/wards' },
+        { name: 'ICU Configuration', href: '/hospital/clinical/icu' },
+        { name: 'OT Configuration', href: '/hospital/clinical/ot' }
       ]
     },
     {
       category: 'Hospital Operations',
       icon: Activity,
       items: [
-        { name: 'OPD', href: '/company/ops/opd' },
-        { name: 'IPD', href: '/company/ops/ipd' },
-        { name: 'Emergency', href: '/company/ops/emergency' },
-        { name: 'Operation Theatre', href: '/company/ops/ot' },
-        { name: 'Nursing Station', href: '/company/ops/nursing-station' },
-        { name: 'Ambulance', href: '/company/ops/ambulance' },
-        { name: 'Bed Management', href: '/company/ops/beds' },
-        { name: 'Patient Flow Monitor', href: '/company/ops/flow-monitor' }
+        { name: 'OPD', href: '/hospital/ops/opd' },
+        { name: 'IPD', href: '/hospital/ops/ipd' },
+        { name: 'Emergency', href: '/hospital/ops/emergency' },
+        { name: 'Operation Theatre', href: '/hospital/ops/ot' },
+        { name: 'Nursing Station', href: '/hospital/ops/nursing-station' },
+        { name: 'Ambulance', href: '/hospital/ops/ambulance' },
+        { name: 'Bed Management', href: '/hospital/ops/beds' },
+        { name: 'Patient Flow Monitor', href: '/hospital/ops/flow-monitor' }
       ]
     },
     {
       category: 'Diagnostic Services',
       icon: FlaskConical,
       items: [
-        { name: 'Laboratory', href: '/company/diagnostics/lab' },
-        { name: 'Radiology', href: '/company/diagnostics/radiology' },
-        { name: 'Blood Bank', href: '/company/diagnostics/blood-bank' },
-        { name: 'Pathology', href: '/company/diagnostics/pathology' }
+        { name: 'Laboratory', href: '/hospital/diagnostics/lab' },
+        { name: 'Radiology', href: '/hospital/diagnostics/radiology' },
+        { name: 'Blood Bank', href: '/hospital/diagnostics/blood-bank' },
+        { name: 'Pathology', href: '/hospital/diagnostics/pathology' }
       ]
     },
     {
       category: 'Pharmacy & Medication',
       icon: Pill,
       items: [
-        { name: 'Pharmacy', href: '/company/pharmacy/store' },
-        { name: 'Drug Catalog', href: '/company/pharmacy/drugs' },
-        { name: 'Medication Policies', href: '/company/pharmacy/policies' },
-        { name: 'Controlled Drugs', href: '/company/pharmacy/controlled' },
-        { name: 'Prescription Rules', href: '/company/pharmacy/prescription-rules' }
+        { name: 'Pharmacy', href: '/hospital/pharmacy/store' },
+        { name: 'Drug Catalog', href: '/hospital/pharmacy/drugs' },
+        { name: 'Medication Policies', href: '/hospital/pharmacy/policies' },
+        { name: 'Controlled Drugs', href: '/hospital/pharmacy/controlled' },
+        { name: 'Prescription Rules', href: '/hospital/pharmacy/prescription-rules' }
       ]
     },
     {
       category: 'Financial Administration',
       icon: CreditCard,
       items: [
-        { name: 'Billing', href: '/company/billing' },
-        { name: 'Tariff Management', href: '/company/financial/tariffs' },
-        { name: 'Packages', href: '/company/financial/packages' },
-        { name: 'Insurance', href: '/company/financial/insurance' },
-        { name: 'Claims', href: '/company/financial/claims' },
-        { name: 'Refund Approvals', href: '/company/financial/refunds' },
-        { name: 'Revenue Dashboard', href: '/company/financial/revenue' }
+        { name: 'Billing', href: '/hospital/billing' },
+        { name: 'Tariff Management', href: '/hospital/financial/tariffs' },
+        { name: 'Packages', href: '/hospital/financial/packages' },
+        { name: 'Insurance', href: '/hospital/financial/insurance' },
+        { name: 'Claims', href: '/hospital/financial/claims' },
+        { name: 'Refund Approvals', href: '/hospital/financial/refunds' },
+        { name: 'Revenue Dashboard', href: '/hospital/financial/revenue' }
       ]
     },
     {
       category: 'Human Resources',
       icon: Users2,
       items: [
-        { name: 'Employees', href: '/company/hr/employees' },
-        { name: 'Recruitment', href: '/company/hr/recruitment' },
-        { name: 'Attendance', href: '/company/hr/attendance' },
-        { name: 'Leave', href: '/company/hr/leave' },
-        { name: 'Shift Management', href: '/company/hr/shifts' },
-        { name: 'Payroll', href: '/company/hr/payroll' },
-        { name: 'Performance', href: '/company/hr/performance' },
-        { name: 'Training', href: '/company/hr/training' }
+        { name: 'Employees', href: '/hospital/hr/employees' },
+        { name: 'Recruitment', href: '/hospital/hr/recruitment' },
+        { name: 'Attendance', href: '/hospital/hr/attendance' },
+        { name: 'Leave', href: '/hospital/hr/leave' },
+        { name: 'Shift Management', href: '/hospital/hr/shifts' },
+        { name: 'Payroll', href: '/hospital/hr/payroll' },
+        { name: 'Performance', href: '/hospital/hr/performance' },
+        { name: 'Training', href: '/hospital/hr/training' }
       ]
     },
     {
       category: 'Supply Chain',
       icon: Truck,
       items: [
-        { name: 'Inventory', href: '/company/scm/inventory' },
-        { name: 'Purchase', href: '/company/scm/purchase' },
-        { name: 'Vendors', href: '/company/scm/vendors' },
-        { name: 'Warehouse', href: '/company/scm/warehouse' },
-        { name: 'Assets', href: '/company/scm/assets' },
-        { name: 'Maintenance', href: '/company/scm/maintenance' },
-        { name: 'Stock Audit', href: '/company/scm/stock-audit' }
+        { name: 'Inventory', href: '/hospital/scm/inventory' },
+        { name: 'Purchase', href: '/hospital/scm/purchase' },
+        { name: 'Vendors', href: '/hospital/scm/vendors' },
+        { name: 'Warehouse', href: '/hospital/scm/warehouse' },
+        { name: 'Assets', href: '/hospital/scm/assets' },
+        { name: 'Maintenance', href: '/hospital/scm/maintenance' },
+        { name: 'Stock Audit', href: '/hospital/scm/stock-audit' }
       ]
     },
     {
       category: 'Quality & Compliance',
       icon: FileCheck,
       items: [
-        { name: 'Incident Management', href: '/company/quality/incidents' },
-        { name: 'Infection Control', href: '/company/quality/infection' },
-        { name: 'Clinical Audit', href: '/company/quality/audit' },
-        { name: 'Risk Management', href: '/company/quality/risk' },
-        { name: 'Compliance', href: '/company/quality/compliance' },
-        { name: 'Accreditation', href: '/company/quality/accreditation' },
-        { name: 'CAPA', href: '/company/quality/capa' }
+        { name: 'Incident Management', href: '/hospital/quality/incidents' },
+        { name: 'Infection Control', href: '/hospital/quality/infection' },
+        { name: 'Clinical Audit', href: '/hospital/quality/audit' },
+        { name: 'Risk Management', href: '/hospital/quality/risk' },
+        { name: 'Compliance', href: '/hospital/quality/compliance' },
+        { name: 'Accreditation', href: '/hospital/quality/accreditation' },
+        { name: 'CAPA', href: '/hospital/quality/capa' }
       ]
     },
     {
       category: 'Communication',
       icon: MessageSquare,
       items: [
-        { name: 'Announcements', href: '/company/comms/announcements' },
-        { name: 'Notifications', href: '/company/comms/notifications' },
-        { name: 'Internal Messaging', href: '/company/comms/messages' },
-        { name: 'Email Templates', href: '/company/comms/email-templates' },
-        { name: 'SMS Templates', href: '/company/comms/sms-templates' }
+        { name: 'Announcements', href: '/hospital/comms/announcements' },
+        { name: 'Notifications', href: '/hospital/comms/notifications' },
+        { name: 'Internal Messaging', href: '/hospital/comms/messages' },
+        { name: 'Email Templates', href: '/hospital/comms/email-templates' },
+        { name: 'SMS Templates', href: '/hospital/comms/sms-templates' }
       ]
     },
     {
       category: 'Reports & Analytics',
       icon: BarChart3,
       items: [
-        { name: 'Executive Dashboard', href: '/company/reports/executive' },
-        { name: 'Clinical Reports', href: '/company/reports/clinical' },
-        { name: 'Financial Reports', href: '/company/reports/financial' },
-        { name: 'HR Reports', href: '/company/reports/hr' },
-        { name: 'Inventory Reports', href: '/company/reports/inventory' },
-        { name: 'Operational Reports', href: '/company/reports/operational' },
-        { name: 'KPI Dashboard', href: '/company/reports/kpi' }
+        { name: 'Executive Dashboard', href: '/hospital/reports/executive' },
+        { name: 'Clinical Reports', href: '/hospital/reports/clinical' },
+        { name: 'Financial Reports', href: '/hospital/reports/financial' },
+        { name: 'HR Reports', href: '/hospital/reports/hr' },
+        { name: 'Inventory Reports', href: '/hospital/reports/inventory' },
+        { name: 'Operational Reports', href: '/hospital/reports/operational' },
+        { name: 'KPI Dashboard', href: '/hospital/reports/kpi' }
       ]
     },
     {
       category: 'System Administration',
       icon: Sliders,
       items: [
-        { name: 'Master Data', href: '/company/sys/master-data' },
-        { name: 'Lookup Management', href: '/company/sys/lookups' },
-        { name: 'Number Series', href: '/company/sys/numbers' },
-        { name: 'Workflow Engine', href: '/company/sys/workflows' },
-        { name: 'Integration Settings', href: '/company/sys/integrations' },
-        { name: 'API Management', href: '/company/sys/api' },
-        { name: 'Background Jobs', href: '/company/sys/jobs' }
+        { name: 'Master Data', href: '/hospital/sys/master-data' },
+        { name: 'Lookup Management', href: '/hospital/sys/lookups' },
+        { name: 'Number Series', href: '/hospital/sys/numbers' },
+        { name: 'Workflow Engine', href: '/hospital/sys/workflows' },
+        { name: 'Integration Settings', href: '/hospital/sys/integrations' },
+        { name: 'API Management', href: '/hospital/sys/api' },
+        { name: 'Background Jobs', href: '/hospital/sys/jobs' }
       ]
     },
     {
       category: 'Help & Support',
       icon: HelpCircle,
       items: [
-        { name: 'Documentation', href: '/company/support/docs' },
-        { name: 'Knowledge Base', href: '/company/support/kb' },
-        { name: 'Support Tickets', href: '/company/support/tickets' },
-        { name: 'System Status', href: '/company/support/status' }
+        { name: 'Documentation', href: '/hospital/support/docs' },
+        { name: 'Knowledge Base', href: '/hospital/support/kb' },
+        { name: 'Support Tickets', href: '/hospital/support/tickets' },
+        { name: 'System Status', href: '/hospital/support/status' }
       ]
     }
   ];
@@ -536,7 +535,7 @@ export default function HospitalDashboard() {
                       <span className="text-xs font-semibold text-slate-400 block">Logged in as</span>
                       <span className="text-xs font-bold text-slate-700 block truncate mt-0.5">{user?.email}</span>
                     </div>
-                    <Link to="/company/settings" onClick={() => setUserDropdownOpen(false)} className="flex items-center w-full px-3 py-2 text-xs font-bold text-slate-700 rounded-xl hover:bg-gray-50 transition-colors mt-1">
+                    <Link to="/hospital/settings" onClick={() => setUserDropdownOpen(false)} className="flex items-center w-full px-3 py-2 text-xs font-bold text-slate-700 rounded-xl hover:bg-gray-50 transition-colors mt-1">
                       <Settings className="w-4 h-4 mr-2.5 text-slate-400" /> Account Settings
                     </Link>
                     <button onClick={logout} className="flex items-center w-full px-3 py-2 text-xs font-bold text-rose-600 rounded-xl hover:bg-rose-50 transition-colors mt-1">

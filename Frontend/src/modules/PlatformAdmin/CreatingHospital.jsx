@@ -40,7 +40,7 @@ const STEPS = [
   { id: 1, name: 'Basic Info' },
   { id: 2, name: 'Contact' },
   { id: 3, name: 'Location' },
-  { id: 4, name: 'Registration' }
+  { id: 4, name: 'Settings' }
 ];
 
 export default function CreatingHospital() {
@@ -119,12 +119,12 @@ export default function CreatingHospital() {
   const validateStep = () => {
     if (currentStep === 1) {
       if (!formData.hospitalName || !formData.hospitalCode || !formData.hospitalType) {
-        setStepError('Please fill in all required basic information fields.');
+        setStepError('Please fill in all required basic information fields (Hospital Name, Hospital Code, Hospital Type).');
         return false;
       }
     } else if (currentStep === 2) {
       if (!formData.email || !formData.phone) {
-        setStepError('Please provide both email and primary phone number.');
+        setStepError('Please provide both email and primary phone number in Communication.');
         return false;
       }
       if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
@@ -133,11 +133,9 @@ export default function CreatingHospital() {
       }
     } else if (currentStep === 3) {
       if (!formData.addressLine1 || !formData.city || !formData.state || !formData.country || !formData.postalCode) {
-        setStepError('Please complete all required location fields.');
+        setStepError('Please complete all required location fields (Street, City, State, Country, Postal).');
         return false;
       }
-    } else if (currentStep === 4) {
-      // Registration fields are technically optional in DB, but we can validate format if needed
     }
     setStepError('');
     return true;

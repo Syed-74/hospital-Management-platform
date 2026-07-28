@@ -66,9 +66,9 @@ export const AuthProvider = ({ children }) => {
         // Extract role names for easy checking
         const userRoles = user.roles?.map(role => role.name.toUpperCase().replace(/\s+/g, '_')) || [];
         
-        // Redirect based on user's default path or default role path
-        const roleWithDefaultPath = user.roles?.find(role => role.defaultPath);
-        const redirectPath = roleWithDefaultPath?.defaultPath || "/login";
+        // Redirect based on mapped dashboard paths
+        const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
+        const redirectPath = roleWithDashboard?.roleDashboards[0]?.dashboard?.path || "/login";
         navigate(redirectPath);
 
         return { success: true };
@@ -292,9 +292,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const getAllBranchesByCompanyId = async (companyId) => {
+  const getAllBranchesByHospitalId = async (hospitalId) => {
     try {
-      const response = await axios.get(`/branches/company/${companyId}`);
+      const response = await axios.get(`/branches/hospital/${hospitalId}`);
       if (response.data.status === "success") {
         return { success: true, data: response.data.data.branches };
       }
@@ -337,7 +337,7 @@ export const AuthProvider = ({ children }) => {
 
   // Flattened array of all permissions from all assigned roles
   const userPermissions = user?.roles?.flatMap(role => 
-    role.permissions?.map(p => p.action) || []
+    role.rolePermissions?.map(p => p.permission.action) || []
   ) || [];
 
   // Provide state data globally across child components
@@ -365,7 +365,7 @@ export const AuthProvider = ({ children }) => {
     getAllBranches,
     updateBranch,
     deleteBranch,
-    getAllBranchesByCompanyId,
+    getAllBranchesByHospitalId,
     createBranchAdmin,
     getBranchAdminById
   };

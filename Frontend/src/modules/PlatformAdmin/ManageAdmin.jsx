@@ -427,18 +427,18 @@ export default function ManageAdmin() {
                           </span>
                         </div>
                         <div className="max-h-60 overflow-y-auto p-4 bg-white">
-                          {roles.find(r => r.id === formData.roleId)?.permissions?.length > 0 ? (
+                          {roles.find(r => r.id === formData.roleId)?.rolePermissions?.length > 0 ? (
                             <ul className="space-y-3">
-                              {roles.find(r => r.id === formData.roleId).permissions.map(p => (
-                                <li key={p.id} className="flex items-start">
+                              {roles.find(r => r.id === formData.roleId).rolePermissions.map(rp => (
+                                <li key={rp.permission.id} className="flex items-start">
                                   <div className="flex-shrink-0 h-5 w-5 rounded bg-green-100 text-green-600 flex items-center justify-center mr-3 mt-0.5">
                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                                     </svg>
                                   </div>
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">{p.action}</p>
-                                    {p.description && <p className="text-xs text-gray-500">{p.description}</p>}
+                                    <p className="text-sm font-medium text-gray-900">{rp.permission.action}</p>
+                                    {rp.permission.description && <p className="text-xs text-gray-500">{rp.permission.description}</p>}
                                   </div>
                                 </li>
                               ))}
