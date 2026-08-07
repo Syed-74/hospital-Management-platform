@@ -61,7 +61,10 @@ async function main() {
     { action: "clinical:write", description: "Write clinical observations and prescriptions" },
     { action: "clinical:read", description: "View clinical notes" },
     { action: "inventory:manage", description: "Manage pharmacy stock and drug audits" },
-    { action: "inventory:read", description: "View inventory levels" }
+    { action: "inventory:read", description: "View inventory levels" },
+    
+    // 4. Branch Admin Level Permissions
+    { action: "branch:access", description: "Access Branch Administration dashboard" }
   ];
 
   // Upsert all permission definitions

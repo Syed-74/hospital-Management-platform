@@ -14,10 +14,12 @@ export default function ManageBranch() {
     getAllBranches, 
     createBranch, 
     updateBranch, 
-    deleteBranch 
+    deleteBranch,
+    getHospitalById
   } = useAuth();
 
   const [branches, setBranches] = useState([]);
+  const [hospitalData, setHospitalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL"); // ALL, ACTIVE, INACTIVE, MAIN
@@ -139,11 +141,20 @@ export default function ManageBranch() {
   useEffect(() => {
     if (hospitalId) {
       fetchBranches();
+      fetchHospitalData();
     } else {
       setLoading(false);
       setError("No associated hospital found for your account.");
     }
   }, [hospitalId]);
+
+  const fetchHospitalData = async () => {
+    const res = await getHospitalById(hospitalId);
+    console.log("FETCHED HOSPITAL DATA:", res);
+    if (res.success) {
+      setHospitalData(res.data);
+    }
+  };
 
   const fetchBranches = async () => {
     setLoading(true);
@@ -740,8 +751,28 @@ export default function ManageBranch() {
                 <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider">Contact Credentials</h4>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Official Email *</label>
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Hospital Admin Name</label>
+                    <Input 
+                      type="text" 
+                      disabled
+                      value={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Admin User'}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                    />
+                  </div>
+                  
+                  <div className="col-span-1 space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Hospital Email</label>
+                    <Input 
+                      type="email" 
+                      disabled
+                      value={hospitalData?.email || ''}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="col-span-2 space-y-1 mt-2">
+                    <label className="text-xs font-bold text-slate-600">Branch Email *</label>
                     <Input 
                       type="email" 
                       name="email" 

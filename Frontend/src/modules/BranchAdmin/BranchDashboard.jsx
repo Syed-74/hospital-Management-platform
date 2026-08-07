@@ -4,20 +4,10 @@ import { useAuth } from '../../core/context/AuthContext';
 import { useTheme } from '../../core/context/ThemeProvider';
 import { 
   LayoutDashboard, 
-  Building2, 
-  ShieldCheck, 
   Stethoscope, 
-  Activity, 
-  FlaskConical, 
-  Pill, 
-  CreditCard, 
-  Users2, 
-  Truck, 
-  FileCheck, 
-  MessageSquare, 
-  BarChart3, 
-  Sliders, 
-  HelpCircle,
+  Users, 
+  Calendar, 
+  Settings, 
   ChevronDown,
   ChevronRight,
   Menu,
@@ -27,30 +17,11 @@ import {
   LogOut,
   ChevronLeft
 } from 'lucide-react';
-import Settings from '../PlatformAdmin/Settings';
 
-export default function HospitalDashboard() {
+export default function BranchDashboard() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  
-  // Track which sidebar menu categories are expanded/collapsed
-  const [expandedCategories, setExpandedCategories] = useState({
-    'Manage Branch': true,
-    'Identity & Access Management': false,
-    'Clinical Administration': false,
-    'Hospital Operations': false,
-    'Diagnostic Services': false,
-    'Pharmacy & Medication': false,
-    'Financial Administration': false,
-    'Human Resources': false,
-    'Supply Chain': false,
-    'Quality & Compliance': false,
-    'Communication': false,
-    'Reports & Analytics': false,
-    'System Administration': false,
-    'Help & Support': false,
-  });
 
   const location = useLocation();
   const { logout, user } = useAuth();
@@ -65,190 +36,39 @@ export default function HospitalDashboard() {
     }
   }, [user]);
 
-  // Complete Enterprise Business Architecture Navigation Outline
   const NAVIGATION_CONFIG = [
     {
       category: 'Overview Dashboard',
       isSingle: true,
-      name: 'Hospital Dashboard',
-      href: '/hospital/overview',
+      name: 'Branch Dashboard',
+      href: '/branch/dashboard',
       icon: LayoutDashboard
     },
-    {
-      category: 'Manage Branch & Access',
-      icon: Building2,
-      items: [
-        { name: 'Branch Management', href: '/hospital/branch/manage' },
-        { name: 'Manage Branch Admin', href: '/hospital/manage-branch-admin' },
-        { name: 'Roles & Permissions', href: '/hospital/roles-permissions' },
-        
-        // { name: 'Permission Management', href: '/hospital/iam/permissions' },
-       
-      ]
-    },
-    // {
-    //   category: 'Identity & Access Management',
-    //   icon: ShieldCheck,
-    //   items: [
-        
-    //   ]
-    // },
     {
       category: 'Clinical Administration',
       icon: Stethoscope,
       items: [
-        { name: 'Doctors', href: '/hospital/clinical/doctors' },
-        { name: 'Nursing', href: '/hospital/clinical/nursing' },
-        { name: 'Patient Services', href: '/hospital/clinical/patients' },
-        { name: 'Appointment Configuration', href: '/hospital/clinical/appointments' },
-        { name: 'Admission Configuration', href: '/hospital/clinical/admission' },
-        { name: 'Discharge Configuration', href: '/hospital/clinical/discharge' },
-        { name: 'Bed Configuration', href: '/hospital/clinical/beds' },
-        { name: 'Ward Configuration', href: '/hospital/clinical/wards' },
-        { name: 'ICU Configuration', href: '/hospital/clinical/icu' },
-        { name: 'OT Configuration', href: '/hospital/clinical/ot' }
+        { name: 'Doctors', href: '/branch/doctors' },
+        { name: 'Patients', href: '/branch/patients' },
+        { name: 'Appointments', href: '/branch/appointments' }
       ]
     },
     {
-      category: 'Hospital Operations',
-      icon: Activity,
+      category: 'Branch Operations',
+      icon: Settings,
       items: [
-        { name: 'OPD', href: '/hospital/ops/opd' },
-        { name: 'IPD', href: '/hospital/ops/ipd' },
-        { name: 'Emergency', href: '/hospital/ops/emergency' },
-        { name: 'Operation Theatre', href: '/hospital/ops/ot' },
-        { name: 'Nursing Station', href: '/hospital/ops/nursing-station' },
-        { name: 'Ambulance', href: '/hospital/ops/ambulance' },
-        { name: 'Bed Management', href: '/hospital/ops/beds' },
-        { name: 'Patient Flow Monitor', href: '/hospital/ops/flow-monitor' }
-      ]
-    },
-    {
-      category: 'Diagnostic Services',
-      icon: FlaskConical,
-      items: [
-        { name: 'Laboratory', href: '/hospital/diagnostics/lab' },
-        { name: 'Radiology', href: '/hospital/diagnostics/radiology' },
-        { name: 'Blood Bank', href: '/hospital/diagnostics/blood-bank' },
-        { name: 'Pathology', href: '/hospital/diagnostics/pathology' }
-      ]
-    },
-    {
-      category: 'Pharmacy & Medication',
-      icon: Pill,
-      items: [
-        { name: 'Pharmacy', href: '/hospital/pharmacy/store' },
-        { name: 'Drug Catalog', href: '/hospital/pharmacy/drugs' },
-        { name: 'Medication Policies', href: '/hospital/pharmacy/policies' },
-        { name: 'Controlled Drugs', href: '/hospital/pharmacy/controlled' },
-        { name: 'Prescription Rules', href: '/hospital/pharmacy/prescription-rules' }
-      ]
-    },
-    {
-      category: 'Financial Administration',
-      icon: CreditCard,
-      items: [
-        { name: 'Billing', href: '/hospital/billing' },
-        { name: 'Tariff Management', href: '/hospital/financial/tariffs' },
-        { name: 'Packages', href: '/hospital/financial/packages' },
-        { name: 'Insurance', href: '/hospital/financial/insurance' },
-        { name: 'Claims', href: '/hospital/financial/claims' },
-        { name: 'Refund Approvals', href: '/hospital/financial/refunds' },
-        { name: 'Revenue Dashboard', href: '/hospital/financial/revenue' }
-      ]
-    },
-    {
-      category: 'Human Resources',
-      icon: Users2,
-      items: [
-        { name: 'Employees', href: '/hospital/hr/employees' },
-        { name: 'Recruitment', href: '/hospital/hr/recruitment' },
-        { name: 'Attendance', href: '/hospital/hr/attendance' },
-        { name: 'Leave', href: '/hospital/hr/leave' },
-        { name: 'Shift Management', href: '/hospital/hr/shifts' },
-        { name: 'Payroll', href: '/hospital/hr/payroll' },
-        { name: 'Performance', href: '/hospital/hr/performance' },
-        { name: 'Training', href: '/hospital/hr/training' }
-      ]
-    },
-    {
-      category: 'Supply Chain',
-      icon: Truck,
-      items: [
-        { name: 'Inventory', href: '/hospital/scm/inventory' },
-        { name: 'Purchase', href: '/hospital/scm/purchase' },
-        { name: 'Vendors', href: '/hospital/scm/vendors' },
-        { name: 'Warehouse', href: '/hospital/scm/warehouse' },
-        { name: 'Assets', href: '/hospital/scm/assets' },
-        { name: 'Maintenance', href: '/hospital/scm/maintenance' },
-        { name: 'Stock Audit', href: '/hospital/scm/stock-audit' }
-      ]
-    },
-    {
-      category: 'Quality & Compliance',
-      icon: FileCheck,
-      items: [
-        { name: 'Incident Management', href: '/hospital/quality/incidents' },
-        { name: 'Infection Control', href: '/hospital/quality/infection' },
-        { name: 'Clinical Audit', href: '/hospital/quality/audit' },
-        { name: 'Risk Management', href: '/hospital/quality/risk' },
-        { name: 'Compliance', href: '/hospital/quality/compliance' },
-        { name: 'Accreditation', href: '/hospital/quality/accreditation' },
-        { name: 'CAPA', href: '/hospital/quality/capa' }
-      ]
-    },
-    {
-      category: 'Communication',
-      icon: MessageSquare,
-      items: [
-        { name: 'Announcements', href: '/hospital/comms/announcements' },
-        { name: 'Notifications', href: '/hospital/comms/notifications' },
-        { name: 'Internal Messaging', href: '/hospital/comms/messages' },
-        { name: 'Email Templates', href: '/hospital/comms/email-templates' },
-        { name: 'SMS Templates', href: '/hospital/comms/sms-templates' }
-      ]
-    },
-    {
-      category: 'Reports & Analytics',
-      icon: BarChart3,
-      items: [
-        { name: 'Executive Dashboard', href: '/hospital/reports/executive' },
-        { name: 'Clinical Reports', href: '/hospital/reports/clinical' },
-        { name: 'Financial Reports', href: '/hospital/reports/financial' },
-        { name: 'HR Reports', href: '/hospital/reports/hr' },
-        { name: 'Inventory Reports', href: '/hospital/reports/inventory' },
-        { name: 'Operational Reports', href: '/hospital/reports/operational' },
-        { name: 'KPI Dashboard', href: '/hospital/reports/kpi' }
-      ]
-    },
-    {
-      category: 'System Administration',
-      icon: Sliders,
-      items: [
-        { name: 'Master Data', href: '/hospital/sys/master-data' },
-        { name: 'Lookup Management', href: '/hospital/sys/lookups' },
-        { name: 'Number Series', href: '/hospital/sys/numbers' },
-        { name: 'Workflow Engine', href: '/hospital/sys/workflows' },
-        { name: 'Integration Settings', href: '/hospital/sys/integrations' },
-        { name: 'API Management', href: '/hospital/sys/api' },
-        { name: 'Background Jobs', href: '/hospital/sys/jobs' }
-      ]
-    },
-    {
-      category: 'Help & Support',
-      icon: HelpCircle,
-      items: [
-        { name: 'Documentation', href: '/hospital/support/docs' },
-        { name: 'Knowledge Base', href: '/hospital/support/kb' },
-        { name: 'Support Tickets', href: '/hospital/support/tickets' },
-        { name: 'System Status', href: '/hospital/support/status' }
+        { name: 'Settings', href: '/branch/settings' }
       ]
     }
   ];
 
+  const [expandedCategories, setExpandedCategories] = useState({
+    'Clinical Administration': true,
+    'Branch Operations': false
+  });
+
   const isActive = (path) => location.pathname === path;
 
-  // Toggle category expansion state
   const toggleCategory = (categoryName) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -256,44 +76,20 @@ export default function HospitalDashboard() {
     }));
   };
 
-  // Generate dynamic breadcrumbs for the hospital dashboard
   const getBreadcrumbs = () => {
     const paths = location.pathname.split('/').filter(Boolean);
     return paths.map((path, idx) => {
       const href = '/' + paths.slice(0, idx + 1).join('/');
       const label = path
         .replace(/-/g, ' ')
-        .replace('company', 'Hospital Portal')
+        .replace('branch', 'Branch Portal')
         .replace(/\b\w/g, c => c.toUpperCase());
       return { label, href, isLast: idx === paths.length - 1 };
     });
   };
 
-  // Determine actual sidebar width state
   const isMini = theme?.miniSidebar || (theme?.collapsibleSidebar && desktopCollapsed);
-
-  // Core Theme Color configurations mapped dynamically
-  const primaryColor = theme?.primaryColor || '#0D9488'; // Default teal-600
-  const headerTextColor = theme?.headerTextColor || '#111827'; // Default gray-900
-  const sidebarColor = theme?.sidebarColor || '#FFFFFF';
-
-  // YIQ luminance helper to check if a color is dark
-  const isColorDark = (hex) => {
-    if (!hex) return false;
-    hex = hex.replace(/^#/, '');
-    if (hex.length === 3) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    const bigint = parseInt(hex, 16);
-    if (isNaN(bigint)) return false;
-    const r = (bigint >> 16) & 255;
-    const g = (bigint >> 8) & 255;
-    const b = bigint & 255;
-    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-    return yiq < 128;
-  };
-
-  const isSidebarDark = isColorDark(sidebarColor);
+  const headerTextColor = theme?.headerTextColor || '#111827';
 
   return (
     <div className="min-h-screen bg-gray-50/50 flex font-sans">
@@ -316,10 +112,7 @@ export default function HospitalDashboard() {
         `}
       >
         {/* Sidebar Header */}
-        <div 
-          className="h-[72px] flex items-center px-6 border-b border-gray-100 shrink-0 relative overflow-hidden"
-        >
-          {/* Logo element */}
+        <div className="h-[72px] flex items-center px-6 border-b border-gray-100 shrink-0 relative overflow-hidden">
           {(theme?.showHospitalLogo ?? true) && (
             hospitalLogo ? (
               <img src={hospitalLogo} alt="Hospital Logo" className="h-8 w-8 object-contain rounded-lg shadow-sm" />
@@ -328,19 +121,17 @@ export default function HospitalDashboard() {
             )
           )}
           
-          {/* Text Title (only if not mini) */}
           {!isMini && (theme?.showHospitalName ?? true) && (
             <div className="flex flex-col overflow-hidden text-left ml-3">
               <span className="text-sm font-extrabold tracking-tight leading-tight truncate text-gray-900">
-                {user?.hospital?.hospitalName || 'Tenant Portal'}
+                {user?.branchAdmin?.branch?.branchName || user?.hospital?.hospitalName || 'Branch Portal'}
               </span>
               <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5 text-theme-primary">
-                {user?.hospital?.hospitalCode || 'HOSP'}
+                {user?.branchAdmin?.branch?.branchCode || 'BRANCH'}
               </span>
             </div>
           )}
 
-          {/* Desktop Collapse Toggle (only if collapsibleSidebar is enabled) */}
           {!mobileSidebarOpen && theme?.collapsibleSidebar && !theme?.miniSidebar && (
             <button 
               onClick={() => setDesktopCollapsed(!desktopCollapsed)}
@@ -390,7 +181,6 @@ export default function HospitalDashboard() {
 
             return (
               <div key={group.category} className="space-y-1">
-                {/* Category Header */}
                 <button
                   onClick={() => !isMini && toggleCategory(group.category)}
                   className={`
@@ -409,7 +199,6 @@ export default function HospitalDashboard() {
                   )}
                 </button>
 
-                {/* Sub Menu Items (only if expanded and not mini) */}
                 {isExpanded && !isMini && (
                   <div className="pl-7 space-y-1 border-l border-gray-200 ml-6 mt-1">
                     {group.items.map((subItem) => {
@@ -432,22 +221,13 @@ export default function HospitalDashboard() {
                     })}
                   </div>
                 )}
-
-                {/* Tooltip on mini sidebar hover */}
-                {isMini && (
-                  <div className="sr-only">
-                    {group.category}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
 
         {/* Sidebar Footer Logout */}
-        <div 
-          className="p-4 border-t border-gray-100 shrink-0"
-        >
+        <div className="p-4 border-t border-gray-100 shrink-0">
           <button 
             onClick={logout}
             className={`flex items-center rounded-xl text-sm font-semibold text-theme-error hover:bg-theme-error/10 transition-colors group relative ${
@@ -468,9 +248,7 @@ export default function HospitalDashboard() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header 
-          className={`h-[72px] border-b flex items-center justify-between px-6 z-30 shrink-0 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] bg-theme-header border-theme-border`}
-        >
+        <header className="h-[72px] border-b flex items-center justify-between px-6 z-30 shrink-0 shadow-[0_1px_2px_0_rgba(0,0,0,0.02)] bg-theme-header border-theme-border">
           <div className="flex items-center gap-4">
             <button
               className="lg:hidden focus:outline-none p-1 rounded-lg hover:bg-gray-50 text-theme-header-text"
@@ -479,7 +257,6 @@ export default function HospitalDashboard() {
               <Menu size={20} />
             </button>
 
-            {/* Dynamic Breadcrumbs */}
             <nav className="hidden sm:flex items-center space-x-1.5 text-xs font-semibold text-slate-400">
               {getBreadcrumbs().map((bc, idx) => (
                 <React.Fragment key={bc.href}>
@@ -495,9 +272,7 @@ export default function HospitalDashboard() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button 
-              className="p-2 transition-colors relative rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600"
-            >
+            <button className="p-2 transition-colors relative rounded-full hover:bg-gray-50 text-gray-400 hover:text-gray-600">
               <Bell size={20} />
               <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
             </button>
@@ -507,22 +282,13 @@ export default function HospitalDashboard() {
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center gap-2 p-1 rounded-xl transition-all hover:bg-gray-50"
               >
-                {user?.hospitalAdmin?.profileImageUrl ? (
-                  <img 
-                    src={user.hospitalAdmin.profileImageUrl} 
-                    alt="Admin Avatar" 
-                    className="h-8 w-8 rounded-xl object-cover border shadow-sm border-theme-border"
-                  />
-                ) : (
-                  <div 
-                    className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center border font-bold uppercase text-xs text-theme-primary border-theme-border"
-                  >
-                    {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
-                  </div>
-                )}
+                <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center border font-bold uppercase text-xs text-theme-primary border-theme-border">
+                  {user?.firstName?.charAt(0) || 'A'}
+                  {user?.lastName?.charAt(0) || ''}
+                </div>
                 <div className="hidden md:flex flex-col text-left shrink-0">
-                  <span className="text-xs font-bold leading-none text-theme-header-text">{user?.firstName} {user?.lastName}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">Hospital Admin</span>
+                  <span className="text-xs font-bold leading-none text-theme-header-text">{user?.firstName || 'Admin'} {user?.lastName || ''}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">Branch Admin</span>
                 </div>
                 <ChevronDown size={14} className="text-slate-400 hidden md:block" />
               </button>
@@ -533,11 +299,8 @@ export default function HospitalDashboard() {
                   <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-200/60 p-1.5 z-50 animate-in fade-in slide-in-from-top-3 duration-200">
                     <div className="px-3.5 py-2.5 border-b border-gray-100 shrink-0">
                       <span className="text-xs font-semibold text-slate-400 block">Logged in as</span>
-                      <span className="text-xs font-bold text-slate-700 block truncate mt-0.5">{user?.email}</span>
+                      <span className="text-xs font-bold text-slate-700 block truncate mt-0.5">{user?.email || 'admin@branch.com'}</span>
                     </div>
-                    <Link to="/hospital/settings" onClick={() => setUserDropdownOpen(false)} className="flex items-center w-full px-3 py-2 text-xs font-bold text-slate-700 rounded-xl hover:bg-gray-50 transition-colors mt-1">
-                      <Settings className="w-4 h-4 mr-2.5 text-slate-400" /> Account Settings
-                    </Link>
                     <button onClick={logout} className="flex items-center w-full px-3 py-2 text-xs font-bold text-rose-600 rounded-xl hover:bg-rose-50 transition-colors mt-1">
                       <LogOut className="w-4 h-4 mr-2.5 text-rose-500" /> Sign Out
                     </button>

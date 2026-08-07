@@ -23,13 +23,32 @@ import { useAuth } from './core/context/AuthContext';
 import { ThemeProvider } from './core/context/ThemeProvider';
 import ManageBranch from './modules/HospitalAdmin/ManageBranch';
 import Permission from './modules/auth/Permission';
+import ManageBranchAdmin from './modules/HospitalAdmin/ManageBranchAdmin';
+import BranchAdminDashboard from './modules/BranchAdmin/branchAdminDashboard';
+import BranchDashboard from './modules/BranchAdmin/BranchDashboard';
+import { Outlet } from 'react-router-dom';
 
 const RootRedirect = () => {
   const { user, token, loading } = useAuth();
   if (loading) return null;
   if (!token || !user) return <Navigate to="/login" replace />;
+  
   const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
-  return <Navigate to={roleWithDashboard?.roleDashboards[0]?.dashboard?.path || "/login"} replace />;
+  
+  if (roleWithDashboard) {
+    return <Navigate to={roleWithDashboard.roleDashboards[0].dashboard.path} replace />;
+  }
+
+  // Fallback routing based on permissions if dashboard mapping is missing
+  const userPermissions = user.roles?.flatMap(role => 
+    role.rolePermissions?.map(p => p.permission.action) || []
+  ) || [];
+
+  if (userPermissions.includes("platform:access")) return <Navigate to="/platformAdmin/overview" replace />;
+  if (userPermissions.includes("hospital:access")) return <Navigate to="/hospital/overview" replace />;
+  if (userPermissions.includes("branch:access")) return <Navigate to="/branch/dashboard" replace />;
+
+  return <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -76,9 +95,24 @@ function App() {
             <Route path="overview" element={<HospitalOverview />} />
             <Route path="roles-permissions" element={<Permission mode="tenant" />} />
             <Route path="branch/manage" element={<ManageBranch />} />
+            <Route path="manage-branch-admin" element={<ManageBranchAdmin/>} />
             <Route path="*" element={<Navigate to="/hospital/overview" replace />} />
           </Route>
-
+           
+          {/* Branch admin  / Tenant Admin Routes */}
+          <Route 
+            path="/branch" 
+            element={
+              <ProtectedRoute requiredPermissions={['branch:access']}>
+                <ThemeProvider>
+                  <BranchDashboard />
+                </ThemeProvider>
+              </ProtectedRoute>
+            } 
+          >
+            <Route index element={<Navigate to="/branch/dashboard" replace />} />
+            <Route path="dashboard" element={<BranchAdminDashboard />} />
+          </Route>
 
           {/* Default Redirection Route */}
           <Route path="/" element={<RootRedirect />} />

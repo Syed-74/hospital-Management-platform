@@ -50,6 +50,12 @@ class AuthService {
       where: { email },
       include: {
         hospital: true,
+        hospitalAdmin: true,
+        branchAdmin: {
+          include: {
+            branch: true,
+          }
+        },
         roles: {
           include: {
             rolePermissions: { include: { permission: true } },

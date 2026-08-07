@@ -18,6 +18,7 @@ import hospitalRoutes from "./modules/createHospital/hospital.routes.js";
 import hospitalAdminRoutes from "./modules/ManageHospAdmin/hospitalAdmin.routes.js";
 import hospitalThemeRoutes from "./modules/hospitalTheme/hospitalTheme.routes.js";
 import branchRoutes from "./modules/BranchManagement/branch.routes.js";
+import branchAdminRoutes from "./modules/ManageBranchAdmin/branchAdmin.routes.js";
 import dashboardsRoutes from "./modules/dashboards/dashboards.routes.js";
 
 const app = express();
@@ -70,6 +71,7 @@ app.use("/api/v1/hospitals", hospitalRoutes);
 app.use("/api/v1/hospital-admins", hospitalAdminRoutes);
 app.use("/api/v1/hospital-themes", hospitalThemeRoutes);
 app.use("/api/v1/branches", branchRoutes);
+app.use("/api/v1/branch-admins", branchAdminRoutes);
 app.use("/api/v1/dashboards", dashboardsRoutes);
 
 // Define other routes here...

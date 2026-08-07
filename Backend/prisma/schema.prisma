@@ -46,6 +46,7 @@ model User {
   
   // Profile Relations
   hospitalAdmin HospitalAdmin?
+  branchAdmin   BranchAdmin?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -158,6 +159,7 @@ model Hospital {
   users                 User[]
   hospitalTheme         HospitalTheme?
   branches              BranchManage[]
+  branchAdmins          BranchAdmin[]
 
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -281,6 +283,64 @@ model BranchManage {
   licenseNumber         String?
   isActive              Boolean  @default(true)
 
+  branchAdmins          BranchAdmin[]
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+}
+
+model BranchAdmin {
+  id                    String   @id @default(cuid())
+  // Link to Global Identity
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Personal Information
+  firstName             String
+  middleName            String?
+  lastName              String
+  fullName              String?
+  employeeId            String?  @unique
+  profilePhoto          String?
+  gender                String?
+  dateOfBirth           DateTime?
+  // Contact Information
+  email                 String   @unique
+  phoneNumber           String?
+  alternatePhoneNumber  String?
+  // Organization
+  hospitalId            String
+  hospital              Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId              String
+  branch                BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  departmentId          String?
+  designation           String?
+  reportingManagerId    String?
+  // Role & Permission
+  roleId                String?
+  permissions           String[] 
+  accessLevel           String?
+  isSuperBranchAdmin    Boolean  @default(false)
+  // Address
+  addressLine1          String?
+  addressLine2          String?
+  city                  String?
+  state                 String?
+  country               String?
+  postalCode            String?
+  // Status
+  status                String   @default("Active")
+  accountStatus         AccountStatus @default(PENDING)
+  joiningDate           DateTime?
+  relievingDate         DateTime?
+  // Security
+  twoFactorEnabled      Boolean  @default(false)
+  passwordChangedAt     DateTime?
+  failedLoginAttempts   Int      @default(0)
+  accountLockedUntil    DateTime?
+  // Audit
+  createdBy             String?
+  updatedBy             String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  deletedAt             DateTime?
 }

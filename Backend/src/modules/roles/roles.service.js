@@ -51,8 +51,19 @@ class RolesService {
 
       // 4. Set new permissions
       if (permissionIds && permissionIds.length > 0) {
+        // Here permissionIds is an array of action strings, e.g., ["branch:manage", "hospital:access"]
+        const resolvedPermissionIds = [];
+        for (const actionName of permissionIds) {
+          // Upsert permission to avoid seeding
+          let perm = await tx.permission.findUnique({ where: { action: actionName } });
+          if (!perm) {
+            perm = await tx.permission.create({ data: { action: actionName } });
+          }
+          resolvedPermissionIds.push(perm.id);
+        }
+
         await tx.rolePermission.createMany({
-          data: permissionIds.map((pid) => ({ roleId, permissionId: pid })),
+          data: resolvedPermissionIds.map((pid) => ({ roleId, permissionId: pid })),
         });
       }
     });

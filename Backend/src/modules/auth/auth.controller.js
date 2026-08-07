@@ -1,5 +1,8 @@
 import catchAsync from "../../utils/catchAsync.js";
 import authService from "./auth.service.js";
+import { verifyToken, generateAccessToken } from "../../utils/jwt.js";
+import { ENV } from "../../config/env.js";
+import AppError from "../../utils/AppError.js";
 
 /**
  * Controller for POST /api/v1/auth/register
@@ -59,5 +62,48 @@ export const getMe = catchAsync(async (req, res, next) => {
     data: {
       user,
     },
+  });
+});
+
+/**
+ * Controller for GET /api/v1/auth/refresh-token
+ * Refreshes the access token using the HTTP-only cookie.
+ */
+export const refreshToken = catchAsync(async (req, res, next) => {
+  const token = req.cookies.refreshToken;
+  
+  if (!token) {
+    return next(new AppError("No refresh token found. Please log in again.", 401));
+  }
+  
+  // Verify the refresh token
+  const decoded = await verifyToken(token, ENV.REFRESH_TOKEN_SECRET);
+  
+  // Generate a new access token
+  const newAccessToken = generateAccessToken(decoded.id);
+  
+  res.status(200).json({
+    status: "success",
+    data: {
+      accessToken: newAccessToken
+    }
+  });
+});
+
+/**
+ * Controller for POST /api/v1/auth/logout
+ * Clears the HTTP-only refresh token cookie.
+ */
+export const logout = catchAsync(async (req, res, next) => {
+  res.cookie("refreshToken", "loggedout", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    expires: new Date(Date.now() + 10 * 1000), // Expire in 10 seconds
+  });
+  
+  res.status(200).json({
+    status: "success",
+    message: "Logged out successfully"
   });
 });

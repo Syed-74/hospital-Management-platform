@@ -66,9 +66,23 @@ export const AuthProvider = ({ children }) => {
         // Extract role names for easy checking
         const userRoles = user.roles?.map(role => role.name.toUpperCase().replace(/\s+/g, '_')) || [];
         
-        // Redirect based on mapped dashboard paths
+        // Redirect based on mapped dashboard paths or fallback to permissions
         const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
-        const redirectPath = roleWithDashboard?.roleDashboards[0]?.dashboard?.path || "/login";
+        
+        let redirectPath = "/login";
+        if (roleWithDashboard) {
+          redirectPath = roleWithDashboard.roleDashboards[0].dashboard.path;
+        } else {
+          // Fallback based on permissions
+          const userPermissions = user.roles?.flatMap(role => 
+            role.rolePermissions?.map(p => p.permission.action) || []
+          ) || [];
+
+          if (userPermissions.includes("platform:access")) redirectPath = "/platformAdmin/overview";
+          else if (userPermissions.includes("hospital:access")) redirectPath = "/hospital/overview";
+          else if (userPermissions.includes("branch:access")) redirectPath = "/branch/dashboard";
+        }
+        
         navigate(redirectPath);
 
         return { success: true };
@@ -327,12 +341,74 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: error.response?.data?.message || "Failed to fetch branch admin" };
     }
   };
+
+  const getAllBranchAdmins = async (hospitalId) => {
+    try {
+      const url = hospitalId ? `/branch-admins?hospitalId=${hospitalId}` : "/branch-admins";
+      const response = await axios.get(url);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branchAdmins };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch branch admins" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch branch admins" };
+    }
+  };
+
+
+  const updateBranchAdmin = async (id, branchAdminData) => {
+    try {
+      const response = await axios.put(`/branch-admins/${id}`, branchAdminData);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.branchAdmin };
+      }
+      return { success: false, message: response.data.message || "Failed to update branch admin" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to update branch admin" };
+    }
+  };
+
+  const deleteBranchAdmin = async (id) => {
+    try {
+      const response = await axios.delete(`/branch-admins/${id}`);
+      console.log("Delete Response:", response);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data?.branchAdmin || null };
+      }
+      return { success: false, message: response.data.message || "Failed to delete branch admin" };
+    } catch (error) {
+      console.error("Delete Error:", error);
+      return { success: false, message: error.response?.data?.message || "Failed to delete branch admin" };
+    }
+  };
   
+  const getAllRoles = async (scope = "") => {
+    try {
+      const url = scope ? `/roles?scope=${scope}` : "/roles";
+      const response = await axios.get(url);
+      if (response.data.status === "success") {
+        return { success: true, data: response.data.data.roles || response.data.data };
+      }
+      return { success: false, message: response.data.message || "Failed to fetch roles" };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || "Failed to fetch roles" };
+    }
+  };
+
   // Authentication Action: Terminate Session Footprint
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    navigate("/login");
+  const logout = async () => {
+    try {
+      // Call backend to clear the httpOnly refresh token cookie
+      await axios.post("/auth/logout");
+    } catch (error) {
+      console.error("Failed to cleanly logout from server:", error);
+    } finally {
+      // Clear local state and storage regardless of server response
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
   };
 
   // Flattened array of all permissions from all assigned roles
@@ -367,7 +443,11 @@ export const AuthProvider = ({ children }) => {
     deleteBranch,
     getAllBranchesByHospitalId,
     createBranchAdmin,
-    getBranchAdminById
+    getBranchAdminById,
+    updateBranchAdmin,
+    deleteBranchAdmin,
+    getAllBranchAdmins,
+    getAllRoles
   };
 
   return (

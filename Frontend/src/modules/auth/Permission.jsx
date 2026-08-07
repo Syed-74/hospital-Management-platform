@@ -83,7 +83,8 @@ export default function Permission({ mode = "tenant" }) {
         setSelectedRole(fetchedRole);
         setSelectedDashboard(fetchedRole.roleDashboards?.[0]?.dashboardId || "");
         setAllPermissions(fetchedPerms);
-        setSelectedPermissions(fetchedRole.rolePermissions?.map(p => p.permission.id) || []);
+        // Use permission.action instead of permission.id
+        setSelectedPermissions(fetchedRole.rolePermissions?.map(p => p.permission.action) || []);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load role permissions.");
@@ -99,11 +100,11 @@ export default function Permission({ mode = "tenant" }) {
     await loadRolePermissions(role.id);
   };
 
-  const handleTogglePermissionId = (permissionId) => {
+  const handleTogglePermissionId = (actionName) => {
     setSelectedPermissions(prev => 
-      prev.includes(permissionId)
-        ? prev.filter(id => id !== permissionId)
-        : [...prev, permissionId]
+      prev.includes(actionName)
+        ? prev.filter(action => action !== actionName)
+        : [...prev, actionName]
     );
   };
 
@@ -272,12 +273,34 @@ export default function Permission({ mode = "tenant" }) {
     },
     {
       group: "Hospital Administration",
+      label: "Branch Admin Management",
+      read: "branchAdmins:read",
+      create: "branchAdmins:create",
+      update: "branchAdmins:update",
+      delete: "branchAdmins:delete",
+      description: "Manage administrators for individual hospital branches.",
+      scopes: ["TENANT", "GLOBAL"]
+    },
+    {
+      group: "Hospital Administration",
       label: "Staff & User Management",
       read: "hospitalUsers:read",
       create: "hospitalUsers:manage",
       update: "hospitalUsers:manage",
       delete: "hospitalUsers:manage",
       description: "Manage staff directory and user accounts.",
+      scopes: ["TENANT", "GLOBAL"]
+    },
+
+    // Branch Administration Group
+    {
+      group: "Branch Administration",
+      label: "Branch Dashboard Access",
+      read: "branch:access",
+      create: "branch:access",
+      update: "branch:access",
+      delete: "branch:access",
+      description: "Access the Branch Admin dashboard and specific branch modules.",
       scopes: ["TENANT", "GLOBAL"]
     },
 
@@ -316,11 +339,18 @@ export default function Permission({ mode = "tenant" }) {
 
   // Helper to resolve permission ID from action name
   const getPermissionIdByAction = (actionName) => {
-    return allPermissions.find(p => p.action === actionName)?.id;
+    // We now use actionName directly as the identifier in the frontend
+    return actionName;
   };
 
   const getPermissionObjectByAction = (actionName) => {
-    return allPermissions.find(p => p.action === actionName);
+    let desc = "Active";
+    MATRIX_DEFINITIONS.forEach(def => {
+      if (def.read === actionName || def.create === actionName || def.update === actionName || def.delete === actionName) {
+        desc = def.description || "Active";
+      }
+    });
+    return allPermissions.find(p => p.action === actionName) || { id: actionName, action: actionName, description: desc };
   };
 
   // Group definitions by category
@@ -337,9 +367,8 @@ export default function Permission({ mode = "tenant" }) {
   }, {});
 
   const handleToggleMatrixCell = (actionName) => {
-    const perm = getPermissionObjectByAction(actionName);
-    if (perm) {
-      handleTogglePermissionId(perm.id);
+    if (actionName) {
+      handleTogglePermissionId(actionName);
     }
   };
 
@@ -356,8 +385,8 @@ export default function Permission({ mode = "tenant" }) {
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-left">
       {/* Breadcrumb Navigation */}
       <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
-        <Link to={mode === "platform" ? "/platformAdmin/overview" : "/hospital/overview"} className="hover:text-slate-600">
-          {mode === "platform" ? "Platform Admin" : "Hospital Admin"}
+        <Link to={mode === "platform" ? "/platformAdmin/overview" : mode === "branch" ? "/branch/dashboard" : "/hospital/overview"} className="hover:text-slate-600">
+          {mode === "platform" ? "Platform Admin" : mode === "branch" ? "Branch Admin" : "Hospital Admin"}
         </Link>
         <span>/</span>
         <span className="text-slate-600">Role Configuration & Permissions</span>
@@ -630,14 +659,14 @@ export default function Permission({ mode = "tenant" }) {
                       No permissions currently mapped.
                     </div>
                   ) : (
-                    selectedPermissions.map(id => {
-                      const permObj = allPermissions.find(p => p.id === id);
-                      return permObj ? (
-                        <div key={id} className="p-1.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between gap-2 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-                          <span className="font-mono text-[9px] text-teal-700 font-bold truncate">{permObj.action}</span>
-                          <span className="text-[8px] text-slate-400 shrink-0 font-medium">{permObj.description || "Active"}</span>
+                    selectedPermissions.map(action => {
+                      const permObj = getPermissionObjectByAction(action);
+                      return (
+                        <div key={action} className="p-1.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between gap-2 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                          <span className="font-mono text-[9px] text-teal-700 font-bold truncate">{action}</span>
+                          <span className="text-[8px] text-slate-400 shrink-0 font-medium">{permObj?.description || "Active"}</span>
                         </div>
-                      ) : null;
+                      );
                     })
                   )}
                 </div>
