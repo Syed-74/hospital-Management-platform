@@ -22,6 +22,7 @@ enum AccountStatus {
 enum RoleScope {
   GLOBAL
   TENANT
+  BRANCH
 }
 
 // ==========================================

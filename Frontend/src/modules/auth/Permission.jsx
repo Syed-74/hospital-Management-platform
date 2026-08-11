@@ -30,6 +30,7 @@ export default function Permission({ mode = "tenant" }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
+  const [newRoleScope, setNewRoleScope] = useState("TENANT");
   const [modalError, setModalError] = useState("");
 
   const [dashboardOptions, setDashboardOptions] = useState([]);
@@ -57,11 +58,7 @@ export default function Permission({ mode = "tenant" }) {
         initialRole = fetchedRoles.find(r => r.id === routeRoleId);
       }
       if (!initialRole && fetchedRoles.length > 0) {
-        if (mode === "platform") {
-          initialRole = fetchedRoles.find(r => r.name === "HOSPITAL_ADMIN") || fetchedRoles[0];
-        } else {
-          initialRole = fetchedRoles.find(r => r.name === "BRANCH_ADMIN") || fetchedRoles[0];
-        }
+        initialRole = fetchedRoles[0];
       }
 
       if (initialRole) {
@@ -138,6 +135,7 @@ export default function Permission({ mode = "tenant" }) {
   const openAddModal = () => {
     setNewRoleName("");
     setNewRoleDesc("");
+    setNewRoleScope("TENANT");
     setModalError("");
     setIsModalOpen(true);
   };
@@ -154,7 +152,8 @@ export default function Permission({ mode = "tenant" }) {
     try {
       const response = await axios.post("/roles", {
         name: newRoleName,
-        description: newRoleDesc
+        description: newRoleDesc,
+        scope: newRoleScope
       });
       
       if (response.data.status === "success") {
@@ -300,8 +299,48 @@ export default function Permission({ mode = "tenant" }) {
       create: "branch:access",
       update: "branch:access",
       delete: "branch:access",
-      description: "Access the Branch Admin dashboard and specific branch modules.",
-      scopes: ["TENANT", "GLOBAL"]
+      description: "Access the Branch Administration dashboard.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Clinical Administration",
+      label: "Doctor Management",
+      read: "doctors:read",
+      create: "doctors:manage",
+      update: "doctors:manage",
+      delete: "doctors:manage",
+      description: "Manage branch doctors and their schedules.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Clinical Administration",
+      label: "Patient Management",
+      read: "patients:read",
+      create: "patients:manage",
+      update: "patients:manage",
+      delete: "patients:manage",
+      description: "Manage branch patients.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Clinical Administration",
+      label: "Appointments",
+      read: "appointments:read",
+      create: "appointments:manage",
+      update: "appointments:manage",
+      delete: "appointments:manage",
+      description: "Manage branch appointments.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Operations",
+      label: "Branch Settings",
+      read: "branch_settings:read",
+      create: "branch_settings:manage",
+      update: "branch_settings:manage",
+      delete: "branch_settings:manage",
+      description: "Configure specific branch settings.",
+      scopes: ["BRANCH"]
     },
 
     // Platform Level Settings Group
@@ -756,6 +795,18 @@ export default function Permission({ mode = "tenant" }) {
                     placeholder="e.g. Ward Supervisor"
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600">Role Scope *</label>
+                  <select
+                    value={newRoleScope}
+                    onChange={(e) => setNewRoleScope(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/10"
+                  >
+                    <option value="TENANT">Hospital Level (TENANT)</option>
+                    <option value="BRANCH">Branch Level (BRANCH)</option>
+                  </select>
                 </div>
 
                 <div className="space-y-1">

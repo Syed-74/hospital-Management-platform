@@ -64,7 +64,13 @@ async function main() {
     { action: "inventory:read", description: "View inventory levels" },
     
     // 4. Branch Admin Level Permissions
-    { action: "branch:access", description: "Access Branch Administration dashboard" }
+    { action: "branch:access", description: "Access Branch Administration dashboard" },
+    { action: "doctors:read", description: "View doctors list" },
+    { action: "doctors:manage", description: "Manage doctors and schedules" },
+    { action: "appointments:read", description: "View appointments" },
+    { action: "appointments:manage", description: "Manage appointments" },
+    { action: "branch_settings:read", description: "View branch settings" },
+    { action: "branch_settings:manage", description: "Manage branch settings" }
   ];
 
   // Upsert all permission definitions
@@ -136,6 +142,18 @@ async function main() {
 
   // Seed / Upsert the HOSPITAL_ADMIN role with ZERO permissions
   // (leaving it completely unassigned, to be configured dynamically by the Platform Admin)
+  const branchAdminRole = await prisma.role.upsert({
+    where: { name: 'Branch_Admin' },
+    update: {
+      scope: 'BRANCH',
+    },
+    create: {
+      name: 'Branch_Admin',
+      description: 'Branch Administrator with full access to their specific branch',
+      scope: 'BRANCH'
+    },
+  });
+
   const hospitalAdminRole = await prisma.role.upsert({
     where: { name: 'HOSPITAL_ADMIN' },
     update: {

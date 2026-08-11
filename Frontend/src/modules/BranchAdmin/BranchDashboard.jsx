@@ -24,7 +24,7 @@ export default function BranchDashboard() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const location = useLocation();
-  const { logout, user } = useAuth();
+  const { logout, user, userPermissions } = useAuth();
   const { theme } = useTheme();
   const [hospitalLogo, setHospitalLogo] = useState("");
 
@@ -42,25 +42,31 @@ export default function BranchDashboard() {
       isSingle: true,
       name: 'Branch Dashboard',
       href: '/branch/dashboard',
-      icon: LayoutDashboard
+      icon: LayoutDashboard,
+      requiredPermissions: ['branch:access']
     },
     {
       category: 'Clinical Administration',
       icon: Stethoscope,
       items: [
-        { name: 'Doctors', href: '/branch/doctors' },
-        { name: 'Patients', href: '/branch/patients' },
-        { name: 'Appointments', href: '/branch/appointments' }
+        { name: 'Doctors', href: '/branch/doctors', requiredPermissions: ['doctors:read', 'doctors:manage'] },
+        { name: 'Patients', href: '/branch/patients', requiredPermissions: ['patients:read', 'patients:manage'] },
+        { name: 'Appointments', href: '/branch/appointments', requiredPermissions: ['appointments:read', 'appointments:manage'] }
       ]
     },
     {
       category: 'Branch Operations',
       icon: Settings,
       items: [
-        { name: 'Settings', href: '/branch/settings' }
+        { name: 'Settings', href: '/branch/settings', requiredPermissions: ['branch_settings:read', 'branch_settings:manage'] }
       ]
     }
   ];
+
+  const hasPermission = (permissions) => {
+    if (!permissions || permissions.length === 0) return true;
+    return permissions.some(perm => userPermissions.includes(perm));
+  };
 
   const [expandedCategories, setExpandedCategories] = useState({
     'Clinical Administration': true,
@@ -153,6 +159,8 @@ export default function BranchDashboard() {
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-3">
           {NAVIGATION_CONFIG.map((group) => {
             if (group.isSingle) {
+              if (!hasPermission(group.requiredPermissions)) return null;
+              
               const active = isActive(group.href);
               return (
                 <Link
@@ -179,6 +187,9 @@ export default function BranchDashboard() {
             const isExpanded = expandedCategories[group.category];
             const CategoryIcon = group.icon;
 
+            const allowedItems = group.items.filter(item => hasPermission(item.requiredPermissions));
+            if (allowedItems.length === 0) return null;
+
             return (
               <div key={group.category} className="space-y-1">
                 <button
@@ -201,7 +212,7 @@ export default function BranchDashboard() {
 
                 {isExpanded && !isMini && (
                   <div className="pl-7 space-y-1 border-l border-gray-200 ml-6 mt-1">
-                    {group.items.map((subItem) => {
+                    {allowedItems.map((subItem) => {
                       const active = isActive(subItem.href);
                       return (
                         <Link

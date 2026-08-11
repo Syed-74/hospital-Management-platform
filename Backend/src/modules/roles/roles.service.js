@@ -3,7 +3,7 @@ import AppError from "../../utils/AppError.js";
 
 class RolesService {
   async createRole(data) {
-    const { name, description } = data;
+    const { name, description, scope = 'TENANT' } = data;
 
     const exists = await prisma.role.findUnique({ where: { name } });
     if (exists) {
@@ -11,7 +11,7 @@ class RolesService {
     }
 
     return await prisma.role.create({
-      data: { name, description },
+      data: { name, description, scope },
     });
   }
 

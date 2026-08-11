@@ -63,9 +63,6 @@ export const AuthProvider = ({ children }) => {
         setToken(accessToken);
         setUser(user);
         
-        // Extract role names for easy checking
-        const userRoles = user.roles?.map(role => role.name.toUpperCase().replace(/\s+/g, '_')) || [];
-        
         // Redirect based on mapped dashboard paths or fallback to permissions
         const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
         
