@@ -179,170 +179,6 @@ export default function Permission({ mode = "tenant" }) {
   // Group permission mappings logically for the Matrix UI
   // Maps a row key to its visual label, database prefixes/action suffixes, and categorization group.
   const MATRIX_DEFINITIONS = [
-    // Clinical Operations Group
-    // {
-    //   group: "Clinical Operations",
-    //   label: "View Patient Records",
-    //   read: "patients:read",
-    //   create: "patients:manage",
-    //   update: "patients:manage",
-    //   delete: "patients:manage",
-    //   description: "Access to patient demographic and medical history data."
-    // },
-    // {
-    //   group: "Clinical Operations",
-    //   label: "Edit Surgical Protocols",
-    //   read: "clinical:read",
-    //   create: "clinical:write",
-    //   update: "clinical:write",
-    //   delete: "clinical:write",
-    //   description: "Modify standard operating procedures for surgical units."
-    // },
-    // {
-    //   group: "Clinical Operations",
-    //   label: "Electronic Health Records (EHR)",
-    //   read: "clinical:read",
-    //   create: "clinical:write",
-    //   update: "clinical:write",
-    //   delete: "clinical:write",
-    //   description: "Ability to finalize and lock patient encounter notes."
-    // },
-
-    // Financial & Billing Group
-    // {
-    //   group: "Financial & Billing",
-    //   label: "Approve Invoices",
-    //   read: "billing:read",
-    //   create: "billing:manage",
-    //   update: "billing:manage",
-    //   delete: "billing:manage",
-    //   description: "Authorize departmental spending and equipment procurement."
-    // },
-    // {
-    //   group: "Financial & Billing",
-    //   label: "Patient Billing Overview",
-    //   read: "billing:read",
-    //   create: "billing:manage",
-    //   update: "billing:manage",
-    //   delete: "billing:manage",
-    //   description: "Read-only access to patient insurance and payment status."
-    // },
-
-    // Inventory Control Group
-    // {
-    //   group: "Inventory Control",
-    //   label: "Inventory Stocks",
-    //   read: "inventory:read",
-    //   create: "inventory:manage",
-    //   update: "inventory:manage",
-    //   delete: "inventory:manage",
-    //   description: "Manage pharmacy stock and drug audits."
-    // },
-
-    // Hospital Administration Group
-    {
-      group: "Hospital Administration",
-      label: "Hospital Access",
-      read: "hospital:access",
-      create: "hospital:access",
-      update: "hospital:access",
-      delete: "hospital:access",
-      description: "Access the Hospital Admin dashboard and modules.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-    {
-      group: "Hospital Administration",
-      label: "Hospital Admin Management",
-      read: "hospitalAdmins:read",
-      create: "hospitalAdmins:create",
-      update: "hospitalAdmins:update",
-      delete: "hospitalAdmins:delete",
-      description: "Manage administrator accounts for the hospital.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-    {
-      group: "Hospital Administration",
-      label: "Branch Management",
-      read: "branch:read",
-      create: "branch:manage",
-      update: "branch:manage",
-      delete: "branch:manage",
-      description: "Create and configure hospital branch offices.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-    {
-      group: "Hospital Administration",
-      label: "Branch Admin Management",
-      read: "branchAdmins:read",
-      create: "branchAdmins:create",
-      update: "branchAdmins:update",
-      delete: "branchAdmins:delete",
-      description: "Manage administrators for individual hospital branches.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-    {
-      group: "Hospital Administration",
-      label: "Staff & User Management",
-      read: "hospitalUsers:read",
-      create: "hospitalUsers:manage",
-      update: "hospitalUsers:manage",
-      delete: "hospitalUsers:manage",
-      description: "Manage staff directory and user accounts.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-
-    // Branch Administration Group
-    {
-      group: "Branch Administration",
-      label: "Branch Dashboard Access",
-      read: "branch:access",
-      create: "branch:access",
-      update: "branch:access",
-      delete: "branch:access",
-      description: "Access the Branch Administration dashboard.",
-      scopes: ["BRANCH"]
-    },
-    {
-      group: "Clinical Administration",
-      label: "Doctor Management",
-      read: "doctors:read",
-      create: "doctors:manage",
-      update: "doctors:manage",
-      delete: "doctors:manage",
-      description: "Manage branch doctors and their schedules.",
-      scopes: ["BRANCH"]
-    },
-    {
-      group: "Clinical Administration",
-      label: "Patient Management",
-      read: "patients:read",
-      create: "patients:manage",
-      update: "patients:manage",
-      delete: "patients:manage",
-      description: "Manage branch patients.",
-      scopes: ["BRANCH"]
-    },
-    {
-      group: "Clinical Administration",
-      label: "Appointments",
-      read: "appointments:read",
-      create: "appointments:manage",
-      update: "appointments:manage",
-      delete: "appointments:manage",
-      description: "Manage branch appointments.",
-      scopes: ["BRANCH"]
-    },
-    {
-      group: "Branch Operations",
-      label: "Branch Settings",
-      read: "branch_settings:read",
-      create: "branch_settings:manage",
-      update: "branch_settings:manage",
-      delete: "branch_settings:manage",
-      description: "Configure specific branch settings.",
-      scopes: ["BRANCH"]
-    },
-
     // Platform Level Settings Group
     {
       group: "Platform Level Settings",
@@ -373,6 +209,328 @@ export default function Permission({ mode = "tenant" }) {
       delete: "permissions:manage",
       description: "Add or manage raw permission definition strings.",
       scopes: ["GLOBAL"]
+    },
+
+    // 1. Hospital Administration & Operations
+    {
+      group: "Hospital Administration & Operations",
+      label: "Hospital Dashboard Access",
+      read: "hospital:access",
+      create: "hospital:access",
+      update: "hospital:access",
+      delete: "hospital:access",
+      description: "Access the Hospital Admin dashboard and modules.",
+      scopes: ["TENANT", "GLOBAL"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Hospital Profile",
+      read: "hospitals:read",
+      create: "hospitals:update",
+      update: "hospitals:update",
+      delete: "hospitals:update",
+      description: "Manage hospital details and configurations.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Branch Management",
+      read: "branch:read",
+      create: "branch:manage",
+      update: "branch:manage",
+      delete: "branch:manage",
+      description: "Create and manage hospital branches.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Branch Admin Management",
+      read: "branchAdmins:read",
+      create: "branchAdmins:manage",
+      update: "branchAdmins:manage",
+      delete: "branchAdmins:manage",
+      description: "Manage administrators for individual hospital branches.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Organizational Structure",
+      read: "departments:read",
+      create: "departments:manage",
+      update: "departments:manage",
+      delete: "departments:manage",
+      description: "Manage departments, specialties, and service catalog.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Business Rules & Policies",
+      read: "hospital_policies:read",
+      create: "hospital_policies:manage",
+      update: "hospital_policies:manage",
+      delete: "hospital_policies:manage",
+      description: "Configure approval workflows and business rules.",
+      scopes: ["TENANT"]
+    },
+
+    // 2. Identity & Access Management (Tenant Level)
+    {
+      group: "Identity & Access Management",
+      label: "Staff Management",
+      read: "users:read",
+      create: "hospitalUsers:manage",
+      update: "hospitalUsers:manage",
+      delete: "hospitalUsers:manage",
+      description: "Manage users, doctors, nurses, and operational staff.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Identity & Access Management",
+      label: "Role Management (RBAC)",
+      read: "roles:manage",
+      create: "roles:manage",
+      update: "roles:manage",
+      delete: "roles:manage",
+      description: "Create and manage hospital and branch-level roles.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Identity & Access Management",
+      label: "Role Assignment",
+      read: "users:read",
+      create: "users:assign_roles",
+      update: "users:assign_roles",
+      delete: "users:assign_roles",
+      description: "Assign roles to hospital and branch users.",
+      scopes: ["TENANT"]
+    },
+
+    // 3. Clinical & Medical Management
+    {
+      group: "Clinical & Medical Management",
+      label: "Clinical Operations",
+      read: "clinical_ops:read",
+      create: "clinical_ops:manage",
+      update: "clinical_ops:manage",
+      delete: "clinical_ops:manage",
+      description: "Oversee clinical activities and standards.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Clinical & Medical Management",
+      label: "Appointments",
+      read: "hospital_appointments:read",
+      create: "hospital_appointments:manage",
+      update: "hospital_appointments:manage",
+      delete: "hospital_appointments:manage",
+      description: "Approve or manage appointments globally across branches.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Clinical & Medical Management",
+      label: "Laboratory",
+      read: "laboratory:read",
+      create: "laboratory:manage",
+      update: "laboratory:manage",
+      delete: "laboratory:manage",
+      description: "Manage laboratory operations and diagnostics.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Clinical & Medical Management",
+      label: "Pharmacy",
+      read: "pharmacy:read",
+      create: "pharmacy:manage",
+      update: "pharmacy:manage",
+      delete: "pharmacy:manage",
+      description: "Manage pharmacy and dispensaries.",
+      scopes: ["TENANT"]
+    },
+
+    // 4. Financial & Administrative
+    {
+      group: "Financial & Administrative",
+      label: "Billing & Claims",
+      read: "hospital_billing:read",
+      create: "hospital_billing:manage",
+      update: "hospital_billing:manage",
+      delete: "hospital_billing:manage",
+      description: "Manage billing, claims, and insurance processing.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Financial Approvals",
+      read: "financial_approvals:read",
+      create: "financial_approvals:manage",
+      update: "financial_approvals:manage",
+      delete: "financial_approvals:manage",
+      description: "Approve discounts, refunds, and financial workflows.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Procurement & Inventory",
+      read: "procurement:read",
+      create: "procurement:manage",
+      update: "procurement:manage",
+      delete: "procurement:manage",
+      description: "Purchasing and inventory oversight.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Human Resources",
+      read: "hr:read",
+      create: "hr:manage",
+      update: "hr:manage",
+      delete: "hr:manage",
+      description: "Staffing, leave management, and payroll approvals.",
+      scopes: ["TENANT"]
+    },
+
+    // 5. Monitoring, Compliance & Integrations
+    {
+      group: "Monitoring & Integrations",
+      label: "Dashboards & Reports",
+      read: "hospital_reports:read",
+      create: "hospital_reports:manage",
+      update: "hospital_reports:manage",
+      delete: "hospital_reports:manage",
+      description: "Access analytics and export data.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Monitoring & Integrations",
+      label: "Compliance & Quality",
+      read: "compliance:read",
+      create: "compliance:manage",
+      update: "compliance:manage",
+      delete: "compliance:manage",
+      description: "Review audit logs and handle quality requirements.",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Monitoring & Integrations",
+      label: "Integrations",
+      read: "integrations:read",
+      create: "integrations:manage",
+      update: "integrations:manage",
+      delete: "integrations:manage",
+      description: "Configure approved integrations (SMS, Payments, etc.).",
+      scopes: ["TENANT"]
+    },
+    {
+      group: "Monitoring & Integrations",
+      label: "Notifications",
+      read: "notifications:read",
+      create: "notifications:manage",
+      update: "notifications:manage",
+      delete: "notifications:manage",
+      description: "Manage notification templates and triggers.",
+      scopes: ["TENANT"]
+    },
+
+    // 6. Branch Administration & Operations (Branch Scope)
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Dashboard Access",
+      read: "branch:access",
+      create: "branch:access",
+      update: "branch:access",
+      delete: "branch:access",
+      description: "Access the Branch Admin dashboard and modules.",
+      scopes: ["BRANCH", "TENANT"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Profile & Config",
+      read: "branch_profile:read",
+      create: "branch_profile:manage",
+      update: "branch_profile:manage",
+      delete: "branch_profile:manage",
+      description: "Manage local branch information and configuration.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Departments & Services",
+      read: "branch_departments:read",
+      create: "branch_departments:manage",
+      update: "branch_departments:manage",
+      delete: "branch_departments:manage",
+      description: "Manage local branch departments and services.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Staff Management",
+      read: "branch_staff:read",
+      create: "branch_staff:manage",
+      update: "branch_staff:manage",
+      delete: "branch_staff:manage",
+      description: "Manage branch staff, schedules, shifts, attendance, and leave.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Roles & Permissions",
+      read: "branch_roles:read",
+      create: "branch_roles:manage",
+      update: "branch_roles:manage",
+      delete: "branch_roles:manage",
+      description: "Assign approved roles to branch staff within delegated authority.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Patient Flow & Appointments",
+      read: "branch_patients:read",
+      create: "branch_patients:manage",
+      update: "branch_patients:manage",
+      delete: "branch_patients:manage",
+      description: "Manage local appointments, patient flow, OPD, and IPD.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Emergency & Bed Management",
+      read: "branch_emergency:read",
+      create: "branch_emergency:manage",
+      update: "branch_emergency:manage",
+      delete: "branch_emergency:manage",
+      description: "Manage emergency services and bed availability.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Pharmacy & Lab",
+      read: "branch_clinical:read",
+      create: "branch_clinical:manage",
+      update: "branch_clinical:manage",
+      delete: "branch_clinical:manage",
+      description: "Manage local pharmacy and laboratory operations.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Financials & Inventory",
+      read: "branch_finance:read",
+      create: "branch_finance:manage",
+      update: "branch_finance:manage",
+      delete: "branch_finance:manage",
+      description: "Manage local billing, inventory, and procurement.",
+      scopes: ["BRANCH"]
+    },
+    {
+      group: "Branch Administration & Operations",
+      label: "Branch Reports & Compliance",
+      read: "branch_reports:read",
+      create: "branch_reports:manage",
+      update: "branch_reports:manage",
+      delete: "branch_reports:manage",
+      description: "Manage branch reports, notifications, compliance, quality, and KPIs.",
+      scopes: ["BRANCH"]
     }
   ];
 

@@ -195,21 +195,17 @@ export default class BranchAdminService {
         const admin = await prisma.branchAdmin.findUnique({ where: { id } });
         if (!admin) throw new AppError("Branch Admin not found", 404);
 
-        // Soft delete the branch admin and deactivate the user
+        // Hard delete the branch admin and the user from the database
         return await prisma.$transaction(async (tx) => {
-            await tx.user.update({
-                where: { id: admin.userId },
-                data: { isActive: false }
+            const deletedBranchAdmin = await tx.branchAdmin.delete({
+                where: { id }
             });
 
-            return await tx.branchAdmin.update({
-                where: { id },
-                data: {
-                    status: "INACTIVE",
-                    accountStatus: "INACTIVE",
-                    deletedAt: new Date()
-                }
+            await tx.user.delete({
+                where: { id: admin.userId }
             });
+
+            return deletedBranchAdmin;
         });
     }
 }

@@ -74,9 +74,8 @@ export default function ManageBranchAdmin() {
   }, [hospitalId]);
 
   const fetchRoles = async () => {
-    const result = await getAllRoles("TENANT"); // Or all roles if scope isn't strict
+    const result = await getAllRoles("BRANCH"); 
     if (result.success) {
-      // Filter roles if you specifically want to show branch admin roles, or just show all
       setRoles(result.data || []);
     }
   };

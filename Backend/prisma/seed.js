@@ -5,12 +5,7 @@ async function main() {
 
   // Define Dashboards
   const dashboardsList = [
-    { name: "Platform Admin Dashboard", path: "/platformAdmin/overview" },
-    { name: "Hospital Admin Dashboard", path: "/hospital/overview" },
-    { name: "Branch Dashboard", path: "/branch/dashboard" },
-    { name: "Doctor Dashboard", path: "/doctor/dashboard" },
-    { name: "Patient Portal", path: "/patient/dashboard" },
-    { name: "Pharmacy Dashboard", path: "/pharmacy/dashboard" }
+    { name: "Platform Admin Dashboard", path: "/platformAdmin/overview" }
   ];
 
   const upsertedDashboards = {};
@@ -24,58 +19,46 @@ async function main() {
   }
   console.log(`✔ Seeded ${dashboardsList.length} dashboards.`);
 
-  // Define all master permission definitions across the entire platform
-  const permissionsList = [
-    // 1. Platform Admin Level Permissions
+  // Define Platform Admin Permissions based on Enterprise Architecture
+  const platformAdminPermissions = [
+    // Platform Access
     { action: "platform:access", description: "Access Platform Admin panel" },
-    { action: "subscriptions:manage", description: "Manage hospital subscriptions" },
-    { action: "hospitals:create", description: "Create new hospitals" },
-    { action: "hospitals:read", description: "Read hospital details" },
-    { action: "hospitals:update", description: "Update hospital details" },
-    { action: "hospitals:delete", description: "Delete hospitals" },
-    { action: "hospitalAdmins:create", description: "Create hospital admin accounts" },
-    { action: "hospitalAdmins:read", description: "View hospital admin accounts" },
-    { action: "hospitalAdmins:update", description: "Modify hospital admin accounts" },
-    { action: "hospitalAdmins:delete", description: "Remove hospital admin accounts" },
     
-    // Core Identity & Access Control management (Needed by Platform Admin to manage permissions)
-    { action: "roles:manage", description: "Full control over role management" },
-    { action: "permissions:manage", description: "Full control over permission mapping" },
-    { action: "users:read", description: "View users registry" },
-    { action: "users:assign_roles", description: "Assign roles to users" },
-
-    // 2. Hospital Admin Level Permissions (Available in registry for dynamic assignment)
-    { action: "hospital:access", description: "Access Hospital Admin dashboard" },
-    { action: "branch:manage", description: "Create and update branches" },
-    { action: "branch:read", description: "Read branch details" },
-    { action: "hospitalUsers:manage", description: "Manage hospital staff members" },
-    { action: "hospitalUsers:read", description: "Read hospital staff members list" },
-    { action: "themes:manage", description: "Manage UI branding and theme configurations" },
-    { action: "themes:read", description: "View UI branding configurations" },
-
-    // 3. Branch / Department Level Permissions (Available in registry for dynamic assignment)
-    { action: "billing:manage", description: "Manage financial invoices and tariffs" },
-    { action: "billing:read", description: "View billing records" },
-    { action: "patients:manage", description: "Manage patient admission and discharge" },
-    { action: "patients:read", description: "Read patient files" },
-    { action: "clinical:write", description: "Write clinical observations and prescriptions" },
-    { action: "clinical:read", description: "View clinical notes" },
-    { action: "inventory:manage", description: "Manage pharmacy stock and drug audits" },
-    { action: "inventory:read", description: "View inventory levels" },
+    // Hospital & Tenant Management
+    { action: "hospitals:create", description: "Create and onboard new hospital tenants" },
+    { action: "hospitals:read", description: "Read hospital tenant details" },
+    { action: "hospitals:update", description: "Update hospital tenant configurations" },
+    { action: "hospitals:delete", description: "Suspend or deactivate hospital tenants" },
     
-    // 4. Branch Admin Level Permissions
-    { action: "branch:access", description: "Access Branch Administration dashboard" },
-    { action: "doctors:read", description: "View doctors list" },
-    { action: "doctors:manage", description: "Manage doctors and schedules" },
-    { action: "appointments:read", description: "View appointments" },
-    { action: "appointments:manage", description: "Manage appointments" },
-    { action: "branch_settings:read", description: "View branch settings" },
-    { action: "branch_settings:manage", description: "Manage branch settings" }
+    // Hospital Admin Management
+    { action: "hospitalAdmins:create", description: "Create Hospital Admin accounts" },
+    { action: "hospitalAdmins:read", description: "View Hospital Admin accounts" },
+    { action: "hospitalAdmins:update", description: "Modify Hospital Admin accounts" },
+    { action: "hospitalAdmins:delete", description: "Deactivate Hospital Admin accounts" },
+    
+    // Subscription & Feature Management
+    { action: "subscriptions:manage", description: "Manage hospital subscriptions and billing" },
+    { action: "features:manage", description: "Control modules and features available to hospitals" },
+    
+    // Identity, Access & Role Management (Global)
+    { action: "platform_users:manage", description: "Create, update, activate, and suspend platform-level users" },
+    { action: "roles:manage", description: "Define system-level roles and assign to users" },
+    { action: "role_templates:manage", description: "Assign role templates to Hospital Admins" },
+    { action: "permissions:manage", description: "Maintain the global permission catalog" },
+    
+    // Security, Audit & Compliance
+    { action: "security_policies:manage", description: "Configure authentication and security policies" },
+    { action: "access_policies:manage", description: "Configure access policies and approval workflows" },
+    { action: "audit_logs:read", description: "Review security, audit, and compliance logs" },
+    
+    // Platform Operations
+    { action: "platform_settings:manage", description: "Manage platform-wide settings" },
+    { action: "system_health:read", description: "Monitor overall system health and metrics" }
   ];
 
-  // Upsert all permission definitions
+  // Upsert Permissions
   const upsertedPermissions = {};
-  for (const perm of permissionsList) {
+  for (const perm of platformAdminPermissions) {
     const created = await prisma.permission.upsert({
       where: { action: perm.action },
       update: { description: perm.description },
@@ -83,42 +66,15 @@ async function main() {
     });
     upsertedPermissions[perm.action] = created;
   }
-  console.log(`✔ Seeded ${permissionsList.length} permission definitions.`);
+  console.log(`✔ Seeded ${platformAdminPermissions.length} platform permissions.`);
 
-  // Define Platform Admin permissions (to connect only to the Platform Admin role)
-  const platformAdminPermActions = [
-    "platform:access",
-    "subscriptions:manage",
-    "hospitals:create",
-    "hospitals:read",
-    "hospitals:update",
-    "hospitals:delete",
-    "hospitalAdmins:create",
-    "hospitalAdmins:read",
-    "hospitalAdmins:update",
-    "hospitalAdmins:delete",
-    "roles:manage",
-    "permissions:manage",
-    "users:read",
-    "users:assign_roles",
-    "themes:manage",
-    "themes:read"
-  ];
-
-  // Map to DB IDs
-  const platformRolePerms = platformAdminPermActions.map(action => ({
-    id: upsertedPermissions[action].id
-  }));
-
-  // Seed / Upsert the PLATFORM_ADMIN role with these permissions connected via mapping
+  // Seed PLATFORM_ADMIN Role
   const platformAdminRole = await prisma.role.upsert({
     where: { name: 'PLATFORM_ADMIN' },
-    update: {
-      scope: 'GLOBAL',
-    },
+    update: { scope: 'GLOBAL' },
     create: {
       name: 'PLATFORM_ADMIN',
-      description: 'Platform Level Super Administrator',
+      description: 'Platform Level Super Administrator governing access across all hospital tenants',
       scope: 'GLOBAL',
     }
   });
@@ -130,51 +86,18 @@ async function main() {
     create: { roleId: platformAdminRole.id, dashboardId: upsertedDashboards["/platformAdmin/overview"].id }
   });
 
-  // Assign Permissions
-  for (const perm of platformRolePerms) {
+  // Assign all Platform Permissions to PLATFORM_ADMIN
+  for (const actionName of Object.keys(upsertedPermissions)) {
+    const permId = upsertedPermissions[actionName].id;
     await prisma.rolePermission.upsert({
-      where: { roleId_permissionId: { roleId: platformAdminRole.id, permissionId: perm.id } },
+      where: { roleId_permissionId: { roleId: platformAdminRole.id, permissionId: permId } },
       update: {},
-      create: { roleId: platformAdminRole.id, permissionId: perm.id }
+      create: { roleId: platformAdminRole.id, permissionId: permId }
     });
   }
   console.log("✔ Seeded PLATFORM_ADMIN role with its required permissions.");
 
-  // Seed / Upsert the HOSPITAL_ADMIN role with ZERO permissions
-  // (leaving it completely unassigned, to be configured dynamically by the Platform Admin)
-  const branchAdminRole = await prisma.role.upsert({
-    where: { name: 'Branch_Admin' },
-    update: {
-      scope: 'BRANCH',
-    },
-    create: {
-      name: 'Branch_Admin',
-      description: 'Branch Administrator with full access to their specific branch',
-      scope: 'BRANCH'
-    },
-  });
-
-  const hospitalAdminRole = await prisma.role.upsert({
-    where: { name: 'HOSPITAL_ADMIN' },
-    update: {
-      scope: 'TENANT',
-    },
-    create: {
-      name: 'HOSPITAL_ADMIN',
-      description: 'Hospital Tenant Administrator',
-      scope: 'TENANT',
-    }
-  });
-  
-  // Assign default dashboard for HOSPITAL_ADMIN
-  await prisma.roleDashboard.upsert({
-    where: { roleId_dashboardId: { roleId: hospitalAdminRole.id, dashboardId: upsertedDashboards["/hospital/overview"].id } },
-    update: {},
-    create: { roleId: hospitalAdminRole.id, dashboardId: upsertedDashboards["/hospital/overview"].id }
-  });
-  console.log("✔ Seeded HOSPITAL_ADMIN role with empty permissions list.");
-
-  console.log("🎉 Seeding complete.");
+  console.log("🎉 Seeding complete. Enterprise Platform Admin ready.");
 }
 
 main()
