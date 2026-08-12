@@ -1,0 +1,26 @@
+model ManageDepartment {
+  id                 String       @id @default(cuid())
+  
+  // Relations
+  hospitalId         String
+  hospital           Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId           String
+  branch             BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  
+  // Important Core Attributes
+  departmentName     String
+  departmentCode     String       @unique
+  
+  // Optional but useful attributes
+  description        String?      // Optional: Details about the department
+  
+  // Status and Flags
+  isActive           Boolean      @default(true) // Replaces generic 'status String'
+  
+  // Audit and Timestamps
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+
+  @@unique([hospitalId, branchId, departmentName])
+}

@@ -1,4 +1,4 @@
-import { prisma } from '../src/config/db.js';
+import { prisma } from './src/config/db.js';
 
 async function main() {
   console.log("Seeding system dashboards and permissions...");

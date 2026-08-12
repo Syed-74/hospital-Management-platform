@@ -1,0 +1,105 @@
+// ==========================================
+// ENUMS
+// ==========================================
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+enum RoleScope {
+  GLOBAL
+  TENANT
+  BRANCH
+}
+
+// ==========================================
+// RBAC SYSTEM MODELS
+// ==========================================
+
+// User Model
+model User {
+  id        String  @id @default(uuid())
+  email     String  @unique
+  password  String // Hashed password
+  firstName String
+  lastName  String
+  isActive  Boolean @default(true)
+
+  // Tenant isolation (optional for Platform Admins)
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+
+  // A user can have multiple roles in a large enterprise
+  roles Role[] @relation("UserRoles")
+
+  // Profile Relations
+  hospitalAdmin HospitalAdmin?
+  branchAdmin   BranchAdmin?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Role Model (e.g., "Doctor", "Admin")
+model Role {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  scope       RoleScope @default(TENANT)
+
+  users           User[]           @relation("UserRoles")
+  roleDashboards  RoleDashboard[]
+  rolePermissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Dashboard Model
+model Dashboard {
+  id   String @id @default(uuid())
+  name String
+  path String @unique
+
+  roleDashboards RoleDashboard[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// RoleDashboard Mapping Table
+model RoleDashboard {
+  id          String @id @default(uuid())
+  roleId      String
+  dashboardId String
+
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, dashboardId])
+}
+
+// RolePermission Mapping Table
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  action      String  @unique // e.g., "users:create"
+  description String?
+
+  rolePermissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

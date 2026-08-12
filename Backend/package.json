@@ -47,6 +47,7 @@
     "prisma": "^7.9.1"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "schema": "prisma/schema",
+    "seed": "node seed.js"
   }
 }

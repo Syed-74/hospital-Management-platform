@@ -32,13 +32,8 @@ export default function ManageDepartments() {
   const defaultFormData = {
     departmentName: "",
     departmentCode: "",
-    departmentType: "",
     description: "",
-    location: "",
-    headOfDepartment: "",
-    contactNumber: "",
-    isActive: true,
-    emergencyAvailable: false
+    isActive: true
   };
   
   const [formData, setFormData] = useState(defaultFormData);
@@ -86,13 +81,8 @@ export default function ManageDepartments() {
     setFormData({
       departmentName: department.departmentName || "",
       departmentCode: department.departmentCode || "",
-      departmentType: department.departmentType || "",
       description: department.description || "",
-      location: department.location || "",
-      headOfDepartment: department.headOfDepartment || "",
-      contactNumber: department.contactNumber || "",
-      isActive: department.isActive !== false,
-      emergencyAvailable: department.emergencyAvailable === true
+      isActive: department.isActive !== false
     });
     setIsEditing(true);
     setCurrentId(department.id);
@@ -223,9 +213,7 @@ export default function ManageDepartments() {
               <thead>
                 <tr className="bg-gray-50/80 border-b border-gray-100">
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Department Info</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type / Location</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Emergency</th>
                   <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
@@ -244,14 +232,6 @@ export default function ManageDepartments() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-800 font-medium">{dept.departmentType || 'Unspecified'}</div>
-                      {dept.location && (
-                        <div className="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                          <MapPin size={12} /> {dept.location}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
                         dept.isActive 
                           ? 'bg-green-50 text-green-700 border border-green-200' 
@@ -259,15 +239,6 @@ export default function ManageDepartments() {
                       }`}>
                         {dept.isActive ? 'Active' : 'Inactive'}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {dept.emergencyAvailable ? (
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          24/7 Available
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-sm">-</span>
-                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -347,68 +318,17 @@ export default function ManageDepartments() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department Type <span className="text-red-500">*</span></label>
-                    <select 
-                      name="departmentType" 
-                      required
-                      value={formData.departmentType} 
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
+                    <textarea 
+                      name="description" 
+                      value={formData.description} 
                       onChange={handleInputChange} 
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
-                    >
-                      <option value="">Select Type...</option>
-                      <option value="Clinical">Clinical</option>
-                      <option value="Non-Clinical">Non-Clinical</option>
-                      <option value="Administrative">Administrative</option>
-                      <option value="Surgical">Surgical</option>
-                      <option value="Diagnostic">Diagnostic</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Number</label>
-                    <Input 
-                      type="text" 
-                      name="contactNumber" 
-                      value={formData.contactNumber} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g., Ext 405 or Phone"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      rows="3"
+                      placeholder="Brief description of the department's role..."
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Location / Floor</label>
-                    <Input 
-                      type="text" 
-                      name="location" 
-                      value={formData.location} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g., Building A, 2nd Floor"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Head of Department (Name)</label>
-                    <Input 
-                      type="text" 
-                      name="headOfDepartment" 
-                      value={formData.headOfDepartment} 
-                      onChange={handleInputChange} 
-                      placeholder="e.g., Dr. Jane Smith"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
-                  <textarea 
-                    name="description" 
-                    value={formData.description} 
-                    onChange={handleInputChange} 
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    rows="3"
-                    placeholder="Brief description of the department's role..."
-                  />
                 </div>
 
                 <div className="flex gap-8 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
@@ -421,17 +341,6 @@ export default function ManageDepartments() {
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                     />
                     <span className="ml-2 text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">Active Department</span>
-                  </label>
-                  
-                  <label className="flex items-center cursor-pointer group">
-                    <input 
-                      type="checkbox" 
-                      name="emergencyAvailable" 
-                      checked={formData.emergencyAvailable} 
-                      onChange={handleInputChange} 
-                      className="w-4 h-4 text-rose-600 border-gray-300 rounded focus:ring-rose-500 cursor-pointer"
-                    />
-                    <span className="ml-2 text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">24/7 Emergency Available</span>
                   </label>
                 </div>
               </form>
