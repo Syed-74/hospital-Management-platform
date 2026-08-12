@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Button from "../../core/components/ui/Button";
 
-export default function BranchAdminDashboard() {
+export default function BranchOverview() {
   const { user } = useAuth();
 
   // MOCK DATA for visually stunning placeholders until API is fully wired

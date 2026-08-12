@@ -15,10 +15,14 @@ import {
   Hospital,
   Bell,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  Building2,
+  Activity,
+  Package,
+  BarChart3
 } from 'lucide-react';
 
-export default function BranchDashboard() {
+export default function BranchLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -46,19 +50,65 @@ export default function BranchDashboard() {
       requiredPermissions: ['branch:access']
     },
     {
-      category: 'Clinical Administration',
-      icon: Stethoscope,
+      category: 'Organization Management',
+      icon: Building2,
       items: [
-        { name: 'Doctors', href: '/branch/doctors', requiredPermissions: ['doctors:read', 'doctors:manage'] },
-        { name: 'Patients', href: '/branch/patients', requiredPermissions: ['patients:read', 'patients:manage'] },
-        { name: 'Appointments', href: '/branch/appointments', requiredPermissions: ['appointments:read', 'appointments:manage'] }
+        { name: 'Departments', href: '/branch/department', requiredPermissions: ['branch:access'] },
+        { name: 'Rooms', href: '/branch/rooms', requiredPermissions: ['branch:access'] },
+        { name: 'Wards', href: '/branch/wards', requiredPermissions: ['branch:access'] },
+        { name: 'Branch Settings', href: '/branch/settings', requiredPermissions: ['branch:access'] }
       ]
     },
     {
-      category: 'Branch Operations',
-      icon: Settings,
+      category: 'People & Access',
+      icon: Users,
       items: [
-        { name: 'Settings', href: '/branch/settings', requiredPermissions: ['branch_settings:read', 'branch_settings:manage'] }
+        { name: 'Staff', href: '/branch/staff', requiredPermissions: ['branch:access'] },
+        { name: 'Users', href: '/branch/users', requiredPermissions: ['branch:access'] },
+        { name: 'Roles', href: '/branch/roles', requiredPermissions: ['branch:access'] },
+        { name: 'Permissions', href: '/branch/permissions', requiredPermissions: ['branch:access'] }
+      ]
+    },
+    {
+      category: 'Operations Management',
+      icon: Activity,
+      items: [
+        { name: 'Patients', href: '/branch/patients', requiredPermissions: ['branch:access'] },
+        { name: 'Appointments', href: '/branch/appointments', requiredPermissions: ['branch:access'] },
+        { name: 'Admissions', href: '/branch/admissions', requiredPermissions: ['branch:access'] },
+        { name: 'Discharges', href: '/branch/discharges', requiredPermissions: ['branch:access'] },
+        { name: 'Transfers', href: '/branch/transfers', requiredPermissions: ['branch:access'] }
+      ]
+    },
+    {
+      category: 'Clinical Operations',
+      icon: Stethoscope,
+      items: [
+        { name: 'Doctors', href: '/branch/doctors', requiredPermissions: ['branch:access'] },
+        { name: 'Nurses', href: '/branch/nurses', requiredPermissions: ['branch:access'] },
+        { name: 'Medical Records', href: '/branch/medical-records', requiredPermissions: ['branch:access'] },
+        { name: 'Prescriptions', href: '/branch/prescriptions', requiredPermissions: ['branch:access'] },
+        { name: 'Scheduling', href: '/branch/scheduling', requiredPermissions: ['branch:access'] }
+      ]
+    },
+    {
+      category: 'Support Operations',
+      icon: Package,
+      items: [
+        { name: 'Billing', href: '/branch/billing', requiredPermissions: ['branch:access'] },
+        { name: 'Inventory', href: '/branch/inventory', requiredPermissions: ['branch:access'] },
+        { name: 'Pharmacy', href: '/branch/pharmacy', requiredPermissions: ['branch:access'] },
+        { name: 'Laboratory', href: '/branch/laboratory', requiredPermissions: ['branch:access'] },
+        { name: 'Procurement', href: '/branch/procurement', requiredPermissions: ['branch:access'] }
+      ]
+    },
+    {
+      category: 'Reports',
+      icon: BarChart3,
+      items: [
+        { name: 'Operations', href: '/branch/reports/operations', requiredPermissions: ['branch:access'] },
+        { name: 'Financial', href: '/branch/reports/financial', requiredPermissions: ['branch:access'] },
+        { name: 'Clinical', href: '/branch/reports/clinical', requiredPermissions: ['branch:access'] }
       ]
     }
   ];
@@ -69,8 +119,12 @@ export default function BranchDashboard() {
   };
 
   const [expandedCategories, setExpandedCategories] = useState({
-    'Clinical Administration': true,
-    'Branch Operations': false
+    'Organization Management': true,
+    'People & Access': false,
+    'Operations Management': false,
+    'Clinical Operations': false,
+    'Support Operations': false,
+    'Reports': false
   });
 
   const isActive = (path) => location.pathname === path;

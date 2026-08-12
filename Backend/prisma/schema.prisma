@@ -31,51 +31,51 @@ enum RoleScope {
 
 // User Model
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   // Hashed password
+  id        String  @id @default(uuid())
+  email     String  @unique
+  password  String // Hashed password
   firstName String
   lastName  String
-  isActive  Boolean  @default(true)
-  
+  isActive  Boolean @default(true)
+
   // Tenant isolation (optional for Platform Admins)
   hospitalId String?
   hospital   Hospital? @relation(fields: [hospitalId], references: [id])
-  
+
   // A user can have multiple roles in a large enterprise
-  roles     Role[]   @relation("UserRoles")
-  
+  roles Role[] @relation("UserRoles")
+
   // Profile Relations
   hospitalAdmin HospitalAdmin?
   branchAdmin   BranchAdmin?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 // Role Model (e.g., "Doctor", "Admin")
 model Role {
-  id          String       @id @default(uuid())
-  name        String       @unique
+  id          String    @id @default(uuid())
+  name        String    @unique
   description String?
-  scope       RoleScope    @default(TENANT)
-  
-  users       User[]       @relation("UserRoles")
-  roleDashboards RoleDashboard[]
+  scope       RoleScope @default(TENANT)
+
+  users           User[]           @relation("UserRoles")
+  roleDashboards  RoleDashboard[]
   rolePermissions RolePermission[]
-  
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Dashboard Model
 model Dashboard {
-  id    String @id @default(uuid())
-  name  String
-  path  String @unique
-  
+  id   String @id @default(uuid())
+  name String
+  path String @unique
+
   roleDashboards RoleDashboard[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -85,9 +85,9 @@ model RoleDashboard {
   id          String @id @default(uuid())
   roleId      String
   dashboardId String
-  
-  role        Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  dashboard   Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
+
+  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, dashboardId])
 }
@@ -97,251 +97,283 @@ model RolePermission {
   id           String @id @default(uuid())
   roleId       String
   permissionId String
-  
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
 }
 
 model Permission {
-  id          String   @id @default(uuid())
-  action      String   @unique // e.g., "users:create"
+  id          String  @id @default(uuid())
+  action      String  @unique // e.g., "users:create"
   description String?
-  
+
   rolePermissions RolePermission[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Hospital {
-  id                    String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // Basic Information
-  hospitalCode          String   @unique
-  hospitalName          String
-  legalName             String?
-  hospitalType          String      // General, Multi-Speciality, Clinic, Diagnostic, Dental
-  ownershipType         String?     // Private, Government, Trust, NGO
+  hospitalCode  String  @unique
+  hospitalName  String
+  legalName     String?
+  hospitalType  String // General, Multi-Speciality, Clinic, Diagnostic, Dental
+  ownershipType String? // Private, Government, Trust, NGO
 
   // Contact Information
-  email                 String   @unique
-  phone                 String
-  alternatePhone        String?
+  email          String  @unique
+  phone          String
+  alternatePhone String?
 
   // Address
-  addressLine1          String
-  addressLine2          String?
-  city                  String
-  state                 String
-  country               String
-  postalCode            String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String
+  postalCode   String
 
   // Registration
-  registrationNumber    String?  @unique
-  taxNumber             String?
-  licenseNumber         String?
-  accreditation         String?  // NABH, JCI, ISO
+  registrationNumber String? @unique
+  taxNumber          String?
+  licenseNumber      String?
+  accreditation      String? // NABH, JCI, ISO
 
   // Branding
-  logo                  String?
-  website               String?
+  logo    String?
+  website String?
 
   // Timezone
-  timezone              String   @default("Asia/Kolkata")
-  currency              String   @default("INR")
-
+  timezone String @default("Asia/Kolkata")
+  currency String @default("INR")
 
   // Status
-  isActive              Boolean  @default(true)
-  isDeleted             Boolean  @default(false)
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
 
-  users                 User[]
-  hospitalTheme         HospitalTheme?
-  branches              BranchManage[]
-  branchAdmins          BranchAdmin[]
+  users         User[]
+  hospitalTheme HospitalTheme?
+  branches      BranchManage[]
+  branchAdmins  BranchAdmin[]
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  manageDepartments ManageDepartment[]
 }
 
 model HospitalAdmin {
-  id                    String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // Link to Global Identity
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Identity
-  employeeCode          String?  @unique
-  middleName            String?
-  displayName           String?
+  employeeCode String? @unique
+  middleName   String?
+  displayName  String?
 
   // Contact
-  phone                 String
-  alternatePhone        String?
-  profileImageUrl       String?
+  phone           String
+  alternatePhone  String?
+  profileImageUrl String?
 
   // Account Status
-  status                AccountStatus @default(PENDING)
-  isEmailVerified       Boolean  @default(false)
-  isPhoneVerified       Boolean  @default(false)
+  status          AccountStatus @default(PENDING)
+  isEmailVerified Boolean       @default(false)
+  isPhoneVerified Boolean       @default(false)
 
   // Login Security
-  lastLoginAt           DateTime?
-  lastLoginIp           String?
-  failedLoginAttempts   Int       @default(0)
-  lockedUntil           DateTime?
+  lastLoginAt         DateTime?
+  lastLoginIp         String?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
 
   // MFA
-  mfaEnabled            Boolean   @default(false)
+  mfaEnabled Boolean @default(false)
 
   // Audit
-  createdBy             String?
-  updatedBy             String?
+  createdBy String?
+  updatedBy String?
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model HospitalTheme {
-  id                  String   @id @default(cuid())
+  id String @id @default(cuid())
 
   // Relationship
-  hospitalId          String   @unique
-  hospital            Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  hospitalId String   @unique
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
   // Branding
-  hospitalLogo        String?
-  favicon             String?
-  loginBackground     String?
+  hospitalLogo    String?
+  favicon         String?
+  loginBackground String?
 
   // Theme Colors
-  primaryColor        String   @default("#2563EB")
-  secondaryColor      String   @default("#1E40AF")
-  accentColor         String   @default("#10B981")
-  sidebarColor        String   @default("#FFFFFF")
-  sidebarTextColor    String   @default("#1F2937")
-  headerColor         String   @default("#FFFFFF")
-  headerTextColor     String   @default("#111827")
-  backgroundColor     String   @default("#F8FAFC")
-  cardColor           String   @default("#FFFFFF")
-  borderColor         String   @default("#E5E7EB")
-  buttonColor         String   @default("#2563EB")
-  buttonTextColor     String   @default("#FFFFFF")
-  linkColor           String   @default("#2563EB")
-  successColor        String   @default("#22C55E")
-  warningColor        String   @default("#F59E0B")
-  errorColor          String   @default("#EF4444")
+  primaryColor     String @default("#2563EB")
+  secondaryColor   String @default("#1E40AF")
+  accentColor      String @default("#10B981")
+  sidebarColor     String @default("#FFFFFF")
+  sidebarTextColor String @default("#1F2937")
+  headerColor      String @default("#FFFFFF")
+  headerTextColor  String @default("#111827")
+  backgroundColor  String @default("#F8FAFC")
+  cardColor        String @default("#FFFFFF")
+  borderColor      String @default("#E5E7EB")
+  buttonColor      String @default("#2563EB")
+  buttonTextColor  String @default("#FFFFFF")
+  linkColor        String @default("#2563EB")
+  successColor     String @default("#22C55E")
+  warningColor     String @default("#F59E0B")
+  errorColor       String @default("#EF4444")
 
   // Typography
-  fontFamily          String   @default("Inter")
-  fontSize            String   @default("medium")
+  fontFamily String @default("Inter")
+  fontSize   String @default("medium")
 
   // Theme Settings
-  themeMode           String   @default("light") // light | dark | auto
-  borderRadius        String   @default("8px")
+  themeMode    String @default("light") // light | dark | auto
+  borderRadius String @default("8px")
 
   // Features
-  showHospitalLogo    Boolean  @default(true)
-  showHospitalName    Boolean  @default(true)
-  enableAnimations    Boolean  @default(true)
+  showHospitalLogo Boolean @default(true)
+  showHospitalName Boolean @default(true)
+  enableAnimations Boolean @default(true)
 
   // Audit
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BranchManage {
-  id                    String   @id @default(cuid())
-  hospitalId            String
-  hospital              Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  
+  id         String   @id @default(cuid())
+  hospitalId String
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
   // Basic Info
-  branchName            String
-  branchCode            String   @unique // Unique code per branch (e.g. OWAISI-SEC-01)
-  isMainBranch          Boolean  @default(false)
+  branchName   String
+  branchCode   String  @unique // Unique code per branch (e.g. OWAISI-SEC-01)
+  isMainBranch Boolean @default(false)
 
   // Contact Info
-  email                 String
-  phone                 String
-  alternatePhone        String?
+  email          String
+  phone          String
+  alternatePhone String?
 
   // Address
-  addressLine1          String
-  addressLine2          String?
-  city                  String
-  state                 String
-  country               String
-  postalCode            String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  country      String
+  postalCode   String
 
   // Localization
-  timezone              String   @default("Asia/Kolkata")
-  currency              String   @default("INR")
+  timezone String @default("Asia/Kolkata")
+  currency String @default("INR")
 
   // Regulatory & Auditing
-  licenseNumber         String?
-  isActive              Boolean  @default(true)
+  licenseNumber String?
+  isActive      Boolean @default(true)
 
-  branchAdmins          BranchAdmin[]
+  branchAdmins BranchAdmin[]
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  manageDepartments ManageDepartment[]
 }
 
 model BranchAdmin {
-  id                    String   @id @default(cuid())
+  id                   String        @id @default(cuid())
   // Link to Global Identity
-  userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String        @unique
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Personal Information
-  firstName             String
-  middleName            String?
-  lastName              String
-  fullName              String?
-  employeeId            String?  @unique
-  profilePhoto          String?
-  gender                String?
-  dateOfBirth           DateTime?
+  firstName            String
+  middleName           String?
+  lastName             String
+  fullName             String?
+  employeeId           String?       @unique
+  profilePhoto         String?
+  gender               String?
+  dateOfBirth          DateTime?
   // Contact Information
-  email                 String   @unique
-  phoneNumber           String?
-  alternatePhoneNumber  String?
+  email                String        @unique
+  phoneNumber          String?
+  alternatePhoneNumber String?
   // Organization
-  hospitalId            String
-  hospital              Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  branchId              String
-  branch                BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  departmentId          String?
-  designation           String?
-  reportingManagerId    String?
+  hospitalId           String
+  hospital             Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId             String
+  branch               BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  departmentId         String?
+  designation          String?
+  reportingManagerId   String?
   // Role & Permission
-  roleId                String?
-  permissions           String[] 
-  accessLevel           String?
-  isSuperBranchAdmin    Boolean  @default(false)
+  roleId               String?
+  permissions          String[]
+  accessLevel          String?
+  isSuperBranchAdmin   Boolean       @default(false)
   // Address
-  addressLine1          String?
-  addressLine2          String?
-  city                  String?
-  state                 String?
-  country               String?
-  postalCode            String?
-  // Status
-  status                String   @default("Active")
-  accountStatus         AccountStatus @default(PENDING)
-  joiningDate           DateTime?
-  relievingDate         DateTime?
+  addressLine1         String?
+  addressLine2         String?
+  city                 String?
+  state                String?
+  country              String?
+  postalCode           String?
+  status               String        @default("Active")
+  accountStatus        AccountStatus @default(PENDING)
+  joiningDate          DateTime?
+  relievingDate        DateTime?
   // Security
-  twoFactorEnabled      Boolean  @default(false)
-  passwordChangedAt     DateTime?
-  failedLoginAttempts   Int      @default(0)
-  accountLockedUntil    DateTime?
+  twoFactorEnabled     Boolean       @default(false)
+  passwordChangedAt    DateTime?
+  failedLoginAttempts  Int           @default(0)
+  accountLockedUntil   DateTime?
   // Audit
-  createdBy             String?
-  updatedBy             String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  deletedAt             DateTime?
+  createdBy            String?
+  updatedBy            String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  deletedAt            DateTime?
+}
+
+model ManageDepartment {
+  id String @id @default(cuid())
+
+  // Relations
+  hospitalId String
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  // Important Core Attributes
+  departmentName String
+  departmentCode String @unique
+  departmentType String // e.g., Clinical, Non-Clinical, Administrative
+
+  // Optional but useful attributes
+  description      String? // Optional: Details about the department
+  location         String? // Optional: Floor, Wing, or Building
+  headOfDepartment String? // Optional: Name or ID of the HOD
+  contactNumber    String? // Optional: Direct extension or phone
+
+  // Status and Flags
+  isActive           Boolean @default(true) // Replaces generic 'status String'
+  emergencyAvailable Boolean @default(false)
+
+  // Audit and Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([hospitalId, branchId, departmentName])
 }

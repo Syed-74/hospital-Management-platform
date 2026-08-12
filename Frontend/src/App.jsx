@@ -24,10 +24,35 @@ import { ThemeProvider } from './core/context/ThemeProvider';
 import ManageBranch from './modules/HospitalAdmin/ManageBranch';
 import Permission from './modules/auth/Permission';
 import ManageBranchAdmin from './modules/HospitalAdmin/ManageBranchAdmin';
-import BranchAdminDashboard from './modules/BranchAdmin/branchAdminDashboard';
-import BranchDashboard from './modules/BranchAdmin/BranchDashboard';
+import BranchOverview from './modules/BranchAdmin/BranchOverview';
+import BranchLayout from './modules/BranchAdmin/BranchLayout';
 import { Outlet } from 'react-router-dom';
-
+import ManageDepartments from './modules/BranchAdmin/ManageDepartments';
+import ManageRooms from './modules/BranchAdmin/ManageRooms';
+import ManageWards from './modules/BranchAdmin/ManageWards';
+import BranchSettings from './modules/BranchAdmin/BranchSettings';
+import ManageStaff from './modules/BranchAdmin/ManageStaff';
+import ManageUsers from './modules/BranchAdmin/ManageUsers';
+import ManageRoles from './modules/BranchAdmin/ManageRoles';
+import ManagePermissions from './modules/BranchAdmin/ManagePermissions';
+import ManagePatients from './modules/BranchAdmin/ManagePatients';
+import ManageAppointments from './modules/BranchAdmin/ManageAppointments';
+import ManageAdmissions from './modules/BranchAdmin/ManageAdmissions';
+import ManageDischarges from './modules/BranchAdmin/ManageDischarges';
+import ManageTransfers from './modules/BranchAdmin/ManageTransfers';
+import ManageDoctors from './modules/BranchAdmin/ManageDoctors';
+import ManageNurses from './modules/BranchAdmin/ManageNurses';
+import ManageMedicalRecords from './modules/BranchAdmin/ManageMedicalRecords';
+import ManagePrescriptions from './modules/BranchAdmin/ManagePrescriptions';
+import ClinicalScheduling from './modules/BranchAdmin/ClinicalScheduling';
+import ManageBilling from './modules/BranchAdmin/ManageBilling';
+import ManageInventory from './modules/BranchAdmin/ManageInventory';
+import ManagePharmacy from './modules/BranchAdmin/ManagePharmacy';
+import ManageLaboratory from './modules/BranchAdmin/ManageLaboratory';
+import ManageProcurement from './modules/BranchAdmin/ManageProcurement';
+import OperationsReports from './modules/BranchAdmin/OperationsReports';
+import FinancialReports from './modules/BranchAdmin/FinancialReports';
+import ClinicalReports from './modules/BranchAdmin/ClinicalReports';
 const RootRedirect = () => {
   const { user, token, loading } = useAuth();
   if (loading) return null;
@@ -105,13 +130,51 @@ function App() {
             element={
               <ProtectedRoute requiredPermissions={['branch:access']}>
                 <ThemeProvider>
-                  <BranchDashboard />
+                  <BranchLayout />
                 </ThemeProvider>
               </ProtectedRoute>
             } 
           >
             <Route index element={<Navigate to="/branch/dashboard" replace />} />
-            <Route path="dashboard" element={<BranchAdminDashboard />} />
+            <Route path="dashboard" element={<BranchOverview />} />
+            
+            {/* Organization Management */}
+            <Route path="department" element={<ManageDepartments />} />
+            <Route path="rooms" element={<ManageRooms />} />
+            <Route path="wards" element={<ManageWards />} />
+            <Route path="settings" element={<BranchSettings />} />
+            
+            {/* People & Access Management */}
+            <Route path="staff" element={<ManageStaff />} />
+            <Route path="users" element={<ManageUsers />} />
+            <Route path="roles" element={<ManageRoles />} />
+            <Route path="permissions" element={<ManagePermissions />} />
+            
+            {/* Operations Management */}
+            <Route path="patients" element={<ManagePatients />} />
+            <Route path="appointments" element={<ManageAppointments />} />
+            <Route path="admissions" element={<ManageAdmissions />} />
+            <Route path="discharges" element={<ManageDischarges />} />
+            <Route path="transfers" element={<ManageTransfers />} />
+            
+            {/* Clinical Operations */}
+            <Route path="doctors" element={<ManageDoctors />} />
+            <Route path="nurses" element={<ManageNurses />} />
+            <Route path="medical-records" element={<ManageMedicalRecords />} />
+            <Route path="prescriptions" element={<ManagePrescriptions />} />
+            <Route path="scheduling" element={<ClinicalScheduling />} />
+            
+            {/* Support Operations */}
+            <Route path="billing" element={<ManageBilling />} />
+            <Route path="inventory" element={<ManageInventory />} />
+            <Route path="pharmacy" element={<ManagePharmacy />} />
+            <Route path="laboratory" element={<ManageLaboratory />} />
+            <Route path="procurement" element={<ManageProcurement />} />
+            
+            {/* Reports */}
+            <Route path="reports/operations" element={<OperationsReports />} />
+            <Route path="reports/financial" element={<FinancialReports />} />
+            <Route path="reports/clinical" element={<ClinicalReports />} />
           </Route>
 
           {/* Default Redirection Route */}

@@ -20,6 +20,7 @@ import hospitalThemeRoutes from "./modules/hospitalTheme/hospitalTheme.routes.js
 import branchRoutes from "./modules/BranchManagement/branch.routes.js";
 import branchAdminRoutes from "./modules/ManageBranchAdmin/branchAdmin.routes.js";
 import dashboardsRoutes from "./modules/dashboards/dashboards.routes.js";
+import departmentRoutes from "./modules/ManageDepartments/department.routes.js";
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use("/api/v1/hospital-themes", hospitalThemeRoutes);
 app.use("/api/v1/branches", branchRoutes);
 app.use("/api/v1/branch-admins", branchAdminRoutes);
 app.use("/api/v1/dashboards", dashboardsRoutes);
+app.use("/api/v1/department", departmentRoutes);
 
 // Define other routes here...
 // app.use("/api/v1/users", userRoutes);
