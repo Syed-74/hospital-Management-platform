@@ -53,7 +53,7 @@ export default function BranchLayout() {
       category: 'Organization Management',
       icon: Building2,
       items: [
-        { name: 'Departments', href: '/branch/department', requiredPermissions: ['branch:access'] },
+        { name: 'Departments & Fee', href: '/branch/department', requiredPermissions: ['branch:access'] },
         { name: 'Rooms', href: '/branch/rooms', requiredPermissions: ['branch:access'] },
         { name: 'Wards', href: '/branch/wards', requiredPermissions: ['branch:access'] },
         { name: 'Branch Settings', href: '/branch/settings', requiredPermissions: ['branch:access'] }

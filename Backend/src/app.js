@@ -27,7 +27,7 @@ const app = express();
 // ==========================================
 // GLOBAL MIDDLEWARES
 // ==========================================
-app.use(helmet()); // Security headers
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } })); // Security headers (modified to allow static images)
 app.use(
   cors({
     origin: function (origin, callback) {

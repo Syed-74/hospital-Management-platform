@@ -256,9 +256,9 @@ export default function Permission({ mode = "tenant" }) {
       group: "Hospital Administration & Operations",
       label: "Organizational Structure",
       read: "departments:read",
-      create: "departments:manage",
-      update: "departments:manage",
-      delete: "departments:manage",
+      create: "departments:create",
+      update: "departments:update",
+      delete: "departments:delete",
       description: "Manage departments, specialties, and service catalog.",
       scopes: ["TENANT"]
     },
@@ -455,10 +455,10 @@ export default function Permission({ mode = "tenant" }) {
     {
       group: "Branch Administration & Operations",
       label: "Branch Departments & Services",
-      read: "branch_departments:read",
-      create: "branch_departments:manage",
-      update: "branch_departments:manage",
-      delete: "branch_departments:manage",
+      read: "departments:read",
+      create: "departments:create",
+      update: "departments:update",
+      delete: "departments:delete",
       description: "Manage local branch departments and services.",
       scopes: ["BRANCH"]
     },

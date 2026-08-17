@@ -2,10 +2,19 @@ import { prisma } from "../../config/db.js";
 
 export default class DepartmentService {
     static async createDepartment(data) {
-        const department = await prisma.manageDepartment.create({
-            data
-        });
-        return department;
+        try {
+            const department = await prisma.manageDepartment.create({
+                data
+            });
+            return department;
+        } catch (error) {
+            if (error.code === 'P2002') {
+                const err = new Error("A department with this code already exists.");
+                err.statusCode = 400;
+                throw err;
+            }
+            throw error;
+        }
     }
 
     static async getAllDepartments() {
@@ -23,13 +32,20 @@ export default class DepartmentService {
     }
 
     static async updateDepartment(id, data) {
-        const department = await prisma.manageDepartment.update({
-            where: {
-                id
-            },
-            data
-        });
-        return department;
+        try {
+            const department = await prisma.manageDepartment.update({
+                where: { id },
+                data
+            });
+            return department;
+        } catch (error) {
+            if (error.code === 'P2002') {
+                const err = new Error("A department with this code already exists.");
+                err.statusCode = 400;
+                throw err;
+            }
+            throw error;
+        }
     }
 
     static async deleteDepartment(id) {

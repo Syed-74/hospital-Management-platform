@@ -408,11 +408,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const createDepartment = async () =>{
+  const createDepartment = async (departmentData) =>{
     try {
-      const response = await axios.post("/department/create");
-      if(response.data.status === "success"){
-        return {success: true, data: response.data.data.department}
+      const response = await axios.post("/department/create", departmentData);
+      if(response.data.success){
+        return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to create department"}
     } catch (error) {
@@ -422,9 +422,9 @@ export const AuthProvider = ({ children }) => {
 
   const getallDepartment = async () =>{
     try {
-      const response = await axios.get("/department/all");
-      if(response.data.status === "success"){
-        return {success: true, data: response.data.data.departments || response.data.data}
+      const response = await axios.get("/department");
+      if(response.data.success){
+        return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to fetch departments"}
     } catch (error) {
@@ -435,8 +435,8 @@ export const AuthProvider = ({ children }) => {
   const getdepartmentById = async (id) =>{
     try {
       const response = await axios.get(`/department/${id}`);
-      if(response.data.status === "success"){
-        return {success: true, data: response.data.data.department}
+      if(response.data.success){
+        return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to fetch department"}
     } catch (error) {
@@ -447,8 +447,8 @@ export const AuthProvider = ({ children }) => {
   const updateDepartment = async (id, data) =>{ 
     try {
       const response = await axios.put(`/department/${id}`,data);
-      if(response.data.status === "success"){
-        return {success: true, data: response.data.data.department}
+      if(response.data.success){
+        return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to update department"}
     } catch (error) {
@@ -459,8 +459,8 @@ export const AuthProvider = ({ children }) => {
   const deleteDepartment = async (id) =>{
     try {
       const response = await axios.delete(`/department/${id}`);
-      if(response.data.status === "success"){
-        return {success: true, data: response.data.data.department}
+      if(response.data.success){
+        return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to delete department"}
     } catch (error) {
