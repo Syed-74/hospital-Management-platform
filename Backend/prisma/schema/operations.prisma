@@ -6,6 +6,7 @@ model ManageDepartment {
   hospital           Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   branchId           String
   branch             BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  manageFees         ManageFee[]
   
   // Important Core Attributes
   departmentName     String
@@ -23,4 +24,36 @@ model ManageDepartment {
   deletedAt          DateTime?
 
   @@unique([hospitalId, branchId, departmentName])
+}
+
+model ManageFee {
+  id                 String       @id @default(cuid())
+  
+  // Relations
+  hospitalId         String
+  hospital           Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId           String
+  branch             BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  departmentId       String
+  department         ManageDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  
+  // Important Core Attributes
+  feeName            String
+  feeCode            String
+  amount             Float
+  tax                Float?       @default(0)
+  
+  // Optional but useful attributes
+  description        String?      // Optional: Details about the fee
+  
+  // Status and Flags
+  isActive           Boolean      @default(true) // Replaces generic 'status String'
+  
+  // Audit and Timestamps
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+
+  @@unique([hospitalId, branchId, feeCode])
+  @@unique([hospitalId, branchId, departmentId, feeName])
 }
