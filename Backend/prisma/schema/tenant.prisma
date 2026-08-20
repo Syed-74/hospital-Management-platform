@@ -43,6 +43,7 @@ model Hospital {
   hospitalTheme HospitalTheme?
   branches      BranchManage[]
   branchAdmins  BranchAdmin[]
+  roles         Role[]
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -203,9 +204,11 @@ model BranchAdmin {
   designation          String?
   reportingManagerId   String?
   // Role & Permission
+  // Denormalized "primary role" pointer for display/UX convenience only.
+  // Actual authorization is always derived from User.roles -> RolePermission,
+  // never from this field directly.
   roleId               String?
-  permissions          String[]
-  accessLevel          String?
+  role                 Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
   isSuperBranchAdmin   Boolean       @default(false)
   // Address
   addressLine1         String?

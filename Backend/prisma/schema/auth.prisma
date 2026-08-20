@@ -45,16 +45,24 @@ model User {
 // Role Model (e.g., "Doctor", "Admin")
 model Role {
   id          String    @id @default(uuid())
-  name        String    @unique
+  name        String
   description String?
   scope       RoleScope @default(TENANT)
+
+  // Tenant isolation: null = GLOBAL/platform-shared role template.
+  // TENANT/BRANCH roles created by a hospital are private to that hospital.
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
   users           User[]           @relation("UserRoles")
   roleDashboards  RoleDashboard[]
   rolePermissions RolePermission[]
+  branchAdmins    BranchAdmin[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, name])
 }
 
 // Dashboard Model
@@ -97,6 +105,7 @@ model Permission {
   id          String  @id @default(uuid())
   action      String  @unique // e.g., "users:create"
   description String?
+  module      String? // UI grouping label, e.g. "Branch Administration"
 
   rolePermissions RolePermission[]
 
