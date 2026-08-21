@@ -254,13 +254,23 @@ export default function Permission({ mode = "tenant" }) {
     },
     {
       group: "Hospital Administration & Operations",
-      label: "Organizational Structure",
+      label: "Manage Departments",
       read: "departments:read",
       create: "departments:create",
       update: "departments:update",
       delete: "departments:delete",
       description: "Manage departments, specialties, and service catalog.",
-      scopes: ["TENANT"]
+      scopes: ["TENANT", "BRANCH"]
+    },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Department Fees",
+      read: "fees:read",
+      create: "fees:create",
+      update: "fees:update",
+      delete: "fees:delete",
+      description: "Manage pricing, consultation, and operational fees per department.",
+      scopes: ["TENANT", "BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",

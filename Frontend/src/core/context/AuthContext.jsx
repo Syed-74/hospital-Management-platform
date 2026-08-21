@@ -411,7 +411,7 @@ export const AuthProvider = ({ children }) => {
   const createDepartment = async (departmentData) =>{
     try {
       const response = await axios.post("/department/create", departmentData);
-      if(response.data.success){
+      if(response.data.status === "success"){
         return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to create department"}
@@ -423,7 +423,7 @@ export const AuthProvider = ({ children }) => {
   const getallDepartment = async () =>{
     try {
       const response = await axios.get("/department");
-      if(response.data.success){
+      if(response.data.status === "success"){
         return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to fetch departments"}
@@ -435,7 +435,7 @@ export const AuthProvider = ({ children }) => {
   const getdepartmentById = async (id) =>{
     try {
       const response = await axios.get(`/department/${id}`);
-      if(response.data.success){
+      if(response.data.status === "success"){
         return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to fetch department"}
@@ -447,7 +447,7 @@ export const AuthProvider = ({ children }) => {
   const updateDepartment = async (id, data) =>{ 
     try {
       const response = await axios.put(`/department/${id}`,data);
-      if(response.data.success){
+      if(response.data.status === "success"){
         return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to update department"}
@@ -459,12 +459,72 @@ export const AuthProvider = ({ children }) => {
   const deleteDepartment = async (id) =>{
     try {
       const response = await axios.delete(`/department/${id}`);
-      if(response.data.success){
+      if(response.data.status === "success"){
         return {success: true, data: response.data.data}
       }
       return {success: false, message: response.data.message || "Failed to delete department"}
     } catch (error) {
       return {success: false, message: error.response?.data?.message || "Failed to delete department"}
+    }
+  }
+
+  const createfee = async (data) =>{
+    try{
+      const response = await axios.post("/fees",data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create fee"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create fee"}
+    }
+  }
+
+  const getAllFees = async () =>{
+    try{
+      const response = await axios.get("/fees");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch fees"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch fees"}
+    }
+  }
+
+  const getFeeById = async (id) =>{
+    try{
+      const response = await axios.get(`/fees/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch fee"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch fee"}
+    }
+  }
+  
+  const updatefee = async (id,data)=>{
+    try{
+      const response = await axios.put(`/fees/${id}`,data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update fee"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update fee"}
+    }
+  }
+
+  const deletefee = async (id) =>{
+    try{
+      const response = await axios.delete(`/fees/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete fee"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete fee"}
     }
   }
 
@@ -509,7 +569,12 @@ export const AuthProvider = ({ children }) => {
     getallDepartment,
     getdepartmentById,
     updateDepartment,
-    deleteDepartment
+    deleteDepartment,
+    createfee,
+    getAllFees,
+    getFeeById,
+    updatefee,
+    deletefee
   };
 
   return (

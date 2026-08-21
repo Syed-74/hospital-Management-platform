@@ -7,12 +7,18 @@ import {
     deleteDepartment 
 } from "./department.controllers.js";
 
+import { protect } from "../../middlewares/auth.middleware.js";
+import { requirePermission } from "../../middlewares/rbac.middleware.js";
+
 const router = Router();
 
-router.post("/create", createDepartment);
-router.get("/", getDepartments);
-router.get("/:id", getDepartmentById);
-router.put("/:id", updateDepartment);
-router.delete("/:id", deleteDepartment);
+// Protect all routes in this router
+router.use(protect);
+
+router.post("/create", requirePermission("departments:create"), createDepartment);
+router.get("/", requirePermission("departments:read"), getDepartments);
+router.get("/:id", requirePermission("departments:read"), getDepartmentById);
+router.put("/:id", requirePermission("departments:update"), updateDepartment);
+router.delete("/:id", requirePermission("departments:delete"), deleteDepartment);
 
 export default router;

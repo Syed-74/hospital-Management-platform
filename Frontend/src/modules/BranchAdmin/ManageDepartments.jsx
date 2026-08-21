@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../../core/context/AuthContext";
 import { 
   Plus, Search, Edit2, Trash2, Building2, 
-  MapPin, Phone, AlertCircle, CheckCircle, XCircle, CreditCard
+  AlertCircle, CheckCircle, XCircle, CreditCard
 } from "lucide-react";
 import Button from "../../core/components/ui/Button";
 import Input from "../../core/components/ui/Input";
@@ -13,37 +13,37 @@ export default function ManageDepartments() {
     getallDepartment, 
     createDepartment, 
     updateDepartment, 
-    deleteDepartment 
+    deleteDepartment,
+    createfee,
+    getAllFees,
+    updatefee,
+    deletefee
   } = useAuth();
 
   const [activeTab, setActiveTab] = useState("departments");
 
+  // Departments State
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Modal State for Departments
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Form State for Departments
   const defaultFormData = {
     departmentName: "",
     departmentCode: "",
     description: "",
     isActive: true
   };
-  
   const [formData, setFormData] = useState(defaultFormData);
 
-  // Mock Fees State
-  const [fees, setFees] = useState([
-    { id: '1', departmentId: 'placeholder1', departmentName: 'Cardiology', feeName: 'First Consultation', amount: 500, tax: 0, isActive: true, description: 'Initial visit fee' }
-  ]);
+  // Fees State
+  const [fees, setFees] = useState([]);
   const [feeSearchTerm, setFeeSearchTerm] = useState("");
   const [isFeeModalOpen, setIsFeeModalOpen] = useState(false);
   const [isEditingFee, setIsEditingFee] = useState(false);
@@ -51,6 +51,7 @@ export default function ManageDepartments() {
   
   const defaultFeeData = {
     departmentId: "",
+    feeCode: "",
     feeName: "",
     amount: "",
     tax: 0,
@@ -66,16 +67,22 @@ export default function ManageDepartments() {
     const result = await getallDepartment();
     if (result.success) {
       setDepartments(result.data || []);
-      // Map mock fees if department exists
-      // In a real app we would fetch fees from API here
     } else {
       setError(result.message || "Failed to fetch departments.");
     }
     setLoading(false);
   };
 
+  const fetchFees = async () => {
+    const result = await getAllFees();
+    if (result.success) {
+      setFees(result.data?.fees || []);
+    }
+  };
+
   useEffect(() => {
     fetchDepartments();
+    fetchFees();
   }, []);
 
   // Department Handlers
@@ -179,6 +186,7 @@ export default function ManageDepartments() {
   const openEditFeeModal = (fee) => {
     setFeeFormData({
       departmentId: fee.departmentId || "",
+      feeCode: fee.feeCode || "",
       feeName: fee.feeName || "",
       amount: fee.amount || "",
       tax: fee.tax || 0,
@@ -197,28 +205,49 @@ export default function ManageDepartments() {
   const handleFeeSubmit = async (e) => {
     e.preventDefault();
     setFormLoading(true);
-    // Mock save
-    const selectedDept = departments.find(d => d.id === feeFormData.departmentId);
-    
-    setTimeout(() => {
-      if (isEditingFee) {
-        setFees(fees.map(f => f.id === currentFeeId ? { ...f, ...feeFormData, departmentName: selectedDept?.departmentName || 'Unknown' } : f));
-        setSuccess("Fee updated successfully.");
-      } else {
-        setFees([...fees, { ...feeFormData, id: Math.random().toString(), departmentName: selectedDept?.departmentName || 'Unknown' }]);
-        setSuccess("Fee created successfully.");
-      }
-      setFormLoading(false);
+    setError("");
+    setSuccess("");
+
+    const payload = {
+      ...feeFormData,
+      amount: parseFloat(feeFormData.amount),
+      tax: parseFloat(feeFormData.tax || 0),
+      hospitalId: user?.hospitalId || user?.branchAdmin?.hospitalId,
+      branchId: user?.branchAdmin?.branchId
+    };
+
+    let result;
+    if (isEditingFee) {
+      result = await updatefee(currentFeeId, payload);
+    } else {
+      result = await createfee(payload);
+    }
+
+    setFormLoading(false);
+
+    if (result.success) {
+      setSuccess("Fee successfully " + (isEditingFee ? 'updated' : 'created') + ".");
       setIsFeeModalOpen(false);
+      fetchFees();
       setTimeout(() => setSuccess(""), 4000);
-    }, 500);
+    } else {
+      setError(result.message || "Failed to " + (isEditingFee ? 'update' : 'create') + " fee.");
+    }
   };
 
-  const handleDeleteFee = (id) => {
+  const handleDeleteFee = async (id) => {
     if (!window.confirm("Are you sure you want to delete this fee?")) return;
-    setFees(fees.filter(f => f.id !== id));
-    setSuccess("Fee deleted successfully.");
-    setTimeout(() => setSuccess(""), 4000);
+    
+    setError("");
+    setSuccess("");
+    const result = await deletefee(id);
+    if (result.success) {
+      setSuccess("Fee successfully deleted.");
+      fetchFees();
+      setTimeout(() => setSuccess(""), 4000);
+    } else {
+      setError(result.message || "Failed to delete fee.");
+    }
   };
 
   // Filters
@@ -227,7 +256,10 @@ export default function ManageDepartments() {
     (d.departmentCode || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredFees = fees.filter(f => 
+  const filteredFees = fees.map(f => {
+    const dept = departments.find(d => d.id === f.departmentId);
+    return { ...f, departmentName: dept ? dept.departmentName : 'Unknown' };
+  }).filter(f => 
     (f.feeName || "").toLowerCase().includes(feeSearchTerm.toLowerCase()) ||
     (f.departmentName || "").toLowerCase().includes(feeSearchTerm.toLowerCase())
   );
@@ -238,9 +270,9 @@ export default function ManageDepartments() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <Building2 className="text-blue-600" /> Manage Departments
+            <Building2 className="text-blue-600" /> Manage Departments & Fees
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Configure clinical and administrative departments for your branch.</p>
+          <p className="text-gray-500 text-sm mt-1">Configure clinical and administrative departments and their associated fees.</p>
         </div>
         {activeTab === 'departments' ? (
           <Button onClick={openCreateModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
@@ -467,12 +499,6 @@ export default function ManageDepartments() {
             </div>
 
             <div className="p-6 overflow-y-auto flex-1">
-              {error && (
-                <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg flex items-center gap-2">
-                  <AlertCircle size={16} shrink={0} /> {error}
-                </div>
-              )}
-
               <form id="departmentForm" onSubmit={handleSubmit} className="space-y-6">
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -587,6 +613,18 @@ export default function ManageDepartments() {
                       value={feeFormData.feeName} 
                       onChange={handleFeeInputChange} 
                       placeholder="e.g., General Consultation"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Fee Code <span className="text-red-500">*</span></label>
+                    <Input 
+                      type="text" 
+                      name="feeCode" 
+                      required 
+                      value={feeFormData.feeCode} 
+                      onChange={handleFeeInputChange} 
+                      placeholder="e.g., CONS-01"
+                      className="uppercase"
                     />
                   </div>
                   <div>
