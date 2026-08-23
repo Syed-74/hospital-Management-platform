@@ -49,6 +49,7 @@ model Hospital {
   updatedAt         DateTime           @updatedAt
   manageDepartments ManageDepartment[]
   manageFees        ManageFee[]
+  departmentTypes   DepartmentType[]
 }
 
 model HospitalAdmin {
@@ -175,6 +176,7 @@ model BranchManage {
   updatedAt         DateTime           @updatedAt
   manageDepartments ManageDepartment[]
   manageFees        ManageFee[]
+  departmentTypes   DepartmentType[]
 }
 
 model BranchAdmin {

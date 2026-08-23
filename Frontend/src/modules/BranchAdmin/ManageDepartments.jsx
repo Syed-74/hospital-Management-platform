@@ -14,13 +14,31 @@ export default function ManageDepartments() {
     createDepartment, 
     updateDepartment, 
     deleteDepartment,
+    createDepartmentType,
+    getAllDepartmentTypes,
+    updateDepartmentType,
+    deleteDepartmentType,
     createfee,
     getAllFees,
     updatefee,
     deletefee
   } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("departments");
+  const [activeTab, setActiveTab] = useState("departmentTypes");
+
+  // Department Types State
+  const [departmentTypes, setDepartmentTypes] = useState([]);
+  const [typeSearchTerm, setTypeSearchTerm] = useState("");
+  const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
+  const [isEditingType, setIsEditingType] = useState(false);
+  const [currentTypeId, setCurrentTypeId] = useState(null);
+  
+  const defaultTypeData = {
+    typeName: "",
+    isRevenueCenter: false,
+    isActive: true
+  };
+  const [typeFormData, setTypeFormData] = useState(defaultTypeData);
 
   // Departments State
   const [departments, setDepartments] = useState([]);
@@ -37,6 +55,7 @@ export default function ManageDepartments() {
   const defaultFormData = {
     departmentName: "",
     departmentCode: "",
+    departmentTypeId: "",
     description: "",
     isActive: true
   };
@@ -61,6 +80,13 @@ export default function ManageDepartments() {
   const [feeFormData, setFeeFormData] = useState(defaultFeeData);
 
   // Fetch Data
+  const fetchDepartmentTypes = async () => {
+    const result = await getAllDepartmentTypes();
+    if (result.success) {
+      setDepartmentTypes(result.data || []);
+    }
+  };
+
   const fetchDepartments = async () => {
     setLoading(true);
     setError("");
@@ -81,9 +107,79 @@ export default function ManageDepartments() {
   };
 
   useEffect(() => {
+    fetchDepartmentTypes();
     fetchDepartments();
     fetchFees();
   }, []);
+
+  // Department Type Handlers
+  const handleTypeInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setTypeFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const openCreateTypeModal = () => {
+    setTypeFormData({...defaultTypeData});
+    setIsEditingType(false);
+    setCurrentTypeId(null);
+    setIsTypeModalOpen(true);
+    setError(""); setSuccess("");
+  };
+
+  const openEditTypeModal = (type) => {
+    setTypeFormData({
+      typeName: type.typeName || "",
+      isRevenueCenter: type.isRevenueCenter || false,
+      isActive: type.isActive !== false
+    });
+    setIsEditingType(true);
+    setCurrentTypeId(type.id);
+    setIsTypeModalOpen(true);
+    setError(""); setSuccess("");
+  };
+
+  const closeTypeModal = () => setIsTypeModalOpen(false);
+
+  const handleTypeSubmit = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setError(""); setSuccess("");
+    
+    const payload = {
+      ...typeFormData,
+      hospitalId: user?.hospitalId || user?.branchAdmin?.hospitalId,
+      branchId: user?.branchAdmin?.branchId
+    };
+
+    let result = isEditingType ? await updateDepartmentType(currentTypeId, payload) : await createDepartmentType(payload);
+    setFormLoading(false);
+
+    if (result.success) {
+      setSuccess("Department Type successfully " + (isEditingType ? 'updated' : 'created') + ".");
+      setIsTypeModalOpen(false);
+      fetchDepartmentTypes();
+      setTimeout(() => setSuccess(""), 4000);
+    } else {
+      setError(result.message || "Failed to " + (isEditingType ? 'update' : 'create') + " department type.");
+    }
+  };
+
+  const handleDeleteType = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this department type?")) return;
+    
+    setError(""); setSuccess("");
+    const result = await deleteDepartmentType(id);
+    if (result.success) {
+      setSuccess("Department Type deleted.");
+      fetchDepartmentTypes();
+      setTimeout(() => setSuccess(""), 4000);
+    } else {
+      setError(result.message || "Failed to delete department type.");
+    }
+  };
 
   // Department Handlers
   const handleInputChange = (e) => {
@@ -107,6 +203,7 @@ export default function ManageDepartments() {
     setFormData({
       departmentName: department.departmentName || "",
       departmentCode: department.departmentCode || "",
+      departmentTypeId: department.departmentTypeId || "",
       description: department.description || "",
       isActive: department.isActive !== false
     });
@@ -251,6 +348,10 @@ export default function ManageDepartments() {
   };
 
   // Filters
+  const filteredDepartmentTypes = departmentTypes.filter(t => 
+    (t.typeName || "").toLowerCase().includes(typeSearchTerm.toLowerCase())
+  );
+
   const filteredDepartments = departments.filter(d => 
     (d.departmentName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
     (d.departmentCode || "").toLowerCase().includes(searchTerm.toLowerCase())
@@ -274,7 +375,11 @@ export default function ManageDepartments() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Configure clinical and administrative departments and their associated fees.</p>
         </div>
-        {activeTab === 'departments' ? (
+        {activeTab === 'departmentTypes' ? (
+          <Button onClick={openCreateTypeModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+            <Plus size={18} /> Add Department Type
+          </Button>
+        ) : activeTab === 'departments' ? (
           <Button onClick={openCreateModal} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
             <Plus size={18} /> Add Department
           </Button>
@@ -286,12 +391,12 @@ export default function ManageDepartments() {
       </div>
 
       {/* Global Feedback */}
-      {error && !isModalOpen && !isFeeModalOpen && (
+      {error && !isModalOpen && !isFeeModalOpen && !isTypeModalOpen && (
         <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 border border-red-100">
           <AlertCircle size={18} /> {error}
         </div>
       )}
-      {success && !isModalOpen && !isFeeModalOpen && (
+      {success && !isModalOpen && !isFeeModalOpen && !isTypeModalOpen && (
         <div className="bg-green-50 text-green-600 p-4 rounded-lg flex items-center gap-2 border border-green-100">
           <CheckCircle size={18} /> {success}
         </div>
@@ -299,6 +404,16 @@ export default function ManageDepartments() {
 
       {/* Tabs */}
       <div className="flex border-b border-gray-200">
+        <button
+          className={"py-3 px-6 text-sm font-medium border-b-2 transition-colors " + (
+            activeTab === 'departmentTypes' 
+            ? "border-blue-600 text-blue-600" 
+            : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+          )}
+          onClick={() => setActiveTab('departmentTypes')}
+        >
+          Department Types
+        </button>
         <button
           className={"py-3 px-6 text-sm font-medium border-b-2 transition-colors " + (
             activeTab === 'departments' 
@@ -330,16 +445,72 @@ export default function ManageDepartments() {
           <input
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-            placeholder={activeTab === 'departments' ? "Search departments by name or code..." : "Search fees by name or department..."}
-            value={activeTab === 'departments' ? searchTerm : feeSearchTerm}
-            onChange={(e) => activeTab === 'departments' ? setSearchTerm(e.target.value) : setFeeSearchTerm(e.target.value)}
+            placeholder={activeTab === 'departmentTypes' ? "Search types..." : activeTab === 'departments' ? "Search departments by name or code..." : "Search fees by name or department..."}
+            value={activeTab === 'departmentTypes' ? typeSearchTerm : activeTab === 'departments' ? searchTerm : feeSearchTerm}
+            onChange={(e) => activeTab === 'departmentTypes' ? setTypeSearchTerm(e.target.value) : activeTab === 'departments' ? setSearchTerm(e.target.value) : setFeeSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {activeTab === 'departments' ? (
+        {activeTab === 'departmentTypes' ? (
+          /* DEPARTMENT TYPES TAB CONTENT */
+          loading ? (
+            <div className="flex flex-col items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+              <p className="text-gray-500 font-medium">Loading...</p>
+            </div>
+          ) : filteredDepartmentTypes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-center px-4">
+              <Building2 size={48} className="text-gray-300 mb-4" />
+              <p className="text-gray-500 font-medium text-lg">No department types found</p>
+              <Button onClick={openCreateTypeModal} className="mt-6 bg-blue-50 text-blue-600 hover:bg-blue-100">
+                Create First Type
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50/80 border-b border-gray-100">
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Type Name</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Revenue Center</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredDepartmentTypes.map((type) => (
+                    <tr key={type.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-6 py-4 font-bold text-gray-900">{type.typeName}</td>
+                      <td className="px-6 py-4">
+                        <span className={"inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium " + (type.isRevenueCenter ? "bg-purple-50 text-purple-700 border border-purple-200" : "bg-gray-100 text-gray-600 border border-gray-200")}>
+                          {type.isRevenueCenter ? 'Yes' : 'No'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={"inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium " + (type.isActive ? "bg-green-50 text-green-700 border border-green-200" : "bg-gray-100 text-gray-600 border border-gray-200")}>
+                          {type.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button onClick={() => openEditTypeModal(type)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg">
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => handleDeleteType(type.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        ) : activeTab === 'departments' ? (
           /* DEPARTMENTS TAB CONTENT */
           loading ? (
             <div className="flex flex-col items-center justify-center h-64">
@@ -375,7 +546,10 @@ export default function ManageDepartments() {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-bold text-gray-900">{dept.departmentName}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">Code: <span className="font-medium text-gray-700">{dept.departmentCode}</span></div>
+                            <div className="flex gap-2 items-center text-xs text-gray-500 mt-0.5">
+                              <span>Code: <span className="font-medium text-gray-700">{dept.departmentCode}</span></span>
+                              <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium text-[10px] uppercase border border-gray-200">{dept.departmentType?.typeName || "Unknown"}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -501,7 +675,7 @@ export default function ManageDepartments() {
             <div className="p-6 overflow-y-auto flex-1">
               <form id="departmentForm" onSubmit={handleSubmit} className="space-y-6">
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department Name <span className="text-red-500">*</span></label>
                     <Input 
@@ -524,6 +698,21 @@ export default function ManageDepartments() {
                       placeholder="e.g., CARD-01"
                       className="uppercase"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Category <span className="text-red-500">*</span></label>
+                    <select 
+                      name="departmentTypeId"
+                      required
+                      value={formData.departmentTypeId}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
+                    >
+                      <option value="" disabled>Select a category</option>
+                      {departmentTypes.map(t => (
+                        <option key={t.id} value={t.id}>{t.typeName}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -599,7 +788,7 @@ export default function ManageDepartments() {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all bg-white"
                     >
                       <option value="" disabled>Select a department</option>
-                      {departments.map(d => (
+                      {departments.filter(d => d.departmentType?.isRevenueCenter).map(d => (
                         <option key={d.id} value={d.id}>{d.departmentName}</option>
                       ))}
                     </select>
@@ -692,6 +881,46 @@ export default function ManageDepartments() {
               </Button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Create / Edit Department Type Modal */}
+      {isTypeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" onClick={closeTypeModal}></div>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg z-10 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Building2 className="text-blue-600" size={20} />
+                {isEditingType ? "Edit Department Type" : "Add Department Type"}
+              </h3>
+              <button onClick={closeTypeModal} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+                <XCircle size={24} />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto">
+              <form id="typeForm" onSubmit={handleTypeSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Type Name <span className="text-red-500">*</span></label>
+                  <Input type="text" name="typeName" required value={typeFormData.typeName} onChange={handleTypeInputChange} placeholder="e.g., Clinical, Pharmacy" />
+                </div>
+                <div className="flex gap-8 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                  <label className="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="isRevenueCenter" checked={typeFormData.isRevenueCenter} onChange={handleTypeInputChange} className="w-4 h-4 text-blue-600 rounded" />
+                    <span className="ml-2 text-sm font-semibold text-gray-700">Revenue Center (Can add fees)</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="isActive" checked={typeFormData.isActive} onChange={handleTypeInputChange} className="w-4 h-4 text-blue-600 rounded" />
+                    <span className="ml-2 text-sm font-semibold text-gray-700">Active</span>
+                  </label>
+                </div>
+              </form>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50/50">
+              <Button type="button" variant="outline" onClick={closeTypeModal} className="px-5">Cancel</Button>
+              <Button type="submit" form="typeForm" disabled={formLoading} className="px-5 bg-blue-600 text-white">{formLoading ? "Saving..." : "Save Changes"}</Button>
+            </div>
           </div>
         </div>
       )}

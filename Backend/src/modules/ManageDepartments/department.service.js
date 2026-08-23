@@ -18,7 +18,11 @@ export default class DepartmentService {
     }
 
     static async getAllDepartments() {
-        const departments = await prisma.manageDepartment.findMany();
+        const departments = await prisma.manageDepartment.findMany({
+            include: {
+                departmentType: true
+            }
+        });
         return departments;
     }
 
@@ -26,6 +30,9 @@ export default class DepartmentService {
         const department = await prisma.manageDepartment.findUnique({
             where: {
                 id
+            },
+            include: {
+                departmentType: true
             }
         });
         return department;

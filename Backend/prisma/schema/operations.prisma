@@ -1,58 +1,81 @@
-model ManageDepartment {
-  id                 String       @id @default(cuid())
-  
+model DepartmentType {
+  id String @id @default(cuid())
+
   // Relations
-  hospitalId         String
-  hospital           Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  branchId           String
-  branch             BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  manageFees         ManageFee[]
-  
+  hospitalId String
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  typeName        String
+  isRevenueCenter Boolean @default(false)
+  isActive        Boolean @default(true)
+
+  departments ManageDepartment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, branchId, typeName])
+}
+
+model ManageDepartment {
+  id String @id @default(cuid())
+
+  // Relations
+  hospitalId String
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  manageFees ManageFee[]
+
   // Important Core Attributes
-  departmentName     String
-  departmentCode     String       @unique
-  
+  departmentName   String
+  departmentCode   String          @unique
+  departmentTypeId String?
+  departmentType   DepartmentType? @relation(fields: [departmentTypeId], references: [id], onDelete: SetNull)
+
   // Optional but useful attributes
-  description        String?      // Optional: Details about the department
-  
+  description String? // Optional: Details about the department
+
   // Status and Flags
-  isActive           Boolean      @default(true) // Replaces generic 'status String'
-  
+  isActive Boolean @default(true) // Replaces generic 'status String'
+
   // Audit and Timestamps
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  deletedAt          DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([hospitalId, branchId, departmentName])
 }
 
 model ManageFee {
-  id                 String       @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Relations
-  hospitalId         String
-  hospital           Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  branchId           String
-  branch             BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  departmentId       String
-  department         ManageDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  
+  hospitalId   String
+  hospital     Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       BranchManage     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   ManageDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
   // Important Core Attributes
-  feeName            String
-  feeCode            String
-  amount             Float
-  tax                Float?       @default(0)
-  
+  feeName String
+  feeCode String
+  amount  Float
+  tax     Float? @default(0)
+
   // Optional but useful attributes
-  description        String?      // Optional: Details about the fee
-  
+  description String? // Optional: Details about the fee
+
   // Status and Flags
-  isActive           Boolean      @default(true) // Replaces generic 'status String'
-  
+  isActive Boolean @default(true) // Replaces generic 'status String'
+
   // Audit and Timestamps
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  deletedAt          DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   @@unique([hospitalId, branchId, feeCode])
   @@unique([hospitalId, branchId, departmentId, feeName])

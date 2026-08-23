@@ -468,6 +468,54 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const createDepartmentType = async (data) =>{
+    try {
+      const response = await axios.post("/department-types/create", data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create department type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create department type"}
+    }
+  }
+
+  const getAllDepartmentTypes = async () =>{
+    try {
+      const response = await axios.get("/department-types");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch department types"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch department types"}
+    }
+  }
+
+  const updateDepartmentType = async (id, data) =>{ 
+    try {
+      const response = await axios.put(`/department-types/${id}`, data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update department type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update department type"}
+    }
+  }
+
+  const deleteDepartmentType = async (id) =>{
+    try {
+      const response = await axios.delete(`/department-types/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete department type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete department type"}
+    }
+  }
+
   const createfee = async (data) =>{
     try{
       const response = await axios.post("/fees",data);
@@ -570,6 +618,10 @@ export const AuthProvider = ({ children }) => {
     getdepartmentById,
     updateDepartment,
     deleteDepartment,
+    createDepartmentType,
+    getAllDepartmentTypes,
+    updateDepartmentType,
+    deleteDepartmentType,
     createfee,
     getAllFees,
     getFeeById,
