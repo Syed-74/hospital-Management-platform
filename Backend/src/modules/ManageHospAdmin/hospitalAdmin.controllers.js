@@ -1,5 +1,4 @@
 import catchAsync from "../../utils/catchAsync.js";
-import AppError from "../../utils/AppError.js";
 import HospitalAdminService from "./hospitalAdmin.service.js";
 
 const hospitalAdminService = new HospitalAdminService();

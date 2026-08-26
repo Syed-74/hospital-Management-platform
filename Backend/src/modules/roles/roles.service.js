@@ -3,20 +3,36 @@ import AppError from "../../utils/AppError.js";
 
 class RolesService {
   async createRole(data) {
-    const { name, description, scope = 'TENANT' } = data;
+    const { name, description, scope = 'TENANT', hospitalId = null, branchId = null } = data;
 
-    const exists = await prisma.role.findUnique({ where: { name } });
+    const exists = await prisma.role.findFirst({ where: { name, hospitalId, branchId } });
     if (exists) {
       throw new AppError("Role already exists", 400);
     }
 
     return await prisma.role.create({
-      data: { name, description, scope },
+      data: { name, description, scope, hospitalId, branchId },
     });
   }
 
-  async getAllRoles(scope) {
-    const whereClause = scope ? { scope } : {};
+  async getAllRoles(scope, user, branchIdFilter) {
+    let whereClause = {};
+    if (scope) {
+      whereClause.scope = scope;
+    }
+
+    if (branchIdFilter) {
+      whereClause.branchId = branchIdFilter;
+    }
+
+    // User scope
+    if (user?.hospitalId) {
+       // If the user belongs to a specific hospital (Hospital/Branch Admin), they only see their tenant's roles.
+       whereClause.hospitalId = user.hospitalId;
+    } else {
+       // Platform Admin sees templates by default unless otherwise specified
+       whereClause.hospitalId = null;
+    }
     
     return await prisma.role.findMany({
       where: whereClause,

@@ -31,26 +31,40 @@ export default function Permission({ mode = "tenant" }) {
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
   const [newRoleScope, setNewRoleScope] = useState("TENANT");
+  const [newRoleBranchId, setNewRoleBranchId] = useState("");
   const [modalError, setModalError] = useState("");
 
   const [dashboardOptions, setDashboardOptions] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchFilter, setSelectedBranchFilter] = useState("");
 
   useEffect(() => {
     fetchInitialData();
-  }, [mode, routeRoleId]);
+  }, [mode, routeRoleId, selectedBranchFilter]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     setError("");
     try {
       // 1. Fetch all roles and dashboards from the database
-      const [rolesRes, dashRes] = await Promise.all([
-        axios.get("/roles"),
+      const fetchPromises = [
+        axios.get("/roles" + (selectedBranchFilter ? `?branchId=${selectedBranchFilter}` : "")),
         axios.get("/dashboards")
-      ]);
-      const fetchedRoles = rolesRes.data.data.roles || [];
+      ];
+      
+      // Fetch branches if hospital admin
+      if (mode === "tenant" && currentUser?.hospitalId) {
+        fetchPromises.push(axios.get(`/branches/hospital/${currentUser.hospitalId}`));
+      }
+
+      const results = await Promise.all(fetchPromises);
+      const fetchedRoles = results[0].data.data.roles || [];
       setRoles(fetchedRoles);
-      setDashboardOptions(dashRes.data.data.dashboards || []);
+      setDashboardOptions(results[1].data.data.dashboards || []);
+
+      if (results[2]) {
+        setBranches(results[2].data.data.branches || []);
+      }
 
       // Determine initial active role
       let initialRole = null;
@@ -150,11 +164,17 @@ export default function Permission({ mode = "tenant" }) {
     setSaving(true);
     setModalError("");
     try {
-      const response = await axios.post("/roles", {
+      const payload = {
         name: newRoleName,
         description: newRoleDesc,
         scope: newRoleScope
-      });
+      };
+      
+      if (newRoleScope === "BRANCH" && newRoleBranchId) {
+        payload.branchId = newRoleBranchId;
+      }
+
+      const response = await axios.post("/roles", payload);
       
       if (response.data.status === "success") {
         const newRole = response.data.data.role;
@@ -643,15 +663,33 @@ export default function Permission({ mode = "tenant" }) {
             </button>
           </div>
 
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search roles..."
-              value={roleSearchTerm}
-              onChange={(e) => setRoleSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-            />
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Search roles..."
+                value={roleSearchTerm}
+                onChange={(e) => setRoleSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+              />
+            </div>
+            
+            {mode === "tenant" && branches.length > 0 && (
+              <select
+                value={selectedBranchFilter}
+                onChange={(e) => {
+                  setSelectedBranchFilter(e.target.value);
+                  setRoles([]); // clear to show loading effect
+                }}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
+              >
+                <option value="">All Branches</option>
+                {branches.map(b => (
+                  <option key={b.id} value={b.id}>{b.branchName}</option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
@@ -668,7 +706,14 @@ export default function Permission({ mode = "tenant" }) {
                   }`}
                 >
                   <div className="flex justify-between items-start">
-                    <span className="font-bold text-xs text-slate-900 block truncate">{roleItem.name}</span>
+                    <div className="overflow-hidden">
+                      <span className="font-bold text-xs text-slate-900 block truncate">{roleItem.name}</span>
+                      {roleItem.branchId && (
+                        <span className="text-[10px] text-teal-600 block mt-0.5 truncate">
+                          @ {branches.find(b => b.id === roleItem.branchId)?.branchName || 'Branch'}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
                       {roleItem.scope}
                     </span>
@@ -969,13 +1014,33 @@ export default function Permission({ mode = "tenant" }) {
                   <label className="text-xs font-bold text-slate-600">Role Scope *</label>
                   <select
                     value={newRoleScope}
-                    onChange={(e) => setNewRoleScope(e.target.value)}
+                    onChange={(e) => {
+                      setNewRoleScope(e.target.value);
+                      if (e.target.value !== "BRANCH") setNewRoleBranchId("");
+                    }}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/10"
                   >
                     <option value="TENANT">Hospital Level (TENANT)</option>
                     <option value="BRANCH">Branch Level (BRANCH)</option>
                   </select>
                 </div>
+
+                {newRoleScope === "BRANCH" && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-600">Select Branch *</label>
+                    <select
+                      value={newRoleBranchId}
+                      onChange={(e) => setNewRoleBranchId(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/10"
+                    >
+                      <option value="">-- Select a Branch --</option>
+                      {branches.map(b => (
+                        <option key={b.id} value={b.id}>{b.branchName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">Description</label>

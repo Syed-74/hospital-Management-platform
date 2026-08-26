@@ -2,13 +2,18 @@ import catchAsync from "../../utils/catchAsync.js";
 import rolesService from "./roles.service.js";
 
 export const createRole = catchAsync(async (req, res, next) => {
-  const role = await rolesService.createRole(req.body);
+  const roleData = { ...req.body };
+  // If the user belongs to a hospital, enforce that the new role belongs to the same hospital
+  if (req.user && req.user.hospitalId) {
+    roleData.hospitalId = req.user.hospitalId;
+  }
+  const role = await rolesService.createRole(roleData);
   res.status(201).json({ status: "success", data: { role } });
 });
 
 export const getRoles = catchAsync(async (req, res, next) => {
-  const { scope } = req.query;
-  const roles = await rolesService.getAllRoles(scope);
+  const { scope, branchId } = req.query;
+  const roles = await rolesService.getAllRoles(scope, req.user, branchId);
   res.status(200).json({ status: "success", data: { roles } });
 });
 

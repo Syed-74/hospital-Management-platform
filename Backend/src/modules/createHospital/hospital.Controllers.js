@@ -1,5 +1,4 @@
 import catchAsync from "../../utils/catchAsync.js";
-import AppError from "../../utils/AppError.js";
 import HospitalService from "./hospital.service.js";
 
 const hospitalService = new HospitalService();

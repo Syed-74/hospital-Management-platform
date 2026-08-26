@@ -9,15 +9,34 @@ class FeeService {
         return fee;
     }
 
-    async getAllFees(query) {
-        // You can add logic here to filter or paginate using the 'query' object if needed
-        const fees = await prisma.manageFee.findMany();
+    async getAllFees(user, query) {
+        let whereClause = {};
+        if (user?.branchAdmin?.branchId) {
+            whereClause.hospitalId = user.branchAdmin.hospitalId;
+            whereClause.branchId = user.branchAdmin.branchId;
+        } else if (user?.hospitalId) {
+            whereClause.hospitalId = user.hospitalId;
+            if (query?.branchId) whereClause.branchId = query.branchId;
+        } else {
+            if (query?.hospitalId) whereClause.hospitalId = query.hospitalId;
+            if (query?.branchId) whereClause.branchId = query.branchId;
+        }
+
+        const fees = await prisma.manageFee.findMany({ where: whereClause });
         return { fees };
     }
 
-    async getFeeById(id) {
-        const fee = await prisma.manageFee.findUnique({
-            where: { id }
+    async getFeeById(id, user) {
+        let whereClause = { id };
+        if (user?.branchAdmin?.branchId) {
+            whereClause.hospitalId = user.branchAdmin.hospitalId;
+            whereClause.branchId = user.branchAdmin.branchId;
+        } else if (user?.hospitalId) {
+            whereClause.hospitalId = user.hospitalId;
+        }
+
+        const fee = await prisma.manageFee.findFirst({
+            where: whereClause
         });
         
         if (!fee) {
@@ -27,7 +46,9 @@ class FeeService {
         return fee;
     }
 
-    async updateFee(id, data) {
+    async updateFee(id, data, user) {
+        const existingFee = await this.getFeeById(id, user);
+        
         const fee = await prisma.manageFee.update({
             where: { id },
             data
@@ -35,7 +56,9 @@ class FeeService {
         return fee;
     }
 
-    async deleteFee(id) {
+    async deleteFee(id, user) {
+        const existingFee = await this.getFeeById(id, user);
+
         await prisma.manageFee.delete({
             where: { id }
         });

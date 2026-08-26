@@ -54,6 +54,9 @@ model Role {
   hospitalId String?
   hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
+  // Branch isolation
+  branchId   String?
+
   users           User[]           @relation("UserRoles")
   roleDashboards  RoleDashboard[]
   rolePermissions RolePermission[]
@@ -62,7 +65,7 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([hospitalId, name])
+  @@unique([hospitalId, branchId, name])
 }
 
 // Dashboard Model

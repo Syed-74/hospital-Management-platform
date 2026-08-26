@@ -9,14 +9,34 @@ class DepartmentTypeService {
         return departmentType;
     }
 
-    async getAllDepartmentTypes(query) {
-        const departmentTypes = await prisma.departmentType.findMany();
+    async getAllDepartmentTypes(user, query) {
+        let whereClause = {};
+        if (user?.branchAdmin?.branchId) {
+            whereClause.hospitalId = user.branchAdmin.hospitalId;
+            whereClause.branchId = user.branchAdmin.branchId;
+        } else if (user?.hospitalId) {
+            whereClause.hospitalId = user.hospitalId;
+            if (query?.branchId) whereClause.branchId = query.branchId;
+        } else {
+            if (query?.hospitalId) whereClause.hospitalId = query.hospitalId;
+            if (query?.branchId) whereClause.branchId = query.branchId;
+        }
+
+        const departmentTypes = await prisma.departmentType.findMany({ where: whereClause });
         return departmentTypes;
     }
 
-    async getDepartmentTypeById(id) {
-        const departmentType = await prisma.departmentType.findUnique({
-            where: { id }
+    async getDepartmentTypeById(id, user) {
+        let whereClause = { id };
+        if (user?.branchAdmin?.branchId) {
+            whereClause.hospitalId = user.branchAdmin.hospitalId;
+            whereClause.branchId = user.branchAdmin.branchId;
+        } else if (user?.hospitalId) {
+            whereClause.hospitalId = user.hospitalId;
+        }
+
+        const departmentType = await prisma.departmentType.findFirst({
+            where: whereClause
         });
 
         if (!departmentType) {
@@ -26,8 +46,8 @@ class DepartmentTypeService {
         return departmentType;
     }
 
-    async updateDepartmentType(id, data) {
-        const existingDepartmentType = await this.getDepartmentTypeById(id);
+    async updateDepartmentType(id, data, user) {
+        const existingDepartmentType = await this.getDepartmentTypeById(id, user);
         if (!existingDepartmentType) {
             throw new AppError("Department Type not found", 404);
         }
@@ -40,8 +60,8 @@ class DepartmentTypeService {
         return departmentType;
     }
 
-    async deleteDepartmentType(id) {
-        const existingDepartmentType = await this.getDepartmentTypeById(id);
+    async deleteDepartmentType(id, user) {
+        const existingDepartmentType = await this.getDepartmentTypeById(id, user);
         if (!existingDepartmentType) {
             throw new AppError("Department Type not found", 404);
         }
