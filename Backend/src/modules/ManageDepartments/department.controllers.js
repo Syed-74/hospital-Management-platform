@@ -1,5 +1,6 @@
 import DepartmentService from "./department.service.js";
 import catchAsync from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
 
 export const createDepartment = catchAsync(async (req, res) => {
     const payload = { ...req.body };
@@ -26,8 +27,11 @@ export const getDepartments = catchAsync(async (req, res) => {
     });
 });
 
-export const getDepartmentById = catchAsync(async (req, res) => {
+export const getDepartmentById = catchAsync(async (req, res, next) => {
     const department = await DepartmentService.getDepartmentById(req.params.id, req.user);
+    if (!department) {
+        return next(new AppError("Department not found", 404));
+    }
     res.status(200).json({
         status: "success",
         message: "Department fetched successfully",

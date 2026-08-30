@@ -1,7 +1,28 @@
 import { prisma } from "../../config/db.js";
 
 export default class DepartmentService {
+    // A Hospital Admin's branchId comes straight from the request body
+    // (unlike a Branch Admin's, which the controller forces from their own
+    // profile) — it must be verified to actually belong to the hospital the
+    // department is being scoped to, every time either value changes.
+    static async _assertBranchBelongsToHospital(hospitalId, branchId) {
+        if (!hospitalId || !branchId) return;
+        const branch = await prisma.branchManage.findUnique({ where: { id: branchId } });
+        if (!branch) {
+            const err = new Error("Branch not found.");
+            err.statusCode = 404;
+            throw err;
+        }
+        if (branch.hospitalId !== hospitalId) {
+            const err = new Error("This branch does not belong to the specified hospital.");
+            err.statusCode = 400;
+            throw err;
+        }
+    }
+
     static async createDepartment(data) {
+        await this._assertBranchBelongsToHospital(data.hospitalId, data.branchId);
+
         try {
             const department = await prisma.manageDepartment.create({
                 data
@@ -66,9 +87,16 @@ export default class DepartmentService {
                 throw err;
             }
 
+            // hospitalId is never reassignable via update. branchId may be
+            // reassigned within the SAME hospital only.
+            const { hospitalId, ...safeData } = data;
+            if (safeData.branchId) {
+                await this._assertBranchBelongsToHospital(existingDepartment.hospitalId, safeData.branchId);
+            }
+
             const department = await prisma.manageDepartment.update({
                 where: { id },
-                data
+                data: safeData
             });
             return department;
         } catch (error) {

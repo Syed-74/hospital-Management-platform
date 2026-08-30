@@ -1,19 +1,36 @@
 import catchAsync from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
 import rolesService from "./roles.service.js";
 
 export const createRole = catchAsync(async (req, res, next) => {
   const roleData = { ...req.body };
-  // If the user belongs to a hospital, enforce that the new role belongs to the same hospital
-  if (req.user && req.user.hospitalId) {
+  // A Role is never branch-specific — strip any legacy/client-supplied
+  // branchId. Branch scoping happens per-assignment (see role-assignments module).
+  delete roleData.branchId;
+
+  if (req.user?.hospitalId) {
+    // Hospital-bound callers (Hospital Admin, or a delegated Branch Admin
+    // holding roles:manage) can only create roles owned by their own
+    // hospital, and can never mint a platform-wide GLOBAL role.
+    if (roleData.scope === "GLOBAL") {
+      return next(new AppError("Only Platform Admins can create GLOBAL scope roles.", 403));
+    }
     roleData.hospitalId = req.user.hospitalId;
+  } else {
+    // Platform-level caller: Can create GLOBAL or TENANT templates.
+    roleData.hospitalId = null;
+    if (!roleData.scope) {
+      roleData.scope = "GLOBAL";
+    }
   }
+
   const role = await rolesService.createRole(roleData);
   res.status(201).json({ status: "success", data: { role } });
 });
 
 export const getRoles = catchAsync(async (req, res, next) => {
-  const { scope, branchId } = req.query;
-  const roles = await rolesService.getAllRoles(scope, req.user, branchId);
+  const { scope } = req.query;
+  const roles = await rolesService.getAllRoles(scope, req.user);
   res.status(200).json({ status: "success", data: { roles } });
 });
 

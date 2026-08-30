@@ -1,25 +1,29 @@
 import catchAsync from "../../utils/catchAsync.js";
+import AppError from "../../utils/AppError.js";
 import BranchAdminService from "./branchAdmin.service.js";
 
 export const createBranchAdmin = catchAsync(async (req, res, next) => {
-    // Assuming the authenticated user's hospitalId is attached or provided in body
-    // If not, rely strictly on req.body
-    const adminData = req.body;
-    
-    // Safety fallback: if creating an admin from a hospital context
-    if (req.user && req.user.hospitalId && !adminData.hospitalId) {
+    const adminData = { ...req.body };
+
+    if (req.user?.hospitalId) {
+        // Hospital-bound callers (Hospital Admin) can only ever create
+        // branch admins within their own hospital — a client-supplied
+        // hospitalId in the body is never trusted, even if present.
         adminData.hospitalId = req.user.hospitalId;
+    } else if (!adminData.hospitalId) {
+        return next(new AppError("hospitalId is required.", 400));
     }
 
-    const branchAdmin = await BranchAdminService.createBranchAdmin(adminData);
+    const branchAdmin = await BranchAdminService.createBranchAdmin(adminData, req.user);
     res.status(201).json({ status: "success", data: { branchAdmin } });
 });
 
 export const getAllBranchAdmins = catchAsync(async (req, res, next) => {
-    const { hospitalId } = req.query;
-    // Or filter by req.user.hospitalId if it's a tenant admin
-    const filterId = hospitalId || (req.user?.hospitalId);
-    
+    // Hospital-bound callers always get their own hospital's roster —
+    // the query string can never override that. Only a platform-level
+    // caller (no hospitalId) may filter by an arbitrary hospitalId.
+    const filterId = req.user?.hospitalId || req.query.hospitalId;
+
     const branchAdmins = await BranchAdminService.getAllBranchAdmins(filterId);
     res.status(200).json({ status: "success", results: branchAdmins.length, data: { branchAdmins } });
 });
@@ -30,7 +34,7 @@ export const getBranchAdminById = catchAsync(async (req, res, next) => {
 });
 
 export const updateBranchAdmin = catchAsync(async (req, res, next) => {
-    const branchAdmin = await BranchAdminService.updateBranchAdmin(req.params.id, req.body);
+    const branchAdmin = await BranchAdminService.updateBranchAdmin(req.params.id, req.body, req.user);
     res.status(200).json({ status: "success", data: { branchAdmin } });
 });
 

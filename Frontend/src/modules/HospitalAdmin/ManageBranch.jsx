@@ -61,21 +61,35 @@ export default function ManageBranch() {
   useEffect(() => {
     if (window.google) return;
     
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    const existingScript = document.getElementById("google-maps-script");
+    if (!existingScript) {
+      const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
+      if (!apiKey) {
+        console.warn("Google Maps API Key is missing in .env. Autocomplete is disabled.");
+        return;
+      }
+      const script = document.createElement("script");
+      script.id = "google-maps-script";
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
   }, []);
 
   // Initialize Autocomplete when Modal Opens
   useEffect(() => {
-    if (isModalOpen) {
-      const timer = setTimeout(() => {
-        initAutocomplete();
-      }, 300);
-      return () => clearTimeout(timer);
+    if (isModalOpen && import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+      let attempts = 0;
+      const checkGoogleAndInit = () => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          initAutocomplete();
+        } else if (attempts < 50) {
+          attempts++;
+          setTimeout(checkGoogleAndInit, 100);
+        }
+      };
+      checkGoogleAndInit();
     }
   }, [isModalOpen]);
 
@@ -723,7 +737,7 @@ export default function ManageBranch() {
                 </div>
 
                 <div className="flex items-center space-x-6 pt-2">
-                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                  {/* <label className="flex items-center space-x-2.5 cursor-pointer select-none">
                     <input 
                       type="checkbox" 
                       name="isMainBranch"
@@ -732,7 +746,7 @@ export default function ManageBranch() {
                       className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20"
                     />
                     <span className="text-sm font-semibold text-slate-700">Set as Main Headquarters Branch</span>
-                  </label>
+                  </label> */}
 
                   <label className="flex items-center space-x-2.5 cursor-pointer select-none">
                     <input 
@@ -822,8 +836,14 @@ export default function ManageBranch() {
                     <input 
                       type="text" 
                       ref={searchInputRef}
-                      placeholder="Type a location to auto-populate fields..."
-                      className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50/20 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all"
+                      disabled={!import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder={import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "Type a location to auto-populate fields..." : "API Key missing in .env"}
+                      className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50/20 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 

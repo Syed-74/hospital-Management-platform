@@ -19,6 +19,7 @@ import hospitalAdminRoutes from "./modules/ManageHospAdmin/hospitalAdmin.routes.
 import hospitalThemeRoutes from "./modules/hospitalTheme/hospitalTheme.routes.js";
 import branchRoutes from "./modules/BranchManagement/branch.routes.js";
 import branchAdminRoutes from "./modules/ManageBranchAdmin/branchAdmin.routes.js";
+import roleAssignmentRoutes from "./modules/roleAssignments/roleAssignment.routes.js";
 import dashboardsRoutes from "./modules/dashboards/dashboards.routes.js";
 import manageDepartmentRoutes from './modules/ManageDepartments/department.routes.js';
 import departmentTypeRoutes from './modules/DepartmentType/departmentType.routes.js';
@@ -76,6 +77,7 @@ app.use("/api/v1/hospital-admins", hospitalAdminRoutes);
 app.use("/api/v1/hospital-themes", hospitalThemeRoutes);
 app.use("/api/v1/branches", branchRoutes);
 app.use("/api/v1/branch-admins", branchAdminRoutes);
+app.use("/api/v1/role-assignments", roleAssignmentRoutes);
 app.use("/api/v1/dashboards", dashboardsRoutes);
 
 app.use('/api/v1/department', manageDepartmentRoutes);

@@ -25,10 +25,14 @@ class HospitalAdminService {
             throw new AppError("Email is already in use", 400);
         }
 
-        // Verify role exists
+        // Verify role exists and actually belongs to this hospital (or is a
+        // reusable hospital-agnostic template — never a different hospital's role)
         const role = await prisma.role.findUnique({ where: { id: roleId } });
         if (!role) {
             throw new AppError("Role not found", 404);
+        }
+        if (role.hospitalId && role.hospitalId !== hospitalId) {
+            throw new AppError("This role does not belong to the specified hospital.", 400);
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -44,9 +48,6 @@ class HospitalAdminService {
                         firstName,
                         lastName,
                         hospitalId,
-                        roles: {
-                            connect: { id: role.id }
-                        }
                     }
                 });
 
@@ -56,6 +57,18 @@ class HospitalAdminService {
                         userId: user.id,
                         employeeCode,
                         phone
+                    }
+                });
+
+                // 3. Grant the role, scoped to this hospital (TENANT scope —
+                // covers every branch of it). This — not a User<->Role
+                // connect — is the actual authorization boundary.
+                await tx.userRoleAssignment.create({
+                    data: {
+                        userId: user.id,
+                        roleId: role.id,
+                        hospitalId,
+                        branchId: null,
                     }
                 });
 

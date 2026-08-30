@@ -14,7 +14,7 @@ export const getMe = (req, res, next) => {
 };
 
 export const getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await usersService.getAllUsers();
+  const users = await usersService.getAllUsers(req.user);
   res.status(200).json({
     status: "success",
     results: users.length,
@@ -30,6 +30,6 @@ export const assignRoles = catchAsync(async (req, res, next) => {
     return res.status(400).json({ status: "fail", message: "roleIds must be an array" });
   }
 
-  const user = await usersService.assignRolesToUser(userId, roleIds);
+  const user = await usersService.assignRolesToUser(req.user, userId, roleIds);
   res.status(200).json({ status: "success", data: { user } });
 });

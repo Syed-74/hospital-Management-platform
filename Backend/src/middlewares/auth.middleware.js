@@ -3,6 +3,7 @@ import AppError from "../utils/AppError.js";
 import { verifyToken } from "../utils/jwt.js";
 import { ENV } from "../config/env.js";
 import { prisma } from "../config/db.js";
+import { attachDerivedRoleView } from "../utils/authz.js";
 
 /**
  * Middleware to protect routes.
@@ -34,10 +35,16 @@ export const protect = catchAsync(async (req, res, next) => {
           branch: true,
         }
       },
-      roles: {
+      // Authorization source of truth: each row grants a Role's
+      // permissions bounded to a scope (GLOBAL / TENANT / BRANCH).
+      roleAssignments: {
         include: {
-          rolePermissions: { include: { permission: true } },
-          roleDashboards: { include: { dashboard: true } },
+          role: {
+            include: {
+              rolePermissions: { include: { permission: true } },
+              roleDashboards: { include: { dashboard: true } },
+            },
+          },
         },
       },
     },
@@ -51,6 +58,8 @@ export const protect = catchAsync(async (req, res, next) => {
   if (!currentUser.isActive) {
     return next(new AppError("Your account has been deactivated. Please contact support.", 401));
   }
+
+  attachDerivedRoleView(currentUser);
 
   // Attach user to request for downstream middlewares and controllers
   req.user = currentUser;

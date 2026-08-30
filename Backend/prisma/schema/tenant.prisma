@@ -44,6 +44,7 @@ model Hospital {
   branches      BranchManage[]
   branchAdmins  BranchAdmin[]
   roles         Role[]
+  roleAssignments UserRoleAssignment[]
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -171,6 +172,7 @@ model BranchManage {
   isActive      Boolean @default(true)
 
   branchAdmins BranchAdmin[]
+  roleAssignments UserRoleAssignment[]
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt

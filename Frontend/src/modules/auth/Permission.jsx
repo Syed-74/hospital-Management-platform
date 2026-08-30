@@ -30,41 +30,29 @@ export default function Permission({ mode = "tenant" }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
-  const [newRoleScope, setNewRoleScope] = useState("TENANT");
-  const [newRoleBranchId, setNewRoleBranchId] = useState("");
+  const [newRoleScope, setNewRoleScope] = useState("");
   const [modalError, setModalError] = useState("");
 
   const [dashboardOptions, setDashboardOptions] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranchFilter, setSelectedBranchFilter] = useState("");
 
   useEffect(() => {
     fetchInitialData();
-  }, [mode, routeRoleId, selectedBranchFilter]);
+  }, [mode, routeRoleId]);
 
   const fetchInitialData = async () => {
     setLoading(true);
     setError("");
     try {
-      // 1. Fetch all roles and dashboards from the database
-      const fetchPromises = [
-        axios.get("/roles" + (selectedBranchFilter ? `?branchId=${selectedBranchFilter}` : "")),
+      // Roles are reusable capability templates — never fetched or
+      // filtered by branch. Branch scoping happens per-assignment.
+      const [rolesRes, dashboardsRes] = await Promise.all([
+        axios.get("/roles"),
         axios.get("/dashboards")
-      ];
-      
-      // Fetch branches if hospital admin
-      if (mode === "tenant" && currentUser?.hospitalId) {
-        fetchPromises.push(axios.get(`/branches/hospital/${currentUser.hospitalId}`));
-      }
-
-      const results = await Promise.all(fetchPromises);
-      const fetchedRoles = results[0].data.data.roles || [];
+      ]);
+      // Filter out PLATFORM_ADMIN so it cannot be managed via the UI
+      const fetchedRoles = (rolesRes.data.data.roles || []).filter(r => r.name !== "PLATFORM_ADMIN");
       setRoles(fetchedRoles);
-      setDashboardOptions(results[1].data.data.dashboards || []);
-
-      if (results[2]) {
-        setBranches(results[2].data.data.branches || []);
-      }
+      setDashboardOptions(dashboardsRes.data.data.dashboards || []);
 
       // Determine initial active role
       let initialRole = null;
@@ -149,7 +137,7 @@ export default function Permission({ mode = "tenant" }) {
   const openAddModal = () => {
     setNewRoleName("");
     setNewRoleDesc("");
-    setNewRoleScope("TENANT");
+    setNewRoleScope("");
     setModalError("");
     setIsModalOpen(true);
   };
@@ -169,10 +157,6 @@ export default function Permission({ mode = "tenant" }) {
         description: newRoleDesc,
         scope: newRoleScope
       };
-      
-      if (newRoleScope === "BRANCH" && newRoleBranchId) {
-        payload.branchId = newRoleBranchId;
-      }
 
       const response = await axios.post("/roles", payload);
       
@@ -240,18 +224,18 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital:access",
       delete: "hospital:access",
       description: "Access the Hospital Admin dashboard and modules.",
-      scopes: ["TENANT", "GLOBAL"]
-    },
-    {
-      group: "Hospital Administration & Operations",
-      label: "Hospital Profile",
-      read: "hospitals:read",
-      create: "hospitals:update",
-      update: "hospitals:update",
-      delete: "hospitals:update",
-      description: "Manage hospital details and configurations.",
       scopes: ["TENANT"]
     },
+    // {
+    //   group: "Hospital Administration & Operations",
+    //   label: "Hospital Profile",
+    //   read: "hospital_profile:read",
+    //   create: "hospital_profile:manage",
+    //   update: "hospital_profile:manage",
+    //   delete: "hospital_profile:manage",
+    //   description: "Manage hospital details and configurations.",
+    //   scopes: ["TENANT"]
+    // },
     {
       group: "Hospital Administration & Operations",
       label: "Branch Management",
@@ -317,10 +301,10 @@ export default function Permission({ mode = "tenant" }) {
     {
       group: "Identity & Access Management",
       label: "Role Management (RBAC)",
-      read: "roles:manage",
-      create: "roles:manage",
-      update: "roles:manage",
-      delete: "roles:manage",
+      read: "tenant_roles:manage",
+      create: "tenant_roles:manage",
+      update: "tenant_roles:manage",
+      delete: "tenant_roles:manage",
       description: "Create and manage hospital and branch-level roles.",
       scopes: ["TENANT"]
     },
@@ -674,22 +658,6 @@ export default function Permission({ mode = "tenant" }) {
                 className="w-full pl-9 pr-4 py-2 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
               />
             </div>
-            
-            {mode === "tenant" && branches.length > 0 && (
-              <select
-                value={selectedBranchFilter}
-                onChange={(e) => {
-                  setSelectedBranchFilter(e.target.value);
-                  setRoles([]); // clear to show loading effect
-                }}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-teal-500"
-              >
-                <option value="">All Branches</option>
-                {branches.map(b => (
-                  <option key={b.id} value={b.id}>{b.branchName}</option>
-                ))}
-              </select>
-            )}
           </div>
 
           <div className="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
@@ -708,11 +676,6 @@ export default function Permission({ mode = "tenant" }) {
                   <div className="flex justify-between items-start">
                     <div className="overflow-hidden">
                       <span className="font-bold text-xs text-slate-900 block truncate">{roleItem.name}</span>
-                      {roleItem.branchId && (
-                        <span className="text-[10px] text-teal-600 block mt-0.5 truncate">
-                          @ {branches.find(b => b.id === roleItem.branchId)?.branchName || 'Branch'}
-                        </span>
-                      )}
                     </div>
                     <span className="text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
                       {roleItem.scope}
@@ -1014,33 +977,24 @@ export default function Permission({ mode = "tenant" }) {
                   <label className="text-xs font-bold text-slate-600">Role Scope *</label>
                   <select
                     value={newRoleScope}
-                    onChange={(e) => {
-                      setNewRoleScope(e.target.value);
-                      if (e.target.value !== "BRANCH") setNewRoleBranchId("");
-                    }}
+                    onChange={(e) => setNewRoleScope(e.target.value)}
+                    required
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/10"
                   >
-                    <option value="TENANT">Hospital Level (TENANT)</option>
-                    <option value="BRANCH">Branch Level (BRANCH)</option>
+                    <option value="" disabled>Select Role Scope</option>
+                    {mode === "platform" ? (
+                      <option value="TENANT">Hospital Level (TENANT)</option>
+                    ) : (
+                      <option value="BRANCH">Branch Admin (reusable across every branch)</option>
+                    )}
                   </select>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    A role is a reusable capability template — it is never tied to one branch.
+                    To make someone "Branch Admin for Branch A", assign this role to that person
+                    for that specific branch from the Branch Admin screen; the same role can be
+                    assigned again for Branch B without creating a second role.
+                  </p>
                 </div>
-
-                {newRoleScope === "BRANCH" && (
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Select Branch *</label>
-                    <select
-                      value={newRoleBranchId}
-                      onChange={(e) => setNewRoleBranchId(e.target.value)}
-                      required
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600/10"
-                    >
-                      <option value="">-- Select a Branch --</option>
-                      {branches.map(b => (
-                        <option key={b.id} value={b.id}>{b.branchName}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">Description</label>

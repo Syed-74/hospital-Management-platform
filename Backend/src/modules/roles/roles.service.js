@@ -2,27 +2,40 @@ import { prisma } from "../../config/db.js";
 import AppError from "../../utils/AppError.js";
 
 class RolesService {
+  /**
+   * A Role is a reusable capability template — it is never tied to a
+   * branch. Scope of use (which hospital/branch a grant applies to) is
+   * decided later, per-user, via UserRoleAssignment. This is what lets a
+   * single "Branch Admin" role be reused across every branch of a hospital
+   * instead of being duplicated per branch.
+   */
   async createRole(data) {
-    const { name, description, scope = 'TENANT', hospitalId = null, branchId = null } = data;
+    const { name, description, scope = 'TENANT', hospitalId = null } = data;
 
-    const exists = await prisma.role.findFirst({ where: { name, hospitalId, branchId } });
+    if (!['GLOBAL', 'TENANT', 'BRANCH'].includes(scope)) {
+      throw new AppError("Invalid role scope.", 400);
+    }
+    if (scope === 'GLOBAL' && hospitalId) {
+      throw new AppError("GLOBAL scope roles cannot belong to a hospital.", 400);
+    }
+    if (scope !== 'GLOBAL' && !hospitalId) {
+      throw new AppError("TENANT/BRANCH scope roles must belong to a hospital.", 400);
+    }
+
+    const exists = await prisma.role.findFirst({ where: { name, hospitalId } });
     if (exists) {
-      throw new AppError("Role already exists", 400);
+      throw new AppError("A role with this name already exists for this hospital.", 400);
     }
 
     return await prisma.role.create({
-      data: { name, description, scope, hospitalId, branchId },
+      data: { name, description, scope, hospitalId },
     });
   }
 
-  async getAllRoles(scope, user, branchIdFilter) {
+  async getAllRoles(scope, user) {
     let whereClause = {};
     if (scope) {
       whereClause.scope = scope;
-    }
-
-    if (branchIdFilter) {
-      whereClause.branchId = branchIdFilter;
     }
 
     // User scope
@@ -33,7 +46,7 @@ class RolesService {
        // Platform Admin sees templates by default unless otherwise specified
        whereClause.hospitalId = null;
     }
-    
+
     return await prisma.role.findMany({
       where: whereClause,
       include: {

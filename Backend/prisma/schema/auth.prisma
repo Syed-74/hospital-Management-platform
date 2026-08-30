@@ -31,8 +31,10 @@ model User {
   hospitalId String?
   hospital   Hospital? @relation(fields: [hospitalId], references: [id])
 
-  // A user can have multiple roles in a large enterprise
-  roles Role[] @relation("UserRoles")
+  // Scoped role grants. A user can hold the same reusable Role at multiple
+  // scopes (e.g. Branch Admin for both Branch A and Branch B) via separate
+  // rows here — the Role itself is never duplicated per scope.
+  roleAssignments UserRoleAssignment[]
 
   // Profile Relations
   hospitalAdmin HospitalAdmin?
@@ -43,6 +45,11 @@ model User {
 }
 
 // Role Model (e.g., "Doctor", "Admin")
+// A Role is a reusable CAPABILITY TEMPLATE only — it defines WHAT its
+// holders can do. It is never tied to a specific branch. WHERE a role's
+// grant applies (which hospital / which branch) is decided per-assignment
+// by UserRoleAssignment, so e.g. a single "Branch Admin" role can be bound
+// to many different branches of the same hospital without duplication.
 model Role {
   id          String    @id @default(uuid())
   name        String
@@ -50,14 +57,12 @@ model Role {
   scope       RoleScope @default(TENANT)
 
   // Tenant isolation: null = GLOBAL/platform-shared role template.
-  // TENANT/BRANCH roles created by a hospital are private to that hospital.
+  // TENANT/BRANCH roles created by a hospital are private to that hospital,
+  // and reusable across every branch of that hospital.
   hospitalId String?
   hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
-  // Branch isolation
-  branchId   String?
-
-  users           User[]           @relation("UserRoles")
+  assignments     UserRoleAssignment[]
   roleDashboards  RoleDashboard[]
   rolePermissions RolePermission[]
   branchAdmins    BranchAdmin[]
@@ -65,7 +70,40 @@ model Role {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([hospitalId, branchId, name])
+  @@unique([hospitalId, name])
+}
+
+// ==========================================
+// SCOPED ROLE ASSIGNMENTS (authorization source of truth)
+// ==========================================
+// Binds a reusable Role to a specific user AT a specific scope. This is the
+// actual authorization boundary used by the backend: Role defines WHAT a
+// user can do; UserRoleAssignment defines WHERE (which hospital/branch)
+// that grant applies. A user can hold multiple assignments — e.g. the same
+// "Branch Admin" role for both Branch A and Branch B (multi-branch users).
+model UserRoleAssignment {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  // GLOBAL grant:  hospitalId = null, branchId = null (e.g. Platform Admin).
+  // TENANT grant:  hospitalId set, branchId = null (covers every branch of that hospital).
+  // BRANCH grant:  hospitalId set AND branchId set (covers only that one branch).
+  hospitalId String?
+  hospital   Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String?
+  branch     BranchManage? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  assignedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, roleId, hospitalId, branchId])
+  @@index([userId])
+  @@index([hospitalId])
+  @@index([branchId])
 }
 
 // Dashboard Model

@@ -2,6 +2,7 @@ import { prisma } from "../../config/db.js";
 import AppError from "../../utils/AppError.js";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import { attachDerivedRoleView } from "../../utils/authz.js";
 
 class AuthService {
   /**
@@ -56,10 +57,14 @@ class AuthService {
             branch: true,
           }
         },
-        roles: {
+        roleAssignments: {
           include: {
-            rolePermissions: { include: { permission: true } },
-            roleDashboards: { include: { dashboard: true } },
+            role: {
+              include: {
+                rolePermissions: { include: { permission: true } },
+                roleDashboards: { include: { dashboard: true } },
+              },
+            },
           },
         },
       },
@@ -83,6 +88,8 @@ class AuthService {
     // 4. Generate tokens
     const accessToken = generateAccessToken(user.id);
     const refreshToken = generateRefreshToken(user.id);
+
+    attachDerivedRoleView(user);
 
     // Remove password from response
     delete user.password;

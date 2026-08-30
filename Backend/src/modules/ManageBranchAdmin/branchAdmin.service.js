@@ -3,7 +3,7 @@ import AppError from "../../utils/AppError.js";
 import bcrypt from "bcrypt";
 
 export default class BranchAdminService {
-    static async createBranchAdmin(adminData) {
+    static async createBranchAdmin(adminData, actingUser = null) {
         // Unpack data
         const {
             email,
@@ -20,12 +20,29 @@ export default class BranchAdminService {
             ...rest
         } = adminData;
 
-        // 1. Verify hospital and branch exist
+        // 1. Verify hospital and branch exist, AND that the branch actually
+        // belongs to this hospital (a branchId from a different hospital
+        // must never be accepted here).
         const hospital = await prisma.hospital.findUnique({ where: { id: hospitalId } });
         if (!hospital) throw new AppError("Hospital not found", 404);
 
         const branch = await prisma.branchManage.findUnique({ where: { id: branchId } });
         if (!branch) throw new AppError("Branch not found", 404);
+        if (branch.hospitalId !== hospitalId) {
+            throw new AppError("This branch does not belong to the specified hospital.", 400);
+        }
+
+        // 1b. If a role is being assigned, it must be a role this hospital
+        // actually owns (or a legacy hospital-agnostic template) — never a
+        // role belonging to a different hospital.
+        let role = null;
+        if (roleId && roleId.trim() !== "") {
+            role = await prisma.role.findUnique({ where: { id: roleId } });
+            if (!role) throw new AppError("Role not found", 404);
+            if (role.hospitalId && role.hospitalId !== hospitalId) {
+                throw new AppError("This role does not belong to the specified hospital.", 400);
+            }
+        }
 
         // 2. Check for unique constraints (email, employeeId)
         const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -68,25 +85,20 @@ export default class BranchAdminService {
         // Parse booleans
         if (adminData.twoFactorEnabled !== undefined) branchAdminData.twoFactorEnabled = adminData.twoFactorEnabled === true || adminData.twoFactorEnabled === "true";
 
-        // 4. Create User and BranchAdmin in a transaction
+        // 4. Create User, BranchAdmin profile, and the scoped role grant
+        // (BRANCH scope: this hospital + this branch) in one transaction.
+        // The grant — not the profile's roleId field — is what actually
+        // authorizes this person; roleId on the profile is a denormalized
+        // display convenience only.
         return await prisma.$transaction(async (tx) => {
-            const userData = {
-                email,
-                password: hashedPassword,
-                firstName,
-                lastName,
-                hospitalId,
-            };
-
-            // Connect the assigned role to the User model for RBAC
-            if (roleId && roleId.trim() !== "") {
-                userData.roles = {
-                    connect: [{ id: roleId }]
-                };
-            }
-
             const newUser = await tx.user.create({
-                data: userData
+                data: {
+                    email,
+                    password: hashedPassword,
+                    firstName,
+                    lastName,
+                    hospitalId,
+                }
             });
 
             branchAdminData.userId = newUser.id;
@@ -94,6 +106,18 @@ export default class BranchAdminService {
             const newBranchAdmin = await tx.branchAdmin.create({
                 data: branchAdminData
             });
+
+            if (role) {
+                await tx.userRoleAssignment.create({
+                    data: {
+                        userId: newUser.id,
+                        roleId: role.id,
+                        hospitalId,
+                        branchId,
+                        assignedBy: actingUser?.id || null,
+                    }
+                });
+            }
 
             return newBranchAdmin;
         });
@@ -124,11 +148,13 @@ export default class BranchAdminService {
         return admin;
     }
 
-    static async updateBranchAdmin(id, updateData) {
+    static async updateBranchAdmin(id, updateData, actingUser = null) {
         const admin = await prisma.branchAdmin.findUnique({ where: { id } });
         if (!admin) throw new AppError("Branch Admin not found", 404);
 
         // Prevent updating critical relational or auth fields directly here
+        // (hospitalId can never be changed via this endpoint — moving a
+        // branch admin to a different hospital is not a supported edit).
         const { email, password, userId, hospitalId, branchId, phone, roleId, ...safeData } = updateData;
 
         // Map phone to phoneNumber if provided
@@ -136,14 +162,29 @@ export default class BranchAdminService {
             safeData.phoneNumber = phone;
         }
 
-        // Ignore empty roleId
+        // Validate the new role (if any) actually belongs to this hospital.
+        let newRole = null;
         if (roleId && roleId.trim() !== "") {
+            newRole = await prisma.role.findUnique({ where: { id: roleId } });
+            if (!newRole) throw new AppError("Role not found", 404);
+            if (newRole.hospitalId && newRole.hospitalId !== admin.hospitalId) {
+                throw new AppError("This role does not belong to this branch admin's hospital.", 400);
+            }
             safeData.roleId = roleId;
         }
 
-        // Allow branch reassignment
-        if (branchId) {
+        // Validate the new branch (if any) actually belongs to this same
+        // hospital — reassignment across branches of the SAME hospital is
+        // fine, reassignment into a different hospital's branch is not.
+        let newBranchId = admin.branchId;
+        if (branchId && branchId !== admin.branchId) {
+            const branch = await prisma.branchManage.findUnique({ where: { id: branchId } });
+            if (!branch) throw new AppError("Branch not found", 404);
+            if (branch.hospitalId !== admin.hospitalId) {
+                throw new AppError("This branch does not belong to this branch admin's hospital.", 400);
+            }
             safeData.branchId = branchId;
+            newBranchId = branchId;
         }
 
         // Parse Date fields into ISO-8601 strings for Prisma
@@ -155,8 +196,8 @@ export default class BranchAdminService {
         if (updateData.twoFactorEnabled !== undefined) safeData.twoFactorEnabled = updateData.twoFactorEnabled === true || updateData.twoFactorEnabled === "true";
 
         return await prisma.$transaction(async (tx) => {
-            // Cascade update to User table
-            if (email || password || safeData.firstName || safeData.lastName || (roleId && roleId.trim() !== "")) {
+            // Update User account fields (auth-relevant only).
+            if (email || password || safeData.firstName || safeData.lastName) {
                 const userUpdate = {};
                 if (email) userUpdate.email = email;
                 if (safeData.firstName) userUpdate.firstName = safeData.firstName;
@@ -167,17 +208,33 @@ export default class BranchAdminService {
                     userUpdate.password = await bcrypt.hash(password, salt);
                 }
 
-                // Sync the assigned role to the User model for RBAC
-                if (roleId && roleId.trim() !== "") {
-                    userUpdate.roles = {
-                        set: [{ id: roleId }] // Replaces existing roles with the new one
-                    };
-                }
-
                 if (Object.keys(userUpdate).length > 0) {
                     await tx.user.update({
                         where: { id: admin.userId },
                         data: userUpdate
+                    });
+                }
+            }
+
+            // Reconcile the actual authorization grant. The profile's
+            // roleId/branchId fields are display convenience only — the
+            // UserRoleAssignment row is what the backend checks, so it must
+            // move in lockstep whenever the role or the branch changes.
+            if (newRole || newBranchId !== admin.branchId) {
+                await tx.userRoleAssignment.deleteMany({
+                    where: { userId: admin.userId, hospitalId: admin.hospitalId, branchId: admin.branchId }
+                });
+
+                const roleToGrant = newRole?.id || admin.roleId;
+                if (roleToGrant) {
+                    await tx.userRoleAssignment.create({
+                        data: {
+                            userId: admin.userId,
+                            roleId: roleToGrant,
+                            hospitalId: admin.hospitalId,
+                            branchId: newBranchId,
+                            assignedBy: actingUser?.id || null,
+                        }
                     });
                 }
             }
