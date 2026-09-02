@@ -19,7 +19,6 @@ export default function Permission({ mode = "tenant" }) {
   const [selectedRole, setSelectedRole] = useState(null);
   const [allPermissions, setAllPermissions] = useState([]);
   const [selectedPermissions, setSelectedPermissions] = useState([]);
-  const [selectedDashboard, setSelectedDashboard] = useState("");
   const [roleSearchTerm, setRoleSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,8 +32,6 @@ export default function Permission({ mode = "tenant" }) {
   const [newRoleScope, setNewRoleScope] = useState("");
   const [modalError, setModalError] = useState("");
 
-  const [dashboardOptions, setDashboardOptions] = useState([]);
-
   useEffect(() => {
     fetchInitialData();
   }, [mode, routeRoleId]);
@@ -45,14 +42,10 @@ export default function Permission({ mode = "tenant" }) {
     try {
       // Roles are reusable capability templates — never fetched or
       // filtered by branch. Branch scoping happens per-assignment.
-      const [rolesRes, dashboardsRes] = await Promise.all([
-        axios.get("/roles"),
-        axios.get("/dashboards")
-      ]);
-      // Filter out PLATFORM_ADMIN so it cannot be managed via the UI
+      const rolesRes = await axios.get("/roles");
+
       const fetchedRoles = (rolesRes.data.data.roles || []).filter(r => r.name !== "PLATFORM_ADMIN");
       setRoles(fetchedRoles);
-      setDashboardOptions(dashboardsRes.data.data.dashboards || []);
 
       // Determine initial active role
       let initialRole = null;
@@ -80,7 +73,6 @@ export default function Permission({ mode = "tenant" }) {
       if (response.data.status === "success") {
         const { role: fetchedRole, allPermissions: fetchedPerms } = response.data.data;
         setSelectedRole(fetchedRole);
-        setSelectedDashboard(fetchedRole.roleDashboards?.[0]?.dashboardId || "");
         setAllPermissions(fetchedPerms);
         // Use permission.action instead of permission.id
         setSelectedPermissions(fetchedRole.rolePermissions?.map(p => p.permission.action) || []);
@@ -114,8 +106,7 @@ export default function Permission({ mode = "tenant" }) {
     setSuccess("");
     try {
       const response = await axios.post(`/roles/${selectedRole.id}/permissions`, {
-        permissionIds: selectedPermissions,
-        dashboardId: selectedDashboard
+        permissionIds: selectedPermissions
       });
       if (response.data.status === "success") {
         setSuccess(`Permissions successfully assigned to ${selectedRole.name}.`);
@@ -224,7 +215,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital:access",
       delete: "hospital:access",
       description: "Access the Hospital Admin dashboard and modules.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     // {
     //   group: "Hospital Administration & Operations",
@@ -244,7 +235,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:manage",
       delete: "branch:manage",
       description: "Create and manage hospital branches.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -254,7 +245,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branchAdmins:manage",
       delete: "branchAdmins:manage",
       description: "Manage administrators for individual hospital branches.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -264,7 +255,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "departments:update",
       delete: "departments:delete",
       description: "Manage departments, specialties, and service catalog.",
-      scopes: ["TENANT", "BRANCH"]
+      scopes: ["HOSPITAL", "BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -274,7 +265,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "fees:update",
       delete: "fees:delete",
       description: "Manage pricing, consultation, and operational fees per department.",
-      scopes: ["TENANT", "BRANCH"]
+      scopes: ["HOSPITAL", "BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -284,7 +275,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_policies:manage",
       delete: "hospital_policies:manage",
       description: "Configure approval workflows and business rules.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
 
     // 2. Identity & Access Management (Tenant Level)
@@ -296,7 +287,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospitalUsers:manage",
       delete: "hospitalUsers:manage",
       description: "Manage users, doctors, nurses, and operational staff.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Identity & Access Management",
@@ -306,7 +297,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "tenant_roles:manage",
       delete: "tenant_roles:manage",
       description: "Create and manage hospital and branch-level roles.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Identity & Access Management",
@@ -316,7 +307,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "users:assign_roles",
       delete: "users:assign_roles",
       description: "Assign roles to hospital and branch users.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
 
     // 3. Clinical & Medical Management
@@ -328,7 +319,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "clinical_ops:manage",
       delete: "clinical_ops:manage",
       description: "Oversee clinical activities and standards.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Clinical & Medical Management",
@@ -338,7 +329,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_appointments:manage",
       delete: "hospital_appointments:manage",
       description: "Approve or manage appointments globally across branches.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Clinical & Medical Management",
@@ -348,7 +339,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "laboratory:manage",
       delete: "laboratory:manage",
       description: "Manage laboratory operations and diagnostics.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Clinical & Medical Management",
@@ -358,7 +349,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "pharmacy:manage",
       delete: "pharmacy:manage",
       description: "Manage pharmacy and dispensaries.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
 
     // 4. Financial & Administrative
@@ -370,7 +361,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_billing:manage",
       delete: "hospital_billing:manage",
       description: "Manage billing, claims, and insurance processing.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Financial & Administrative",
@@ -380,7 +371,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "financial_approvals:manage",
       delete: "financial_approvals:manage",
       description: "Approve discounts, refunds, and financial workflows.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Financial & Administrative",
@@ -390,7 +381,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "procurement:manage",
       delete: "procurement:manage",
       description: "Purchasing and inventory oversight.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Financial & Administrative",
@@ -400,7 +391,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hr:manage",
       delete: "hr:manage",
       description: "Staffing, leave management, and payroll approvals.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
 
     // 5. Monitoring, Compliance & Integrations
@@ -412,7 +403,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_reports:manage",
       delete: "hospital_reports:manage",
       description: "Access analytics and export data.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Monitoring & Integrations",
@@ -422,7 +413,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "compliance:manage",
       delete: "compliance:manage",
       description: "Review audit logs and handle quality requirements.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Monitoring & Integrations",
@@ -432,7 +423,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "integrations:manage",
       delete: "integrations:manage",
       description: "Configure approved integrations (SMS, Payments, etc.).",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
     {
       group: "Monitoring & Integrations",
@@ -442,7 +433,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "notifications:manage",
       delete: "notifications:manage",
       description: "Manage notification templates and triggers.",
-      scopes: ["TENANT"]
+      scopes: ["HOSPITAL"]
     },
 
     // 6. Branch Administration & Operations (Branch Scope)
@@ -454,7 +445,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:access",
       delete: "branch:access",
       description: "Access the Branch Admin dashboard and modules.",
-      scopes: ["BRANCH", "TENANT"]
+      scopes: ["BRANCH", "HOSPITAL"]
     },
     {
       group: "Branch Administration & Operations",
@@ -567,13 +558,17 @@ export default function Permission({ mode = "tenant" }) {
   // Group definitions by category
   const groupedMatrix = MATRIX_DEFINITIONS.reduce((acc, current) => {
     // Filter matrix based on role scope
-    const roleScope = selectedRole?.scope || 'TENANT';
+    const roleScope = selectedRole?.scope || 'HOSPITAL';
     if (current.scopes && !current.scopes.includes(roleScope)) {
       return acc;
     }
 
-    if (!acc[current.group]) acc[current.group] = [];
-    acc[current.group].push(current);
+    let dynamicGroup = "Hospital Admin Permissions";
+    if (roleScope === "GLOBAL") dynamicGroup = "Platform Admin Permissions";
+    if (roleScope === "BRANCH") dynamicGroup = "Branch Admin Permissions";
+
+    if (!acc[dynamicGroup]) acc[dynamicGroup] = [];
+    acc[dynamicGroup].push(current);
     return acc;
   }, {});
 
@@ -726,25 +721,6 @@ export default function Permission({ mode = "tenant" }) {
               </div>
             </div>
 
-            {/* Dashboard Assignment */}
-            <div className="p-6 border-b border-slate-100 bg-white space-y-4">
-              <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5 pb-2">
-                <Layers className="w-4 h-4 text-teal-600" />
-                Assign Landing Dashboard
-              </h4>
-              <p className="text-xs text-slate-500">Select the default dashboard that users with this role will see upon login.</p>
-              <select 
-                value={selectedDashboard} 
-                onChange={(e) => setSelectedDashboard(e.target.value)}
-                className="w-full sm:w-1/2 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="">-- Select a Dashboard --</option>
-                {dashboardOptions.map(opt => (
-                  <option key={opt.id} value={opt.id}>{opt.name} ({opt.path})</option>
-                ))}
-              </select>
-            </div>
-
             {/* Matrix Form / Checkboxes */}
             <div className="p-6 space-y-8 max-h-[600px] overflow-y-auto">
               {Object.entries(groupedMatrix).map(([category, rows]) => (
@@ -859,12 +835,7 @@ export default function Permission({ mode = "tenant" }) {
                 <span className="text-[10px] text-slate-500 leading-relaxed block">{selectedRole.description || "No description provided."}</span>
               </div>
 
-              <div className="space-y-1">
-                <span className="text-[10px] text-slate-400 font-bold uppercase block">Selected Dashboard</span>
-                <span className="text-xs font-bold text-slate-900 block truncate">
-                  {selectedDashboard ? dashboardOptions.find(d => d.id === selectedDashboard)?.name || selectedDashboard : "Not Assigned"}
-                </span>
-              </div>
+
 
               <div className="space-y-2">
                 <span className="text-[10px] text-slate-400 font-bold uppercase block">Currently Assigned Permissions</span>
@@ -983,7 +954,7 @@ export default function Permission({ mode = "tenant" }) {
                   >
                     <option value="" disabled>Select Role Scope</option>
                     {mode === "platform" ? (
-                      <option value="TENANT">Hospital Level (TENANT)</option>
+                      <option value="HOSPITAL">Hospital Level (HOSPITAL)</option>
                     ) : (
                       <option value="BRANCH">Branch Admin (reusable across every branch)</option>
                     )}

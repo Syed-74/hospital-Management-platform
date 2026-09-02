@@ -3,22 +3,6 @@ import { prisma } from './src/config/db.js';
 async function main() {
   console.log("Seeding system dashboards and permissions...");
 
-  // Define Dashboards
-  const dashboardsList = [
-    { name: "Platform Admin Dashboard", path: "/platformAdmin/overview" }
-  ];
-
-  const upsertedDashboards = {};
-  for (const dash of dashboardsList) {
-    const created = await prisma.dashboard.upsert({
-      where: { path: dash.path },
-      update: { name: dash.name },
-      create: { name: dash.name, path: dash.path }
-    });
-    upsertedDashboards[dash.path] = created;
-  }
-  console.log(`✔ Seeded ${dashboardsList.length} dashboards.`);
-
   // Define Platform Admin Permissions based on Enterprise Architecture
   const platformAdminPermissions = [
     // ------------------------------------
@@ -31,13 +15,14 @@ async function main() {
     { action: "api_keys:manage", description: "Manage global API keys and webhooks for external integrations" },
 
     // ------------------------------------
-    // TENANT (HOSPITAL) MANAGEMENT
     // ------------------------------------
-    { action: "hospitals:create", description: "Create and onboard new hospital tenants" },
-    { action: "hospitals:read", description: "Read hospital tenant details and statistics" },
-    { action: "hospitals:update", description: "Update hospital tenant configurations and limits" },
-    { action: "hospitals:delete", description: "Suspend or deactivate hospital tenants" },
-    { action: "hospital_themes:manage", description: "Configure custom branding and themes for hospital tenants" },
+    // HOSPITAL MANAGEMENT
+    // ------------------------------------
+    { action: "hospitals:create", description: "Create and onboard new hospitals" },
+    { action: "hospitals:read", description: "Read hospital details and statistics" },
+    { action: "hospitals:update", description: "Update hospital configurations and limits" },
+    { action: "hospitals:delete", description: "Suspend or deactivate hospitals" },
+    { action: "hospital_themes:manage", description: "Configure custom branding and themes for hospitals" },
 
     // ------------------------------------
     // HOSPITAL ADMIN MANAGEMENT
@@ -66,13 +51,13 @@ async function main() {
     // ------------------------------------
     { action: "security_policies:manage", description: "Configure authentication (MFA/SSO) and password policies" },
     { action: "access_policies:manage", description: "Configure IP whitelisting and geo-blocking policies" },
-    { action: "audit_logs:read", description: "Review global security, audit, and compliance logs across all tenants" },
+    { action: "audit_logs:read", description: "Review global security, audit, and compliance logs across all hospitals" },
 
     // ------------------------------------
     // GLOBAL DATA MANAGEMENT
     // ------------------------------------
     { action: "global_data:manage", description: "Manage standard ICD codes, global medical terminology, and standard drug databases" },
-    { action: "platform_announcements:manage", description: "Publish system-wide maintenance announcements to all tenants" },
+    { action: "platform_announcements:manage", description: "Publish system-wide maintenance announcements to all hospitals" },
   ];
 
   // Upsert Permissions
@@ -99,7 +84,7 @@ async function main() {
     platformAdminRole = await prisma.role.update({
       where: { id: platformAdminRole.id },
       data: {
-        description: 'Platform Level Super Administrator governing access across all hospital tenants',
+        description: 'Platform Level Super Administrator governing access across all hospitals',
         scope: 'GLOBAL'
       }
     });
@@ -107,18 +92,11 @@ async function main() {
     platformAdminRole = await prisma.role.create({
       data: {
         name: 'PLATFORM_ADMIN',
-        description: 'Platform Level Super Administrator governing access across all hospital tenants',
+        description: 'Platform Level Super Administrator governing access across all hospitals',
         scope: 'GLOBAL'
       }
     });
   }
-
-  // Assign Dashboard
-  await prisma.roleDashboard.upsert({
-    where: { roleId_dashboardId: { roleId: platformAdminRole.id, dashboardId: upsertedDashboards["/platformAdmin/overview"].id } },
-    update: {},
-    create: { roleId: platformAdminRole.id, dashboardId: upsertedDashboards["/platformAdmin/overview"].id }
-  });
 
   // Assign all Platform Permissions to PLATFORM_ADMIN
   for (const actionName of Object.keys(upsertedPermissions)) {

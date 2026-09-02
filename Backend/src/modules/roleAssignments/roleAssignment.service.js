@@ -33,11 +33,11 @@ class RoleAssignmentService {
     if (role.scope === "GLOBAL") {
       resolvedHospitalId = null;
       resolvedBranchId = null;
-    } else if (role.scope === "TENANT") {
+    } else if (role.scope === "HOSPITAL") {
       resolvedHospitalId = role.hospitalId || hospitalId || null;
       resolvedBranchId = null;
       if (!resolvedHospitalId) {
-        throw new AppError("hospitalId is required to assign a TENANT scope role.", 400);
+        throw new AppError("hospitalId is required to assign a HOSPITAL scope role.", 400);
       }
     } else if (role.scope === "BRANCH") {
       resolvedHospitalId = role.hospitalId || hospitalId || null;
@@ -54,7 +54,7 @@ class RoleAssignmentService {
       throw new AppError("Unrecognized role scope.", 400);
     }
 
-    // A TENANT/BRANCH role is owned by exactly one hospital — the
+    // A HOSPITAL/BRANCH role is owned by exactly one hospital — the
     // assignment can never point somewhere else.
     if (role.hospitalId && role.hospitalId !== resolvedHospitalId) {
       throw new AppError("This role does not belong to the specified hospital.", 400);
@@ -126,7 +126,7 @@ class RoleAssignmentService {
     if (!assignment) throw new AppError("Assignment not found", 404);
 
     if (actingUser.hospitalId && assignment.hospitalId !== actingUser.hospitalId) {
-      // 404, not 403 — don't confirm that a foreign-tenant assignment exists.
+      // 404, not 403 — don't confirm that a foreign-hospital assignment exists.
       throw new AppError("Assignment not found", 404);
     }
 

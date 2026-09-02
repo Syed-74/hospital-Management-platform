@@ -63,21 +63,18 @@ export const AuthProvider = ({ children }) => {
         setToken(accessToken);
         setUser(user);
         
-        // Redirect based on mapped dashboard paths or fallback to permissions
-        const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
-        
         let redirectPath = "/login";
-        if (roleWithDashboard) {
-          redirectPath = roleWithDashboard.roleDashboards[0].dashboard.path;
-        } else {
-          // Fallback based on permissions
-          const userPermissions = user.roles?.flatMap(role => 
-            role.rolePermissions?.map(p => p.permission.action) || []
-          ) || [];
-
-          if (userPermissions.includes("platform:access")) redirectPath = "/platformAdmin/overview";
-          else if (userPermissions.includes("hospital:access")) redirectPath = "/hospital/overview";
-          else if (userPermissions.includes("branch:access")) redirectPath = "/branch/dashboard";
+        
+        if (user.roles && user.roles.length > 0) {
+          const scopes = user.roles.map(role => role.scope);
+          
+          if (scopes.includes("GLOBAL")) {
+            redirectPath = "/platformAdmin/overview";
+          } else if (scopes.includes("HOSPITAL") || scopes.includes("TENANT")) {
+            redirectPath = "/hospital/overview";
+          } else if (scopes.includes("BRANCH")) {
+            redirectPath = "/branch/dashboard";
+          }
         }
         
         navigate(redirectPath);

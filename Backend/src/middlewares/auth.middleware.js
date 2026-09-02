@@ -42,7 +42,6 @@ export const protect = catchAsync(async (req, res, next) => {
           role: {
             include: {
               rolePermissions: { include: { permission: true } },
-              roleDashboards: { include: { dashboard: true } },
             },
           },
         },

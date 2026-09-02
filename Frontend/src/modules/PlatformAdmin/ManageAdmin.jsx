@@ -51,7 +51,7 @@ export default function ManageAdmin() {
       const [adminsRes, hospitalsRes, rolesRes] = await Promise.all([
         getAllHospAdmins(),
         getAllHospitals(),
-        axios.get('/roles?scope=TENANT')
+        axios.get('/roles?scope=HOSPITAL')
       ]);
 
       if (adminsRes.success) setAdmins(adminsRes.data || []);

@@ -3,7 +3,7 @@
  *
  * A user's access is the union of their UserRoleAssignment rows. Each
  * assignment grants whatever permissions its Role carries, bounded to a
- * scope: GLOBAL (hospitalId = null, branchId = null), TENANT (hospitalId
+ * scope: GLOBAL (hospitalId = null, branchId = null), HOSPITAL (hospitalId
  * set, branchId = null — covers every branch of that hospital), or BRANCH
  * (hospitalId + branchId set — covers only that one branch).
  *
@@ -32,7 +32,7 @@ export function isAuthorizedForScope(grantingScopes, target) {
   return grantingScopes.some((g) => {
     if (!g.hospitalId) return true; // GLOBAL grant covers everything
     if (g.hospitalId !== target.hospitalId) return false;
-    if (!g.branchId) return true; // TENANT grant covers every branch of this hospital
+    if (!g.branchId) return true; // HOSPITAL grant covers every branch of this hospital
     if (!target.branchId) return false; // a BRANCH grant cannot cover a hospital-wide action
     return g.branchId === target.branchId;
   });
@@ -45,9 +45,9 @@ export function hasPermission(user, action) {
 
 /**
  * Derives a backward-compatible flattened `roles` array (deduped Role
- * objects, each with its rolePermissions/roleDashboards already included)
+ * objects, each with its rolePermissions already included)
  * from a user's `roleAssignments`, and attaches it to the user object.
- * Existing code that flattens `user.roles` for permission/dashboard checks
+ * Existing code that flattens `user.roles` for permission checks
  * keeps working unchanged; `user.roleAssignments` remains available for
  * anything that needs the actual scope (hospitalId/branchId) behind a grant.
  */

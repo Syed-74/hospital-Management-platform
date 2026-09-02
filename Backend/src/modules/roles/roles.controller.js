@@ -36,13 +36,13 @@ export const getRoles = catchAsync(async (req, res, next) => {
 
 export const assignPermissions = catchAsync(async (req, res, next) => {
   const { roleId } = req.params;
-  const { permissionIds, dashboardId } = req.body; // Expecting an array of permission UUIDs
+  const { permissionIds } = req.body; // Expecting an array of permission UUIDs
 
   if (!Array.isArray(permissionIds)) {
     return res.status(400).json({ status: "fail", message: "permissionIds must be an array" });
   }
 
-  const result = await rolesService.assignPermissionsToRole(roleId, permissionIds, dashboardId);
+  const result = await rolesService.assignPermissionsToRole(roleId, permissionIds);
   res.status(200).json({ status: "success", data: result });
 });
 

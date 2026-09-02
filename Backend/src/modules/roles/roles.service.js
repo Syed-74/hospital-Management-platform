@@ -10,16 +10,13 @@ class RolesService {
    * instead of being duplicated per branch.
    */
   async createRole(data) {
-    const { name, description, scope = 'TENANT', hospitalId = null } = data;
+    const { name, description, scope = 'HOSPITAL', hospitalId = null } = data;
 
-    if (!['GLOBAL', 'TENANT', 'BRANCH'].includes(scope)) {
+    if (!['GLOBAL', 'HOSPITAL', 'BRANCH'].includes(scope)) {
       throw new AppError("Invalid role scope.", 400);
     }
     if (scope === 'GLOBAL' && hospitalId) {
       throw new AppError("GLOBAL scope roles cannot belong to a hospital.", 400);
-    }
-    if (scope !== 'GLOBAL' && !hospitalId) {
-      throw new AppError("TENANT/BRANCH scope roles must belong to a hospital.", 400);
     }
 
     const exists = await prisma.role.findFirst({ where: { name, hospitalId } });
@@ -51,12 +48,11 @@ class RolesService {
       where: whereClause,
       include: {
         rolePermissions: { include: { permission: true } },
-        roleDashboards: { include: { dashboard: true } },
       },
     });
   }
 
-  async assignPermissionsToRole(roleId, permissionIds, dashboardId) {
+  async assignPermissionsToRole(roleId, permissionIds) {
     // Validate role exists
     const role = await prisma.role.findUnique({ where: { id: roleId } });
     if (!role) {
@@ -65,20 +61,11 @@ class RolesService {
 
     // Use a transaction to ensure atomic replacement
     await prisma.$transaction(async (tx) => {
-      // 1. Clear old dashboard mapping
-      await tx.roleDashboard.deleteMany({ where: { roleId } });
 
-      // 2. Set new dashboard if provided
-      if (dashboardId) {
-        await tx.roleDashboard.create({
-          data: { roleId, dashboardId },
-        });
-      }
-
-      // 3. Clear old permission mapping
+      // 1. Clear old permission mapping
       await tx.rolePermission.deleteMany({ where: { roleId } });
 
-      // 4. Set new permissions
+      // 2. Set new permissions
       if (permissionIds && permissionIds.length > 0) {
         // Here permissionIds is an array of action strings, e.g., ["branch:manage", "hospital:access"]
         const resolvedPermissionIds = [];
@@ -105,7 +92,6 @@ class RolesService {
       where: { id: roleId },
       include: {
         rolePermissions: { include: { permission: true } },
-        roleDashboards: { include: { dashboard: true } },
       },
     });
 

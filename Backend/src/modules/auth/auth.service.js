@@ -62,7 +62,6 @@ class AuthService {
             role: {
               include: {
                 rolePermissions: { include: { permission: true } },
-                roleDashboards: { include: { dashboard: true } },
               },
             },
           },

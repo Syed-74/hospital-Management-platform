@@ -1,1 +1,0 @@
-import { prisma } from './src/config/db.js'; async function main() { await prisma.roleDashboard.deleteMany({ where: { dashboard: { path: '/company/overview' } } }); await prisma.dashboard.deleteMany({ where: { path: '/company/overview' } }); console.log('Deleted old dashboard'); } main().catch(console.error).finally(() => prisma.$disconnect());

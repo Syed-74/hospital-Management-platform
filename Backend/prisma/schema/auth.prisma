@@ -10,7 +10,7 @@ enum AccountStatus {
 
 enum RoleScope {
   GLOBAL
-  TENANT
+  HOSPITAL
   BRANCH
 }
 
@@ -54,7 +54,7 @@ model Role {
   id          String    @id @default(uuid())
   name        String
   description String?
-  scope       RoleScope @default(TENANT)
+  scope       RoleScope @default(HOSPITAL)
 
   // Tenant isolation: null = GLOBAL/platform-shared role template.
   // TENANT/BRANCH roles created by a hospital are private to that hospital,
@@ -63,7 +63,6 @@ model Role {
   hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
 
   assignments     UserRoleAssignment[]
-  roleDashboards  RoleDashboard[]
   rolePermissions RolePermission[]
   branchAdmins    BranchAdmin[]
 
@@ -104,30 +103,6 @@ model UserRoleAssignment {
   @@index([userId])
   @@index([hospitalId])
   @@index([branchId])
-}
-
-// Dashboard Model
-model Dashboard {
-  id   String @id @default(uuid())
-  name String
-  path String @unique
-
-  roleDashboards RoleDashboard[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// RoleDashboard Mapping Table
-model RoleDashboard {
-  id          String @id @default(uuid())
-  roleId      String
-  dashboardId String
-
-  role      Role      @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  dashboard Dashboard @relation(fields: [dashboardId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, dashboardId])
 }
 
 // RolePermission Mapping Table
