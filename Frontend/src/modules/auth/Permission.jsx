@@ -217,16 +217,16 @@ export default function Permission({ mode = "tenant" }) {
       description: "Access the Hospital Admin dashboard and modules.",
       scopes: ["HOSPITAL"]
     },
-    // {
-    //   group: "Hospital Administration & Operations",
-    //   label: "Hospital Profile",
-    //   read: "hospital_profile:read",
-    //   create: "hospital_profile:manage",
-    //   update: "hospital_profile:manage",
-    //   delete: "hospital_profile:manage",
-    //   description: "Manage hospital details and configurations.",
-    //   scopes: ["TENANT"]
-    // },
+    {
+      group: "Hospital Administration & Operations",
+      label: "Hospital Profile",
+      read: "hospital_profile:read",
+      create: "hospital_profile:manage",
+      update: "hospital_profile:manage",
+      delete: "hospital_profile:manage",
+      description: "Manage hospital details and configurations.",
+      scopes: ["TENANT"]
+    },
     {
       group: "Hospital Administration & Operations",
       label: "Branch Management",
@@ -235,7 +235,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:manage",
       delete: "branch:manage",
       description: "Create and manage hospital branches.",
-      scopes: ["HOSPITAL"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -255,7 +255,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "departments:update",
       delete: "departments:delete",
       description: "Manage departments, specialties, and service catalog.",
-      scopes: ["HOSPITAL", "BRANCH"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -265,7 +265,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "fees:update",
       delete: "fees:delete",
       description: "Manage pricing, consultation, and operational fees per department.",
-      scopes: ["HOSPITAL", "BRANCH"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Hospital Administration & Operations",
@@ -287,17 +287,17 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospitalUsers:manage",
       delete: "hospitalUsers:manage",
       description: "Manage users, doctors, nurses, and operational staff.",
-      scopes: ["HOSPITAL"]
+      scopes: ["BRANCH",]
     },
     {
       group: "Identity & Access Management",
       label: "Role Management (RBAC)",
-      read: "tenant_roles:manage",
-      create: "tenant_roles:manage",
-      update: "tenant_roles:manage",
-      delete: "tenant_roles:manage",
+      read: "roles:manage",
+      create: "roles:manage",
+      update: "roles:manage",
+      delete: "roles:manage",
       description: "Create and manage hospital and branch-level roles.",
-      scopes: ["HOSPITAL"]
+      scopes: ["HOSPITAL","BRANCH"]
     },
     {
       group: "Identity & Access Management",
@@ -307,7 +307,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "users:assign_roles",
       delete: "users:assign_roles",
       description: "Assign roles to hospital and branch users.",
-      scopes: ["HOSPITAL"]
+      scopes: ["HOSPITAL" ,"BRANCH"]
     },
 
     // 3. Clinical & Medical Management
@@ -319,7 +319,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "clinical_ops:manage",
       delete: "clinical_ops:manage",
       description: "Oversee clinical activities and standards.",
-      scopes: ["HOSPITAL"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Clinical & Medical Management",
@@ -329,7 +329,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_appointments:manage",
       delete: "hospital_appointments:manage",
       description: "Approve or manage appointments globally across branches.",
-      scopes: ["HOSPITAL"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Clinical & Medical Management",
@@ -445,7 +445,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:access",
       delete: "branch:access",
       description: "Access the Branch Admin dashboard and modules.",
-      scopes: ["BRANCH", "HOSPITAL"]
+      scopes: ["BRANCH"]
     },
     {
       group: "Branch Administration & Operations",
@@ -588,7 +588,7 @@ export default function Permission({ mode = "tenant" }) {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-left">
+    <div className="w-full max-w-[1400px] mx-auto space-y-6 text-left">
       {/* Breadcrumb Navigation */}
       <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
         <Link to={mode === "platform" ? "/platformAdmin/overview" : mode === "branch" ? "/branch/dashboard" : "/hospital/overview"} className="hover:text-slate-600">

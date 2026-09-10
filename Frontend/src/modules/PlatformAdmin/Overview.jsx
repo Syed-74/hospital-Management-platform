@@ -1,12 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Users, Banknote, Cloud, Plus, Radio, FileText, Key, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../../core/context/AuthContext';
 
 export default function Overview() {
+  const { getAllHospitals, getAllHospAdmins } = useAuth();
+  
+  const [realHospitals, setRealHospitals] = useState([]);
+  const [realAdmins, setRealAdmins] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [hospRes, adminRes] = await Promise.all([
+          getAllHospitals(),
+          getAllHospAdmins()
+        ]);
+        if (hospRes.success) setRealHospitals(hospRes.data?.hospitals || hospRes.data || []);
+        if (adminRes.success) setRealAdmins(adminRes.data || []);
+      } catch (err) {
+        console.error("Failed to load overview data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, [getAllHospitals, getAllHospAdmins]);
+
   const stats = [
-    { name: 'Total Tenants', value: '142', subtext: 'hospitals', change: '+4 this month', changeType: 'positive', icon: Building2 },
-    { name: 'Active Users', value: '48.5k', subtext: '', change: '12.4k new', changeType: 'neutral', icon: Users },
-    { name: 'Monthly Revenue', value: '$1.24M', subtext: '', change: '↑ 8.2%', changeType: 'positive', icon: Banknote },
-    { name: 'System Uptime', value: '99.99%', subtext: '', change: 'Target 99.9%', changeType: 'neutral-gray', icon: Cloud },
+    { name: 'Total Tenants', value: isLoading ? '...' : realHospitals.length.toString(), subtext: 'hospitals', change: '+4 this month', changeType: 'positive', icon: Building2 },
+    { name: 'Active Admins', value: isLoading ? '...' : realAdmins.length.toString(), subtext: '', change: 'Latest data', changeType: 'neutral', icon: Users },
+    { name: 'Monthly Revenue', value: '$1.24M', subtext: 'Projected', change: '↑ 8.2%', changeType: 'positive', icon: Banknote },
+    { name: 'System Uptime', value: '99.99%', subtext: 'Operational', change: 'Target 99.9%', changeType: 'neutral-gray', icon: Cloud },
   ];
 
   const quickActions = [
@@ -16,14 +41,20 @@ export default function Overview() {
     { title: 'Manage Licenses', subtitle: 'SUBSCRIPTION LOGIC', icon: Key, color: 'text-teal-700', bg: 'bg-teal-50' },
   ];
 
-  const tenants = [
-    { id: 'MA', name: 'Mayo Clinic Apex', branches: 14, plan: 'PLATINUM', planColor: 'text-amber-700 bg-amber-100', status: 'Active', statusColor: 'text-emerald-700 bg-emerald-100', dot: 'bg-emerald-500', time: 'Just now' },
-    { id: 'SH', name: 'St. Helios Medical', branches: 6, plan: 'GOLD', planColor: 'text-blue-700 bg-blue-100', status: 'Active', statusColor: 'text-emerald-700 bg-emerald-100', dot: 'bg-emerald-500', time: '4 mins ago' },
-    { id: 'KC', name: "King's Cross Health", branches: 22, plan: 'PLATINUM', planColor: 'text-amber-700 bg-amber-100', status: 'Suspended', statusColor: 'text-red-700 bg-red-100', dot: 'bg-red-500', time: '2 days ago' },
-  ];
+  const tenants = realHospitals.slice(0, 5).map(h => ({
+    id: h.hospitalCode || 'HSP', 
+    name: h.hospitalName || 'Unknown', 
+    branches: h.branches?.length || 0, 
+    plan: 'ENTERPRISE', 
+    planColor: 'text-amber-700 bg-amber-100', 
+    status: h.isActive !== false ? 'Active' : 'Inactive', 
+    statusColor: h.isActive !== false ? 'text-emerald-700 bg-emerald-100' : 'text-gray-700 bg-gray-100', 
+    dot: h.isActive !== false ? 'bg-emerald-500' : 'bg-gray-500', 
+    time: h.createdAt ? new Date(h.createdAt).toLocaleDateString() : 'Recently'
+  }));
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto bg-slate-50/50 min-h-full">
+    <div className="space-y-6 w-full max-w-[1400px] mx-auto">
       {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, idx) => (

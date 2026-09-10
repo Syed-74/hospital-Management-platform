@@ -37,7 +37,14 @@ export default function ManageAdmin() {
     employeeCode: '',
     roleId: '',
     isActive: true,
-    status: 'PENDING'
+    status: 'PENDING',
+    middleName: '',
+    displayName: '',
+    alternatePhone: '',
+    profileImageUrl: '',
+    isEmailVerified: false,
+    isPhoneVerified: false,
+    mfaEnabled: false
   });
 
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function ManageAdmin() {
     setIsEditMode(false);
     setEditId(null);
     setFormData({
-      hospitalId: '', firstName: '', lastName: '', email: '', password: '', phone: '', employeeCode: '', roleId: '', isActive: true, status: 'PENDING'
+      hospitalId: '', firstName: '', lastName: '', middleName: '', displayName: '', email: '', password: '', phone: '', alternatePhone: '', employeeCode: '', profileImageUrl: '', roleId: '', isActive: true, status: 'PENDING', isEmailVerified: false, isPhoneVerified: false, mfaEnabled: false
     });
     setError('');
     setStep(1);
@@ -98,10 +105,17 @@ export default function ManageAdmin() {
       email: admin.email || '',
       password: '', // Leave empty on edit
       phone: admin.hospitalAdmin?.phone || '',
+      alternatePhone: admin.hospitalAdmin?.alternatePhone || '',
       employeeCode: admin.hospitalAdmin?.employeeCode || '',
+      profileImageUrl: admin.hospitalAdmin?.profileImageUrl || '',
       roleId: roleId,
       isActive: admin.isActive,
-      status: admin.hospitalAdmin?.status || 'PENDING'
+      status: admin.hospitalAdmin?.status || 'PENDING',
+      middleName: admin.hospitalAdmin?.middleName || '',
+      displayName: admin.hospitalAdmin?.displayName || '',
+      isEmailVerified: admin.hospitalAdmin?.isEmailVerified || false,
+      isPhoneVerified: admin.hospitalAdmin?.isPhoneVerified || false,
+      mfaEnabled: admin.hospitalAdmin?.mfaEnabled || false
     });
     setError('');
     setStep(1);
@@ -158,7 +172,7 @@ export default function ManageAdmin() {
   }
 
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8">
+    <div className="w-full max-w-[1400px] mx-auto space-y-8">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -296,79 +310,119 @@ export default function ManageAdmin() {
                 {/* STEP 1: Basic Info */}
                 {step === 1 && (
                   <>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-900">First Name <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                          <input required type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="John" />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-900">Last Name <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                          <input required type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="Doe" />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-900">Email Address <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                          <input required={!isEditMode} disabled={isEditMode} type="email" name="email" value={formData.email} onChange={handleInputChange}
-                            className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`} placeholder="admin@hospital.com" />
-                        </div>
-                      </div>
-
-                      {!isEditMode && (
+                    {/* Identity Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4">Identity Details</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                         <div className="space-y-2">
-                          <label className="text-sm font-semibold text-gray-900">Temporary Password <span className="text-red-500">*</span></label>
+                          <label className="text-sm font-semibold text-gray-900">First Name <span className="text-red-500">*</span></label>
                           <div className="relative">
-                            <input required type="password" name="password" value={formData.password} onChange={handleInputChange}
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="••••••••" />
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input required type="text" name="firstName" value={formData.firstName} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="John" />
                           </div>
                         </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-900">Phone Number <span className="text-red-500">*</span></label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                          <input required type="text" name="phone" value={formData.phone} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="+1 (555) 000-0000" />
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Middle Name</label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="" />
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-900">Employee Code</label>
-                        <div className="relative">
-                          <BadgeInfo className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                          <input type="text" name="employeeCode" value={formData.employeeCode} onChange={handleInputChange}
-                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="EMP-12345" />
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Last Name <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input required type="text" name="lastName" value={formData.lastName} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="Doe" />
+                          </div>
+                        </div>
+                        <div className="space-y-2 sm:col-span-3">
+                          <label className="text-sm font-semibold text-gray-900">Display Name</label>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input type="text" name="displayName" value={formData.displayName} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="Dr. John Doe" />
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-2">
-                      <label className="text-sm font-semibold text-gray-900">Assign to Hospital <span className="text-red-500">*</span></label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <select required name="hospitalId" value={formData.hospitalId} onChange={handleInputChange} disabled={isEditMode}
-                          className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`}>
-                          <option value="">Select a Hospital</option>
-                          {hospitals.map(h => (
-                            <option key={h.id} value={h.id}>{h.hospitalName} ({h.hospitalCode})</option>
-                          ))}
-                        </select>
+                    {/* Contact Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4">Contact Details</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Email Address <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input required={!isEditMode} disabled={isEditMode} type="email" name="email" value={formData.email} onChange={handleInputChange}
+                              className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`} placeholder="admin@hospital.com" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Profile Image URL</label>
+                          <div className="relative">
+                            <input type="text" name="profileImageUrl" value={formData.profileImageUrl} onChange={handleInputChange}
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="https://example.com/avatar.jpg" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Phone Number <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input required type="text" name="phone" value={formData.phone} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="+1 (555) 000-0000" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Alternate Phone</label>
+                          <div className="relative">
+                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input type="text" name="alternatePhone" value={formData.alternatePhone} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="+1 (555) 111-1111" />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    {isEditMode && (
-                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 pt-2">
+                    {/* Account Security Section */}
+                    <div className="mb-6">
+                      <h4 className="text-sm font-bold text-gray-900 border-b pb-2 mb-4">Account Security & Settings</h4>
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        {!isEditMode && (
+                          <div className="space-y-2">
+                            <label className="text-sm font-semibold text-gray-900">Temporary Password <span className="text-red-500">*</span></label>
+                            <div className="relative">
+                              <input required type="password" name="password" value={formData.password} onChange={handleInputChange}
+                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="••••••••" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Employee Code</label>
+                          <div className="relative">
+                            <BadgeInfo className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input type="text" name="employeeCode" value={formData.employeeCode} onChange={handleInputChange}
+                              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600 transition-all outline-none" placeholder="EMP-12345" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-gray-900">Assign to Hospital <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <select required name="hospitalId" value={formData.hospitalId} onChange={handleInputChange} disabled={isEditMode}
+                              className={`w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl transition-all outline-none appearance-none ${isEditMode ? 'bg-gray-100 text-gray-500' : 'bg-gray-50 focus:ring-2 focus:ring-indigo-600/20 focus:border-teal-600'}`}>
+                              <option value="">Select a Hospital</option>
+                              {hospitals.map(h => (
+                                <option key={h.id} value={h.id}>{h.hospitalName} ({h.hospitalCode})</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
                           <label className="text-sm font-semibold text-gray-900">Account Status</label>
                           <select name="status" value={formData.status} onChange={handleInputChange}
@@ -379,14 +433,31 @@ export default function ManageAdmin() {
                             <option value="SUSPENDED">Suspended</option>
                           </select>
                         </div>
+                      </div>
 
-                        <div className="flex items-center space-x-3 pt-8">
+                      <div className="grid grid-cols-2 gap-4 mt-6">
+                        <div className="flex items-center space-x-3">
                           <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleInputChange}
                             className="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-indigo-600" />
-                          <label htmlFor="isActive" className="text-sm font-semibold text-gray-900">User is Login Active</label>
+                          <label htmlFor="isActive" className="text-sm font-semibold text-gray-900">Login Active</label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <input type="checkbox" id="mfaEnabled" name="mfaEnabled" checked={formData.mfaEnabled} onChange={handleInputChange}
+                            className="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-indigo-600" />
+                          <label htmlFor="mfaEnabled" className="text-sm font-semibold text-gray-900">MFA Enabled</label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <input type="checkbox" id="isEmailVerified" name="isEmailVerified" checked={formData.isEmailVerified} onChange={handleInputChange}
+                            className="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-indigo-600" />
+                          <label htmlFor="isEmailVerified" className="text-sm font-semibold text-gray-900">Email Verified</label>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <input type="checkbox" id="isPhoneVerified" name="isPhoneVerified" checked={formData.isPhoneVerified} onChange={handleInputChange}
+                            className="w-5 h-5 text-teal-600 rounded border-gray-300 focus:ring-indigo-600" />
+                          <label htmlFor="isPhoneVerified" className="text-sm font-semibold text-gray-900">Phone Verified</label>
                         </div>
                       </div>
-                    )}
+                    </div>
 
                     <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end gap-3">
                       <button type="button" onClick={() => setIsModalOpen(false)}

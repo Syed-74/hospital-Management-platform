@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../core/context/AuthContext";
 import { 
-  Plus, Search, Edit2, Trash2, Loader2, Shield, AlertCircle, ChevronRight, ChevronLeft
+  Plus, Search, Edit2, Trash2, Loader2, Shield, AlertCircle, ChevronRight, ChevronLeft, X, UserPlus, CheckCircle2
 } from "lucide-react";
 import Button from "../../core/components/ui/Button";
 import Input from "../../core/components/ui/Input";
@@ -348,51 +348,69 @@ export default function ManageBranchAdmin() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-xl font-semibold">
-                {isEditing ? "Edit Branch Admin" : "Add Branch Admin"}
-              </h2>
-              <div className="text-sm font-medium text-gray-500">
-                Step {currentStep} of {totalSteps}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity p-4 sm:p-6 duration-300">
+          <div className="w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
+            
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus className="w-5 h-5 text-teal-600" />
+                  {isEditing ? "Update Branch Admin" : "Register Branch Admin"}
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Step {currentStep} of {totalSteps} — {currentStep === 1 ? 'Personal Info' : currentStep === 2 ? 'Contact Details' : currentStep === 3 ? 'Organization' : 'Security'}
+                </p>
               </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
             
-            <div className="p-6 flex-1 overflow-y-auto">
+            {/* Stepper Progress Bar */}
+            <div className="h-1 w-full bg-slate-100">
+              <div 
+                className="h-full bg-teal-600 transition-all duration-300 ease-out" 
+                style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+              ></div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 relative">
               {error && (
-                <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md flex items-center gap-2">
-                  <AlertCircle size={18} />
+                <div className="mb-6 p-3.5 bg-red-50 text-red-700 rounded-xl border border-red-100 flex items-center gap-2 text-sm font-medium animate-in fade-in">
+                  <AlertCircle size={18} className="shrink-0" />
                   {error}
                 </div>
               )}
               
-              <form id="adminForm" onSubmit={handleFormSubmit} className="space-y-4">
+              <form id="adminForm" onSubmit={handleFormSubmit} className="space-y-6 animate-in fade-in duration-300">
                 
                 {/* STEP 1: Personal Info */}
                 {currentStep === 1 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Personal Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
-                        <Input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} />
+                  <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-2">Personal Information</h3>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">First Name <span className="text-red-500">*</span></label>
+                        <Input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Middle Name</label>
-                        <Input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange} />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Middle Name</label>
+                        <Input type="text" name="middleName" value={formData.middleName} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
-                        <Input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Last Name <span className="text-red-500">*</span></label>
+                        <Input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                        <Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Date of Birth</label>
+                        <Input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
-                        <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Gender</label>
+                        <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white">
                           <option value="">Select...</option>
                           <option value="Male">Male</option>
                           <option value="Female">Female</option>
@@ -405,31 +423,31 @@ export default function ManageBranchAdmin() {
 
                 {/* STEP 2: Contact & Address */}
                 {currentStep === 2 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Contact & Address</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                        <Input type="email" name="email" value={formData.email} onChange={handleInputChange} />
+                  <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-2">Contact & Address</h3>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Email <span className="text-red-500">*</span></label>
+                        <Input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Primary Phone *</label>
-                        <Input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Primary Phone <span className="text-red-500">*</span></label>
+                        <Input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Alternate Phone</label>
-                        <Input type="tel" name="alternatePhoneNumber" value={formData.alternatePhoneNumber} onChange={handleInputChange} />
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Alternate Phone</label>
+                        <Input type="tel" name="alternatePhoneNumber" value={formData.alternatePhoneNumber} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
                     </div>
-                    <div className="space-y-3 pt-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-                      <Input type="text" placeholder="Address Line 1" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} />
-                      <Input type="text" placeholder="Address Line 2" name="addressLine2" value={formData.addressLine2} onChange={handleInputChange} />
-                      <div className="grid grid-cols-2 gap-4">
-                        <Input type="text" placeholder="City" name="city" value={formData.city} onChange={handleInputChange} />
-                        <Input type="text" placeholder="State" name="state" value={formData.state} onChange={handleInputChange} />
-                        <Input type="text" placeholder="Country" name="country" value={formData.country} onChange={handleInputChange} />
-                        <Input type="text" placeholder="Postal Code" name="postalCode" value={formData.postalCode} onChange={handleInputChange} />
+                    <div className="space-y-4 pt-4 border-t border-slate-100">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Address Location</label>
+                      <Input type="text" placeholder="Address Line 1" name="addressLine1" value={formData.addressLine1} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                      <Input type="text" placeholder="Address Line 2 (Optional)" name="addressLine2" value={formData.addressLine2} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                      <div className="grid grid-cols-2 gap-4 pt-1">
+                        <Input type="text" placeholder="City" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                        <Input type="text" placeholder="State" name="state" value={formData.state} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                        <Input type="text" placeholder="Country" name="country" value={formData.country} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                        <Input type="text" placeholder="Postal Code" name="postalCode" value={formData.postalCode} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
                       </div>
                     </div>
                   </div>
@@ -437,37 +455,25 @@ export default function ManageBranchAdmin() {
 
                 {/* STEP 3: Organization Details */}
                 {currentStep === 3 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Organization Details</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Assign Branch *</label>
-                        <select name="branchId" value={formData.branchId} onChange={handleInputChange} className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-2">Organization Configuration</h3>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Assign Branch <span className="text-red-500">*</span></label>
+                        <select name="branchId" value={formData.branchId} onChange={handleInputChange} className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white">
                           <option value="">Select a Branch...</option>
                           {branches.map(b => (
                             <option key={b.id} value={b.id}>{b.branchName}</option>
                           ))}
                         </select>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-                        <Input type="text" name="employeeId" value={formData.employeeId} onChange={handleInputChange} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Department ID</label>
-                        <Input type="text" name="departmentId" value={formData.departmentId} onChange={handleInputChange} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
-                        <Input type="text" name="designation" value={formData.designation} onChange={handleInputChange} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Assign Role</label>
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Assign Role</label>
                         <select 
                           name="roleId" 
                           value={formData.roleId} 
                           onChange={handleInputChange} 
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white"
                         >
                           <option value="">Select a Role...</option>
                           {roles.map(r => (
@@ -475,18 +481,30 @@ export default function ManageBranchAdmin() {
                           ))}
                         </select>
                       </div>
+                      <div className="space-y-1.5 mt-2">
+                        <label className="block text-xs font-bold text-slate-700">Employee ID</label>
+                        <Input type="text" name="employeeId" value={formData.employeeId} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                      </div>
+                      <div className="space-y-1.5 mt-2">
+                        <label className="block text-xs font-bold text-slate-700">Department ID</label>
+                        <Input type="text" name="departmentId" value={formData.departmentId} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                      </div>
+                      <div className="col-span-2 space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Designation</label>
+                        <Input type="text" name="designation" value={formData.designation} onChange={handleInputChange} className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500" />
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {/* STEP 4: Security */}
                 {currentStep === 4 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium text-gray-800 border-b pb-2">Security</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Password * {isEditing && <span className="text-xs text-gray-500 font-normal">(Leave blank to keep current)</span>}
+                  <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                    <h3 className="text-sm font-bold text-teal-700 uppercase tracking-wider mb-2">Security & Access</h3>
+                    <div className="grid grid-cols-1 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Account Password {isEditing && <span className="text-slate-400 font-normal ml-1">(Leave blank to keep current)</span>}
                         </label>
                         <Input 
                           type="password" 
@@ -494,20 +512,20 @@ export default function ManageBranchAdmin() {
                           value={formData.password} 
                           onChange={handleInputChange} 
                           minLength={6}
+                          className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500"
                         />
                       </div>
                     </div>
-                    <div className="flex items-center mt-4">
-                      <input 
-                        type="checkbox" 
-                        id="twoFactorEnabled"
-                        name="twoFactorEnabled"
-                        checked={formData.twoFactorEnabled}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label htmlFor="twoFactorEnabled" className="ml-2 block text-sm text-gray-900">
-                        Enable Two-Factor Authentication (2FA)
+                    <div className="flex items-center mt-6 pt-4 border-t border-slate-100">
+                      <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                        <input 
+                          type="checkbox" 
+                          name="twoFactorEnabled"
+                          checked={formData.twoFactorEnabled}
+                          onChange={handleInputChange}
+                          className="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500/20"
+                        />
+                        <span className="text-sm font-bold text-slate-700">Enable Two-Factor Authentication (2FA)</span>
                       </label>
                     </div>
                   </div>
@@ -516,24 +534,41 @@ export default function ManageBranchAdmin() {
             </div>
             
             {/* Modal Footer */}
-            <div className="p-6 border-t border-gray-200 flex justify-between items-center bg-gray-50 rounded-b-lg">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+            <div className="p-6 border-t border-slate-100 flex justify-between items-center bg-slate-50 mt-auto">
+              <Button 
+                type="button" 
+                onClick={() => setIsModalOpen(false)}
+                className="bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold px-4 py-2.5 rounded-xl transition-colors"
+              >
                 Cancel
               </Button>
               <div className="flex gap-3">
                 {currentStep > 1 && (
-                  <Button type="button" variant="secondary" onClick={prevStep} className="flex items-center gap-1">
-                    <ChevronLeft size={16} /> Previous
+                  <Button 
+                    type="button" 
+                    onClick={prevStep} 
+                    className="bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1"
+                  >
+                    <ChevronLeft size={16} /> Back
                   </Button>
                 )}
                 {currentStep < totalSteps ? (
-                  <Button type="button" onClick={nextStep} className="flex items-center gap-1">
+                  <Button 
+                    type="button" 
+                    onClick={nextStep} 
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-1 border-none"
+                  >
                     Next <ChevronRight size={16} />
                   </Button>
                 ) : (
-                  <Button type="submit" form="adminForm" disabled={formLoading} className="flex items-center gap-2">
+                  <Button 
+                    type="submit" 
+                    form="adminForm" 
+                    disabled={formLoading} 
+                    className="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-sm flex items-center gap-2 border-none"
+                  >
                     {formLoading && <Loader2 size={16} className="animate-spin" />}
-                    {isEditing ? "Update Admin" : "Create Admin"}
+                    {isEditing ? "Save Changes" : "Complete Registration"}
                   </Button>
                 )}
               </div>

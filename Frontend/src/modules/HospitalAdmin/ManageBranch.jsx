@@ -31,6 +31,7 @@ export default function ManageBranch() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentBranchId, setCurrentBranchId] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("general"); // general, contact, location, settings
 
   // Autocomplete ref
   const searchInputRef = useRef(null);
@@ -242,6 +243,24 @@ export default function ManageBranch() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    
+    // Custom validation to switch tabs if a required field is empty
+    if (!formData.branchName || !formData.branchCode) {
+      setActiveTab("general");
+      setError("Please fill all required General Information fields.");
+      return;
+    }
+    if (!formData.email || !formData.phone) {
+      setActiveTab("contact");
+      setError("Please fill all required Contact Details fields.");
+      return;
+    }
+    if (!formData.addressLine1 || !formData.city || !formData.state || !formData.postalCode || !formData.country) {
+      setActiveTab("location");
+      setError("Please fill all required Address Details fields.");
+      return;
+    }
+
     setFormLoading(true);
     setError("");
     setSuccess("");
@@ -672,8 +691,8 @@ export default function ManageBranch() {
 
       {/* Add / Edit Slide-over Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300">
-          <div className="w-full max-w-lg h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 ease-out">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity p-4 sm:p-6 duration-300">
+          <div className="w-full max-w-lg max-h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 ease-out overflow-hidden">
             
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
@@ -689,277 +708,321 @@ export default function ManageBranch() {
               </button>
             </div>
 
+            {/* Modal Tabs */}
+            <div className="flex items-center px-6 border-b border-slate-100 bg-slate-50/50">
+              <button 
+                type="button"
+                onClick={() => setActiveTab("general")}
+                className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
+                  activeTab === "general" ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-200"
+                }`}
+              >
+                <Building2 className="w-4 h-4" /> General
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveTab("contact")}
+                className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
+                  activeTab === "contact" ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-200"
+                }`}
+              >
+                <Phone className="w-4 h-4" /> Contact
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveTab("location")}
+                className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
+                  activeTab === "location" ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-200"
+                }`}
+              >
+                <MapPin className="w-4 h-4" /> Address
+              </button>
+              <button 
+                type="button"
+                onClick={() => setActiveTab("settings")}
+                className={`py-3.5 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
+                  activeTab === "settings" ? "border-teal-600 text-teal-700" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-200"
+                }`}
+              >
+                <Globe className="w-4 h-4" /> Settings
+              </button>
+            </div>
+
             {/* Modal Form Content */}
-            <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+            <form onSubmit={handleFormSubmit} className="flex-1 overflow-y-auto p-6 bg-slate-50 relative">
               
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider">General Information</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2 space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Branch Name *</label>
-                    <Input 
-                      type="text" 
-                      name="branchName" 
-                      required
-                      value={formData.branchName}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Apollo Jubilee Hills"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
+              <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === "general" ? "block" : "hidden"}`}>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                  <h4 className="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                    <Building2 className="w-4 h-4" /> General Information
+                  </h4>
                   
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Branch Code *</label>
-                    <Input 
-                      type="text" 
-                      name="branchCode" 
-                      required
-                      disabled={isEditing}
-                      value={formData.branchCode}
-                      onChange={handleInputChange}
-                      placeholder="e.g. APOLLO-JH-01"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm disabled:bg-slate-50 disabled:text-slate-400"
-                    />
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="col-span-2 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Branch Name <span className="text-red-500">*</span></label>
+                      <Input 
+                        type="text" 
+                        name="branchName" 
+                        required={activeTab === 'general'}
+                        value={formData.branchName}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Apollo Jubilee Hills"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Branch Code <span className="text-red-500">*</span></label>
+                      <Input 
+                        type="text" 
+                        name="branchCode" 
+                        required={activeTab === 'general'}
+                        disabled={isEditing}
+                        value={formData.branchCode}
+                        onChange={handleInputChange}
+                        placeholder="e.g. APOLLO-JH-01"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm disabled:bg-slate-50 disabled:text-slate-400 focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">License Number</label>
+                      <Input 
+                        type="text" 
+                        name="licenseNumber" 
+                        value={formData.licenseNumber}
+                        onChange={handleInputChange}
+                        placeholder="Lic. No / Reg No"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">License Number</label>
-                    <Input 
-                      type="text" 
-                      name="licenseNumber" 
-                      value={formData.licenseNumber}
-                      onChange={handleInputChange}
-                      placeholder="Lic. No / Reg No"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-6 pt-2">
-                  {/* <label className="flex items-center space-x-2.5 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
-                      name="isMainBranch"
-                      checked={formData.isMainBranch}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20"
-                    />
-                    <span className="text-sm font-semibold text-slate-700">Set as Main Headquarters Branch</span>
-                  </label> */}
-
-                  <label className="flex items-center space-x-2.5 cursor-pointer select-none">
-                    <input 
-                      type="checkbox" 
-                      name="isActive"
-                      checked={formData.isActive}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20"
-                    />
-                    <span className="text-sm font-semibold text-slate-700">Is Active</span>
-                  </label>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider">Contact Credentials</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-1 space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Hospital Admin Name</label>
-                    <Input 
-                      type="text" 
-                      disabled
-                      value={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Admin User'}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-                  
-                  <div className="col-span-1 space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Hospital Email</label>
-                    <Input 
-                      type="email" 
-                      disabled
-                      value={hospitalData?.email || ''}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div className="col-span-2 space-y-1 mt-2">
-                    <label className="text-xs font-bold text-slate-600">Branch Email *</label>
-                    <Input 
-                      type="email" 
-                      name="email" 
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="info@branch.apollo.com"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Contact Number *</label>
-                    <Input 
-                      type="tel" 
-                      name="phone" 
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="+91 XXXXX XXXXX"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Alternate Phone</label>
-                    <Input 
-                      type="tel" 
-                      name="alternatePhone" 
-                      value={formData.alternatePhone}
-                      onChange={handleInputChange}
-                      placeholder="Optional phone"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
+                  <div className="flex items-center space-x-6 pt-4 border-t border-slate-100">
+                    <label className="flex items-center space-x-2.5 cursor-pointer select-none">
+                      <input 
+                        type="checkbox" 
+                        name="isActive"
+                        checked={formData.isActive}
+                        onChange={handleInputChange}
+                        className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500/20"
+                      />
+                      <span className="text-sm font-bold text-slate-700">Is Active</span>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider">Address Details</h4>
-                
-                <div className="space-y-4">
+              <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === "contact" ? "block" : "hidden"}`}>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                  <h4 className="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                    <Phone className="w-4 h-4" /> Contact Credentials
+                  </h4>
                   
-                  {/* Google Autocomplete search input */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-blue-600">Search Address (Google Auto-fill)</label>
-                    <input 
-                      type="text" 
-                      ref={searchInputRef}
-                      disabled={!import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                        }
-                      }}
-                      placeholder={import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "Type a location to auto-populate fields..." : "API Key missing in .env"}
-                      className="w-full px-3 py-2 border border-blue-200 rounded-lg text-sm bg-blue-50/20 focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Address Line 1 *</label>
-                    <Input 
-                      type="text" 
-                      name="addressLine1" 
-                      required
-                      value={formData.addressLine1}
-                      onChange={handleInputChange}
-                      placeholder="Building, street address"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Address Line 2</label>
-                    <Input 
-                      type="text" 
-                      name="addressLine2" 
-                      value={formData.addressLine2}
-                      onChange={handleInputChange}
-                      placeholder="Apartment, suite, unit, etc."
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600">City *</label>
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="col-span-1 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Hospital Admin Name</label>
                       <Input 
                         type="text" 
-                        name="city" 
-                        required
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        placeholder="e.g. Hyderabad"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        disabled
+                        value={user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Admin User'}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
+                      />
+                    </div>
+                    
+                    <div className="col-span-1 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Hospital Email</label>
+                      <Input 
+                        type="email" 
+                        disabled
+                        value={hospitalData?.email || ''}
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600">State *</label>
+                    <div className="col-span-2 space-y-1.5 pt-2">
+                      <label className="text-xs font-bold text-slate-700">Branch Email <span className="text-red-500">*</span></label>
                       <Input 
-                        type="text" 
-                        name="state" 
-                        required
-                        value={formData.state}
+                        type="email" 
+                        name="email" 
+                        required={activeTab === 'contact'}
+                        value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="e.g. Telangana"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        placeholder="info@branch.apollo.com"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600">Postal Code *</label>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Contact Number <span className="text-red-500">*</span></label>
                       <Input 
-                        type="text" 
-                        name="postalCode" 
-                        required
-                        value={formData.postalCode}
+                        type="tel" 
+                        name="phone" 
+                        required={activeTab === 'contact'}
+                        value={formData.phone}
                         onChange={handleInputChange}
-                        placeholder="e.g. 500033"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        placeholder="+91 XXXXX XXXXX"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-600">Country *</label>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Alternate Phone</label>
                       <Input 
-                        type="text" 
-                        name="country" 
-                        required
-                        value={formData.country}
+                        type="tel" 
+                        name="alternatePhone" 
+                        value={formData.alternatePhone}
                         onChange={handleInputChange}
-                        placeholder="e.g. India"
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                        placeholder="Optional phone"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-wider">Localization</h4>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Timezone</label>
-                    <Input 
-                      type="text" 
-                      name="timezone" 
-                      value={formData.timezone}
-                      onChange={handleInputChange}
-                      placeholder="e.g. Asia/Kolkata"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
+              <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === "location" ? "block" : "hidden"}`}>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                  <h4 className="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                    <MapPin className="w-4 h-4" /> Address Details
+                  </h4>
+                  
+                  <div className="space-y-5">
+                    {/* Google Autocomplete search input */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-blue-600">Search Address (Google Auto-fill)</label>
+                      <input 
+                        type="text" 
+                        ref={searchInputRef}
+                        disabled={!import.meta.env.VITE_GOOGLE_MAPS_API_KEY}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                          }
+                        }}
+                        placeholder={import.meta.env.VITE_GOOGLE_MAPS_API_KEY ? "Type a location to auto-populate fields..." : "API Key missing in .env"}
+                        className="w-full px-3.5 py-2.5 border border-blue-200 rounded-lg text-sm bg-blue-50/40 focus:bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-600">Currency</label>
-                    <Input 
-                      type="text" 
-                      name="currency" 
-                      value={formData.currency}
-                      onChange={handleInputChange}
-                      placeholder="e.g. INR"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Address Line 1 <span className="text-red-500">*</span></label>
+                      <Input 
+                        type="text" 
+                        name="addressLine1" 
+                        required={activeTab === 'location'}
+                        value={formData.addressLine1}
+                        onChange={handleInputChange}
+                        placeholder="Building, street address"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Address Line 2</label>
+                      <Input 
+                        type="text" 
+                        name="addressLine2" 
+                        value={formData.addressLine2}
+                        onChange={handleInputChange}
+                        placeholder="Apartment, suite, unit, etc."
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">City <span className="text-red-500">*</span></label>
+                        <Input 
+                          type="text" 
+                          name="city" 
+                          required={activeTab === 'location'}
+                          value={formData.city}
+                          onChange={handleInputChange}
+                          placeholder="e.g. Hyderabad"
+                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">State <span className="text-red-500">*</span></label>
+                        <Input 
+                          type="text" 
+                          name="state" 
+                          required={activeTab === 'location'}
+                          value={formData.state}
+                          onChange={handleInputChange}
+                          placeholder="e.g. Telangana"
+                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Postal Code <span className="text-red-500">*</span></label>
+                        <Input 
+                          type="text" 
+                          name="postalCode" 
+                          required={activeTab === 'location'}
+                          value={formData.postalCode}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 500033"
+                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Country <span className="text-red-500">*</span></label>
+                        <Input 
+                          type="text" 
+                          name="country" 
+                          required={activeTab === 'location'}
+                          value={formData.country}
+                          onChange={handleInputChange}
+                          placeholder="e.g. India"
+                          className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`space-y-6 animate-in fade-in duration-300 ${activeTab === "settings" ? "block" : "hidden"}`}>
+                <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                  <h4 className="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                    <Globe className="w-4 h-4" /> Localization Settings
+                  </h4>
+                  
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Timezone</label>
+                      <Input 
+                        type="text" 
+                        name="timezone" 
+                        value={formData.timezone}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Asia/Kolkata"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Currency</label>
+                      <Input 
+                        type="text" 
+                        name="currency" 
+                        value={formData.currency}
+                        onChange={handleInputChange}
+                        placeholder="e.g. INR"
+                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-sm focus:ring-teal-500"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {error && (
-                <div className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-xs font-medium text-red-800 flex items-start space-x-2">
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-100 text-xs font-medium text-red-800 flex items-start space-x-2 mt-4 animate-in fade-in">
                   <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>

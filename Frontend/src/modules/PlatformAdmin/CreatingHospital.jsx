@@ -254,7 +254,7 @@ export default function CreatingHospital() {
   );
 
   return (  
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="w-full max-w-[1400px] mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>

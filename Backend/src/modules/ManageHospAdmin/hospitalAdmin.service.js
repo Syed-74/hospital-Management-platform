@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 class HospitalAdminService {
     async createHospitalAdmin(data) {
-        const { hospitalId, firstName, lastName, email, password, phone, employeeCode, roleId } = data;
+        const { hospitalId, firstName, lastName, email, password, phone, employeeCode, roleId, middleName, displayName, alternatePhone, profileImageUrl, status, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
 
         if (!password) {
             throw new AppError("Password is required", 400);
@@ -56,7 +56,15 @@ class HospitalAdminService {
                     data: {
                         userId: user.id,
                         employeeCode,
-                        phone
+                        phone,
+                        middleName,
+                        displayName,
+                        alternatePhone,
+                        profileImageUrl,
+                        status: status || 'PENDING',
+                        isEmailVerified: isEmailVerified || false,
+                        isPhoneVerified: isPhoneVerified || false,
+                        mfaEnabled: mfaEnabled || false,
                     }
                 });
 
@@ -128,7 +136,7 @@ class HospitalAdminService {
     }
 
     async updateHospitalAdmin(id, data) {
-        const { firstName, lastName, phone, employeeCode, isActive, status } = data;
+        const { firstName, lastName, phone, employeeCode, isActive, status, middleName, displayName, alternatePhone, profileImageUrl, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
 
         const admin = await this.getHospitalAdminById(id); // Ensures they exist and are an admin
 
@@ -150,7 +158,14 @@ class HospitalAdminService {
                     data: {
                         phone: phone !== undefined ? phone : admin.hospitalAdmin?.phone,
                         employeeCode: employeeCode !== undefined ? employeeCode : admin.hospitalAdmin?.employeeCode,
-                        status: status !== undefined ? status : admin.hospitalAdmin?.status
+                        status: status !== undefined ? status : admin.hospitalAdmin?.status,
+                        middleName: middleName !== undefined ? middleName : admin.hospitalAdmin?.middleName,
+                        displayName: displayName !== undefined ? displayName : admin.hospitalAdmin?.displayName,
+                        alternatePhone: alternatePhone !== undefined ? alternatePhone : admin.hospitalAdmin?.alternatePhone,
+                        profileImageUrl: profileImageUrl !== undefined ? profileImageUrl : admin.hospitalAdmin?.profileImageUrl,
+                        isEmailVerified: isEmailVerified !== undefined ? isEmailVerified : admin.hospitalAdmin?.isEmailVerified,
+                        isPhoneVerified: isPhoneVerified !== undefined ? isPhoneVerified : admin.hospitalAdmin?.isPhoneVerified,
+                        mfaEnabled: mfaEnabled !== undefined ? mfaEnabled : admin.hospitalAdmin?.mfaEnabled,
                     }
                 });
 
