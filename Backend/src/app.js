@@ -24,6 +24,9 @@ import manageDepartmentRoutes from './modules/ManageDepartments/department.route
 import departmentTypeRoutes from './modules/DepartmentType/departmentType.routes.js';
 
 import feeRoutes from "./modules/DpartmentFees/fee.routes.js";
+import floorRoutes from "./modules/BranchFloor/floor.routes.js";
+import wardRoutes from "./modules/BranchWard/ward.routes.js";
+import roomRoutes from "./modules/BranchRoom/room.routes.js";
 
 const app = express();
 
@@ -81,6 +84,9 @@ app.use("/api/v1/role-assignments", roleAssignmentRoutes);
 app.use('/api/v1/department', manageDepartmentRoutes);
 app.use('/api/v1/department-types', departmentTypeRoutes);
 app.use('/api/v1/fees', feeRoutes);
+app.use('/api/v1/floors', floorRoutes);
+app.use('/api/v1/wards', wardRoutes);
+app.use('/api/v1/rooms', roomRoutes);
 
 // Define other routes here...
 // app.use("/api/v1/users", userRoutes);

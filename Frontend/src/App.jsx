@@ -28,6 +28,7 @@ import BranchOverview from './modules/BranchAdmin/BranchOverview';
 import BranchLayout from './modules/BranchAdmin/BranchLayout';
 import { Outlet } from 'react-router-dom';
 import ManageDepartments from './modules/BranchAdmin/ManageDepartments';
+import ManageInfrastructure from './modules/BranchAdmin/ManageInfrastructure';
 import ManageRooms from './modules/BranchAdmin/ManageRooms';
 import ManageWards from './modules/BranchAdmin/ManageWards';
 import BranchSettings from './modules/BranchAdmin/BranchSettings';
@@ -140,6 +141,7 @@ function App() {
             
             {/* Organization Management */}
             <Route path="department" element={<ManageDepartments />} />
+            <Route path="infrastructure" element={<ManageInfrastructure />} />
             <Route path="rooms" element={<ManageRooms />} />
             <Route path="wards" element={<ManageWards />} />
             <Route path="settings" element={<BranchSettings />} />

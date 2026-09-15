@@ -173,6 +173,9 @@ model BranchManage {
 
   branchAdmins BranchAdmin[]
   roleAssignments UserRoleAssignment[]
+  branchFloors BranchFloor[]
+  branchRooms BranchRoom[]
+  branchWards BranchWard[]
 
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -236,4 +239,55 @@ model BranchAdmin {
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
   deletedAt            DateTime?
+}
+
+model BranchFloor {
+    id                 String    @id @default(cuid())
+    branchId           String
+    branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    name               String
+    code               String?   // e.g., "OPD-001"
+    type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
+    isAvailable        Boolean   @default(true)
+    capacity           Int       @default(1)
+    status             String    @default("Active")
+    rooms              BranchRoom[]
+    wards              BranchWard[]
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
+}
+
+model BranchRoom {
+  id                 String    @id @default(cuid())
+  branchId           String
+  branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorId            String?
+  floor              BranchFloor?  @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  name               String
+  code               String?   // e.g., "OPD-001"
+  type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
+  isAvailable        Boolean   @default(true)
+  capacity           Int       @default(1)
+  status             String    @default("Active")
+  wards              BranchWard[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model BranchWard {
+    id                 String    @id @default(cuid())
+    branchId           String
+    branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+    floorId            String?
+    floor              BranchFloor?  @relation(fields: [floorId], references: [id], onDelete: SetNull)
+    roomId             String?
+    room               BranchRoom?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+    name               String
+    code               String?   // e.g., "OPD-001"
+    type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
+    isAvailable        Boolean   @default(true)
+    capacity           Int       @default(1)
+    status             String    @default("Active")
+    createdAt          DateTime  @default(now())
+    updatedAt          DateTime  @updatedAt
 }

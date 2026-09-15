@@ -573,6 +573,246 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
+  const createFloor = async (data) => {
+    try{
+      const response = await axios.post("/floors", data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create floor"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create floor"}
+    }
+  }
+
+  const getFloorById = async (id) => {
+    try{
+      const response = await axios.get(`/floors/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch floor"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch floor"}
+    }
+  }
+
+  const updateFloor = async (id,data) => {
+    try{
+      const response = await axios.put(`/floors/${id}`,data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update floor"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update floor"}
+    }
+  }
+
+  const deleteFloor = async (id) => {
+    try{
+      const response = await axios.delete(`/floors/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete floor"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete floor"}
+    }
+  }
+
+  const getAllFloors = async () => {
+    try{
+      const response = await axios.get("/floors");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch floors"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch floors"}
+    }
+  }
+
+  const createRoom = async (data) => {
+    try{
+      const response = await axios.post("/rooms", data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create room"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create room"}
+    }
+  }
+
+  const getRoomById = async (id) => {
+    try{
+      const response = await axios.get(`/rooms/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch room"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch room"}
+    }
+  }
+
+  const updateRoom = async (id,data) => {
+    try{
+      const response = await axios.put(`/rooms/${id}`,data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update room"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update room"}
+    }
+  }
+
+  const deleteRoom = async (id) => {
+    try{
+      const response = await axios.delete(`/rooms/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete room"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete room"}
+    }
+  }
+
+  const getAllRooms = async () => {
+    try{
+      const response = await axios.get("/rooms");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch rooms"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch rooms"}
+    }
+  }
+
+  const createWard = async (data) => {
+    try{
+      const response = await axios.post("/wards", data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create ward"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create ward"}
+    }
+  }
+
+  const getWardById = async (id) => {
+    try{
+      const response = await axios.get(`/wards/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch ward"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch ward"}
+    }
+  }
+
+  const updateWard = async (id,data) => {
+    try{
+      const response = await axios.put(`/wards/${id}`,data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update ward"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update ward"}
+    }
+  }
+
+  const deleteWard = async (id) => {
+    try{
+      const response = await axios.delete(`/wards/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete ward"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete ward"}
+    }
+  }
+
+  const getAllWards = async () => {
+    try{
+      const response = await axios.get("/wards");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch wards"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch wards"}
+    }
+  }
+
+  const createRoomType = async (data) => {
+    try{
+      const response = await axios.post("/room-types", data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to create room type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to create room type"}
+    }
+  }
+
+  const getRoomTypeById = async (id) => {
+    try{
+      const response = await axios.get(`/room-types/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch room type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch room type"}
+    }
+  }
+
+  const updateRoomType = async (id,data) => {
+    try{
+      const response = await axios.put(`/room-types/${id}`,data);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to update room type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to update room type"}
+    }
+  }
+
+  const deleteRoomType = async (id) => {
+    try{
+      const response = await axios.delete(`/room-types/${id}`);
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to delete room type"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to delete room type"}
+    }
+  }
+
+  const getAllRoomTypes = async () => {
+    try{
+      const response = await axios.get("/room-types");
+      if(response.data.status === "success"){
+        return {success: true, data: response.data.data}
+      }
+      return {success: false, message: response.data.message || "Failed to fetch room types"}
+    } catch (error) {
+      return {success: false, message: error.response?.data?.message || "Failed to fetch room types"}
+    }
+  }
+
   // Flattened array of all permissions from all assigned roles
   const userPermissions = user?.roles?.flatMap(role => 
     role.rolePermissions?.map(p => p.permission.action) || []
@@ -623,7 +863,27 @@ export const AuthProvider = ({ children }) => {
     getAllFees,
     getFeeById,
     updatefee,
-    deletefee
+    deletefee,
+    createFloor,
+    getFloorById,
+    updateFloor,
+    deleteFloor,
+    getAllFloors,
+    createRoom,
+    getRoomById,
+    updateRoom,
+    deleteRoom,
+    getAllRooms,
+    createWard,
+    getWardById,
+    updateWard,
+    deleteWard,
+    getAllWards,
+    createRoomType,
+    getRoomTypeById,
+    updateRoomType,
+    deleteRoomType,
+    getAllRoomTypes
   };
 
   return (

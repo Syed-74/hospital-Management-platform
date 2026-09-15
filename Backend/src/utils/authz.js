@@ -18,8 +18,9 @@
  */
 export function getGrantingScopes(user, action) {
   if (!user?.roleAssignments) return [];
+  const actionList = Array.isArray(action) ? action : [action];
   return user.roleAssignments
-    .filter((a) => a.role?.rolePermissions?.some((rp) => rp.permission?.action === action))
+    .filter((a) => a.role?.rolePermissions?.some((rp) => actionList.includes(rp.permission?.action)))
     .map((a) => ({ hospitalId: a.hospitalId ?? null, branchId: a.branchId ?? null }));
 }
 
