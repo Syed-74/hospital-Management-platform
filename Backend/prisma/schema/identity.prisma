@@ -1,0 +1,427 @@
+// ==========================================================
+// IDENTITY, AUTHENTICATION, EMPLOYMENT & AUTHORIZATION (RBAC)
+// ==========================================================
+// This schema owns everything about WHO a person is, HOW they prove it,
+// WHERE they are employed, and WHAT they are allowed to do:
+//   - Identity:        User
+//   - Authentication:  UserCredential, UserMfaSetting, UserSession
+//   - Employment:      Employee, EmploymentAssignment, ProfessionalProfile
+//   - Verification:    DocumentRequirement, EmployeeDocument
+//   - Authorization:   Role, Permission, RolePermission, UserRoleAssignment
+//
+// Organizational structure (Hospital, Branch, Department, ...) lives in
+// tenant.prisma and is only referenced here by id.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+// GLOBAL / HOSPITAL / BRANCH are ORGANIZATIONAL SCOPE only — how far a
+// Role's grant reaches. Job/profession (Doctor, Nurse, Accountant, ...) is
+// NOT a scope; it is just the name of a Role or, where it needs structured
+// data, an EmploymentAssignment.designation / ProfessionalProfile.
+enum RoleScope {
+  GLOBAL
+  HOSPITAL
+  BRANCH
+}
+
+// Authentication/account lifecycle state — owned by UserCredential, never
+// duplicated on a role-specific profile.
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum MfaMethod {
+  TOTP
+  SMS
+  EMAIL
+}
+
+// Employment lifecycle — reused by both Employee (overall employment) and
+// EmploymentAssignment (a specific hospital/branch/department placement),
+// replacing the old ambiguous pair of free-text `status` + `accountStatus`
+// fields that could disagree with each other.
+enum EmploymentStatus {
+  ACTIVE
+  ON_LEAVE
+  SUSPENDED
+  TERMINATED
+  RESIGNED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+// ==========================================
+// IDENTITY
+// ==========================================
+
+// A User is a pure identity: who someone is and how to contact them.
+// It carries no password, no MFA state, no employment/role data — those
+// are separate concerns modeled below and linked 1:1 (or 1:many) from here.
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  gender       String?
+  mobileNumber String?
+  profilePhoto String?
+  isActive     Boolean   @default(true)
+
+  // Tenant isolation (null for Platform Admins, who are not bound to a hospital).
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+
+  // Authentication concerns — each a dedicated model so login security,
+  // MFA, and session tracking can evolve independently of identity.
+  credential UserCredential?
+  mfaSetting UserMfaSetting?
+  sessions   UserSession[]
+
+  // Employment record (only present for staff — Doctor, Nurse, Hospital
+  // Admin, Branch Admin, etc.). A platform-only user has none.
+  employee Employee?
+
+  // Authorization source of truth. See UserRoleAssignment.
+  roleAssignments UserRoleAssignment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hospitalId])
+}
+
+// ==========================================
+// AUTHENTICATION
+// ==========================================
+
+// Everything needed to authenticate a User and enforce login security.
+// This is the single source of truth for account/login state — it used to
+// be duplicated (status, isEmailVerified, failedLoginAttempts, ...) across
+// HospitalAdmin and BranchAdmin; now it exists exactly once per User.
+model UserCredential {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  passwordHash       String
+  passwordChangedAt  DateTime?
+  mustChangePassword Boolean   @default(false)
+
+  status          AccountStatus @default(PENDING)
+  isEmailVerified Boolean       @default(false)
+  isPhoneVerified Boolean       @default(false)
+
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  lastLoginIp         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Multi-factor authentication settings — kept separate from UserCredential
+// so MFA can be introspected/updated without touching password state.
+model UserMfaSetting {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  isEnabled  Boolean    @default(false)
+  method     MfaMethod?
+  secret     String?
+  verifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Refresh-token-backed login sessions, so a session can be listed, audited,
+// or revoked independently of the credential/password it was issued from.
+model UserSession {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  refreshTokenHash String  @unique
+  userAgent        String?
+  ipAddress        String?
+
+  issuedAt  DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ==========================================
+// EMPLOYMENT
+// ==========================================
+
+// The common employment record for ANY staff member (Hospital Admin,
+// Branch Admin, Doctor, Nurse, Accountant, ...) — one per User. Holds
+// employment identity only; WHERE the person works is modeled separately
+// by EmploymentAssignment, so one Employee can hold multiple placements
+// (e.g. cross-branch) without duplicating their employee identity.
+model Employee {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Home tenant this employee belongs to.
+  hospitalId String
+  hospital   Hospital @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  employeeCode     String? @unique
+  middleName       String?
+  displayName      String?
+  alternatePhone   String?
+  officeExtension  String?
+  emergencyContact String?
+
+  // Personal / residential address (distinct from the Hospital's/Branch's
+  // business address).
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  country      String?
+  postalCode   String?
+
+  joiningDate      DateTime?
+  relievingDate    DateTime?
+  employmentStatus EmploymentStatus @default(ACTIVE)
+
+  // Optional, job-specific data — never hardcoded onto Employee itself.
+  professionalProfile ProfessionalProfile?
+  documents           EmployeeDocument[]
+
+  // Placements (hospital/branch/department) held by this employee.
+  assignments        EmploymentAssignment[] @relation("EmployeeAssignments")
+  managedAssignments EmploymentAssignment[] @relation("AssignmentReportingManager")
+
+  createdBy String?
+  updatedBy String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+// WHERE an Employee works: which hospital, which branch (null = hospital-
+// level, e.g. a Hospital Admin), and which department. Job title
+// (designation) and reporting line are attributes of the placement, since
+// they can change independently of the employee's core identity.
+model EmploymentAssignment {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation("EmployeeAssignments", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  hospitalId String
+  hospital   Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String?
+  branch     BranchManage? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  departmentId String?
+  department   ManageDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  designation String?
+  isPrimary   Boolean @default(true)
+
+  reportingManagerId String?
+  reportingManager   Employee? @relation("AssignmentReportingManager", fields: [reportingManagerId], references: [id], onDelete: SetNull)
+
+  startDate DateTime?
+  endDate   DateTime?
+  status    EmploymentStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([hospitalId])
+  @@index([branchId])
+  @@index([departmentId])
+}
+
+// Professional credentials, kept out of Employee so non-clinical/non-
+// licensed staff simply have no row here instead of a wall of null columns.
+model ProfessionalProfile {
+  id String @id @default(cuid())
+
+  employeeId String   @unique
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  qualification String?
+  license       String?
+  certification String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// DOCUMENTS & BACKGROUND VERIFICATION
+// ==========================================
+
+// Defines WHICH documents must be collected, configurable per hospital and
+// optionally per role, instead of hardcoding fields like `identityDocument`
+// / `addressProof` / `license` onto each role-specific model.
+model DocumentRequirement {
+  id String @id @default(cuid())
+
+  // null = platform-wide default requirement, applied across every hospital.
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  code        String
+  name        String
+  description String?
+  isMandatory Boolean @default(true)
+  isActive    Boolean @default(true)
+
+  // null = applies regardless of role.
+  appliesToRoleId String?
+  appliesToRole   Role?   @relation(fields: [appliesToRoleId], references: [id], onDelete: SetNull)
+
+  documents EmployeeDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, code])
+}
+
+// An actual document submitted by an Employee, tracked through a
+// verification workflow. `requirementId` is nullable so ad-hoc/other
+// documents can still be recorded without a matching requirement.
+model EmployeeDocument {
+  id String @id @default(cuid())
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  requirementId String?
+  requirement   DocumentRequirement? @relation(fields: [requirementId], references: [id], onDelete: SetNull)
+
+  label   String
+  fileUrl String
+
+  status     VerificationStatus @default(PENDING)
+  verifiedBy String?
+  verifiedAt DateTime?
+  remarks    String?
+
+  uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([requirementId])
+}
+
+// ==========================================
+// AUTHORIZATION (RBAC) — single source of truth
+// ==========================================
+
+// A Role is a reusable CAPABILITY TEMPLATE only — it defines WHAT its
+// holders can do. It is never tied to a specific branch. WHERE a role's
+// grant applies (which hospital / which branch) is decided per-assignment
+// by UserRoleAssignment, so e.g. a single "Branch Admin" role can be bound
+// to many different branches of the same hospital without duplication.
+model Role {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  scope       RoleScope @default(HOSPITAL)
+
+  // Tenant isolation: null = GLOBAL/platform-shared role template.
+  // HOSPITAL/BRANCH roles created by a hospital are private to that
+  // hospital, and reusable across every branch of that hospital.
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  assignments          UserRoleAssignment[]
+  rolePermissions      RolePermission[]
+  documentRequirements DocumentRequirement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, name])
+}
+
+model Permission {
+  id          String  @id @default(uuid())
+  action      String  @unique // e.g., "users:create"
+  description String?
+  module      String? // UI grouping label, e.g. "Branch Administration"
+
+  rolePermissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+// Authorization source of truth. Every effective grant a User holds is a
+// row here: the Role says WHAT they can do; hospitalId/branchId say WHERE.
+//   GLOBAL grant:  hospitalId = null, branchId = null (e.g. Platform Admin).
+//   TENANT grant:  hospitalId set, branchId = null (covers every branch of that hospital).
+//   BRANCH grant:  hospitalId set AND branchId set (covers only that one branch).
+// There is no `roleId`/`isSuperX` shortcut anywhere else in the schema —
+// this table is the only place authorization is decided.
+model UserRoleAssignment {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  hospitalId String?
+  hospital   Hospital?     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String?
+  branch     BranchManage? @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  assignedBy String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, roleId, hospitalId, branchId])
+  @@index([userId])
+  @@index([hospitalId])
+  @@index([branchId])
+}

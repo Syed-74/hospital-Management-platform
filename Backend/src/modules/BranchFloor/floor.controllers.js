@@ -7,8 +7,8 @@ async function resolveUserBranchId(req) {
     if (req.body?.branchId) return req.body.branchId;
     if (req.query?.branchId) return req.query.branchId;
 
-    if (req.user?.branchAdmin?.branchId) {
-        return req.user.branchAdmin.branchId;
+    if (req.user?.branchId) {
+        return req.user.branchId;
     }
 
     if (req.user?.roleAssignments && req.user.roleAssignments.length > 0) {

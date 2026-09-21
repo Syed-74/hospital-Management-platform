@@ -2,7 +2,7 @@ import { prisma } from "../../config/db.js";
 import AppError from "../../utils/AppError.js";
 import bcrypt from "bcrypt";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
-import { attachDerivedRoleView } from "../../utils/authz.js";
+import { attachDerivedRoleView, attachEmploymentContext } from "../../utils/authz.js";
 
 class AuthService {
   /**
@@ -20,42 +20,42 @@ class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user (and potentially assign default 'User' role)
-    // For now, we just create the user. Roles can be assigned by admin.
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        isActive: true,
-        createdAt: true,
-      },
+    // Create the identity and its credential together. Roles can be
+    // assigned by an admin afterwards.
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: { email, firstName, lastName },
+      });
+      await tx.userCredential.create({
+        data: { userId: newUser.id, passwordHash: hashedPassword },
+      });
+      return newUser;
     });
 
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+    };
   }
 
   /**
    * Login user and return tokens
    */
   async loginUser(email, password) {
-    // 1. Find user and their roles/permissions
+    // 1. Find user, their credential, employment placement, and roles/permissions
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
         hospital: true,
-        hospitalAdmin: true,
-        branchAdmin: {
+        credential: true,
+        employee: {
           include: {
-            branch: true,
-          }
+            assignments: { include: { branch: true, department: true } },
+          },
         },
         roleAssignments: {
           include: {
@@ -69,12 +69,12 @@ class AuthService {
       },
     });
 
-    if (!user) {
+    if (!user || !user.credential) {
       throw new AppError("Incorrect email or password", 401);
     }
 
     // 2. Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.credential.passwordHash);
     if (!isPasswordValid) {
       throw new AppError("Incorrect email or password", 401);
     }
@@ -89,9 +89,10 @@ class AuthService {
     const refreshToken = generateRefreshToken(user.id);
 
     attachDerivedRoleView(user);
+    attachEmploymentContext(user);
 
-    // Remove password from response
-    delete user.password;
+    // Remove the credential (password hash) from the response
+    delete user.credential;
 
     return { user, accessToken, refreshToken };
   }

@@ -16,15 +16,19 @@ const router = express.Router();
 // Apply auth middleware to all routes
 router.use(protect);
 
-// Resolve the ACTUAL hospital + branch a given branch admin :id belongs to
-// from the database — never trust the id alone as proof of ownership.
+// Resolve the ACTUAL hospital + branch a given branch admin :id (Employee.id)
+// belongs to from the database — never trust the id alone as proof of
+// ownership.
 const resolveBranchAdminScope = async (req) => {
-    const admin = await prisma.branchAdmin.findFirst({
+    const admin = await prisma.employee.findFirst({
         where: { id: req.params.id, deletedAt: null },
-        select: { hospitalId: true, branchId: true },
+        select: {
+            hospitalId: true,
+            assignments: { where: { isPrimary: true }, select: { branchId: true }, take: 1 },
+        },
     });
     if (!admin) return null;
-    return { hospitalId: admin.hospitalId, branchId: admin.branchId };
+    return { hospitalId: admin.hospitalId, branchId: admin.assignments[0]?.branchId ?? null };
 };
 
 router.route("/")

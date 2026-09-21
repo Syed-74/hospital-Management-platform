@@ -2,9 +2,23 @@ import { prisma } from "../../config/db.js";
 import AppError from "../../utils/AppError.js";
 import bcrypt from "bcrypt";
 
+// A "Hospital Admin" is a User with an Employee record whose primary
+// placement is hospital-level (EmploymentAssignment.branchId = null) — it
+// is no longer a distinct profile model, so every query below filters
+// through Employee/EmploymentAssignment instead of a dedicated table.
+const HOSPITAL_ADMIN_INCLUDE = {
+    employee: {
+        include: {
+            professionalProfile: true,
+            assignments: { include: { branch: true, department: true } },
+        },
+    },
+    hospital: { select: { id: true, hospitalName: true, hospitalCode: true } },
+};
+
 class HospitalAdminService {
     async createHospitalAdmin(data) {
-        const { hospitalId, firstName, lastName, email, password, phone, employeeCode, roleId, middleName, displayName, alternatePhone, profileImageUrl, status, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
+        const { hospitalId, firstName, lastName, email, password, employeeCode, roleId, middleName, displayName, alternatePhone, status, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
 
         if (!password) {
             throw new AppError("Password is required", 400);
@@ -40,11 +54,10 @@ class HospitalAdminService {
         try {
             // Prisma Transaction for atomic creation
             const result = await prisma.$transaction(async (tx) => {
-                // 1. Create User
+                // 1. Create User (pure identity)
                 const user = await tx.user.create({
                     data: {
                         email,
-                        password: hashedPassword,
                         firstName,
                         lastName,
                         hospitalId,
@@ -55,29 +68,52 @@ class HospitalAdminService {
                     }
                 });
 
-                // 2. Create HospitalAdmin Profile
-                const hospitalAdmin = await tx.hospitalAdmin.create({
+                // 2. Authentication concerns
+                await tx.userCredential.create({
+                    data: {
+                        userId: user.id,
+                        passwordHash: hashedPassword,
+                        status: status || 'PENDING',
+                        isEmailVerified: isEmailVerified || false,
+                        isPhoneVerified: isPhoneVerified || false,
+                    }
+                });
+                await tx.userMfaSetting.create({
+                    data: {
+                        userId: user.id,
+                        isEnabled: mfaEnabled || false,
+                    }
+                });
+
+                // 3. Employment record + hospital-level placement (branchId
+                // null = covers the whole hospital, not a single branch).
+                const employee = await tx.employee.create({
                     data: {
                         userId: user.id,
                         hospitalId,
                         employeeCode,
                         middleName,
                         displayName,
-                        designation: data.designation || null,
-                        department: data.department || null,
-                        qualification: data.qualification || null,
-                        joiningDate: data.joiningDate ? new Date(data.joiningDate) : null,
-                        officeExtension: data.officeExtension || null,
                         alternatePhone: alternatePhone || null,
+                        officeExtension: data.officeExtension || null,
                         emergencyContact: data.emergencyContact || null,
-                        status: status || 'PENDING',
-                        isEmailVerified: isEmailVerified || false,
-                        isPhoneVerified: isPhoneVerified || false,
-                        mfaEnabled: mfaEnabled || false,
-                    }
+                        joiningDate: data.joiningDate ? new Date(data.joiningDate) : null,
+                        ...(data.qualification
+                            ? { professionalProfile: { create: { qualification: data.qualification } } }
+                            : {}),
+                        assignments: {
+                            create: {
+                                hospitalId,
+                                branchId: null,
+                                designation: data.designation || null,
+                                isPrimary: true,
+                            },
+                        },
+                    },
+                    include: { professionalProfile: true, assignments: true },
                 });
 
-                // 3. Grant the role, scoped to this hospital (TENANT scope —
+                // 4. Grant the role, scoped to this hospital (TENANT scope —
                 // covers every branch of it). This — not a User<->Role
                 // connect — is the actual authorization boundary.
                 await tx.userRoleAssignment.create({
@@ -89,12 +125,10 @@ class HospitalAdminService {
                     }
                 });
 
-                return { user, hospitalAdmin };
+                return { user, employee };
             });
 
-            // Omit password from response
-            const { password: _, ...userWithoutPassword } = result.user;
-            return { ...userWithoutPassword, hospitalAdmin: result.hospitalAdmin };
+            return { ...result.user, employee: result.employee };
         } catch (error) {
             if (error.code === 'P2002') {
                 const target = error.meta?.target || [];
@@ -108,51 +142,43 @@ class HospitalAdminService {
     async getAllHospitalAdmins(query) {
         const admins = await prisma.user.findMany({
             where: {
-                hospitalAdmin: { isNot: null }
+                employee: { assignments: { some: { branchId: null } } },
+                ...(query?.hospitalId ? { hospitalId: query.hospitalId } : {}),
             },
-            include: {
-                hospitalAdmin: true,
-                hospital: { select: { id: true, hospitalName: true, hospitalCode: true } }
-            },
+            include: HOSPITAL_ADMIN_INCLUDE,
             orderBy: { createdAt: 'desc' }
         });
 
-        // Remove passwords
-        return admins.map(admin => {
-            const { password, ...safeAdmin } = admin;
-            return safeAdmin;
-        });
+        return admins;
     }
 
     async getHospitalAdminById(id) {
         const admin = await prisma.user.findFirst({
-            where: { 
+            where: {
                 id,
-                hospitalAdmin: { isNot: null }
+                employee: { assignments: { some: { branchId: null } } },
             },
-            include: {
-                hospitalAdmin: true,
-                hospital: true
-            }
+            include: HOSPITAL_ADMIN_INCLUDE,
         });
 
         if (!admin) {
             throw new AppError("Hospital admin not found", 404);
         }
 
-        const { password, ...safeAdmin } = admin;
-        return safeAdmin;
+        return admin;
     }
 
     async updateHospitalAdmin(id, data) {
-        const { firstName, lastName, phone, mobileNumber, dateOfBirth, gender, profilePhoto, profileImageUrl, employeeCode, isActive, status, middleName, displayName, alternatePhone, designation, department, qualification, joiningDate, officeExtension, emergencyContact, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
+        const { firstName, lastName, phone, mobileNumber, dateOfBirth, gender, profilePhoto, profileImageUrl, employeeCode, isActive, status, middleName, displayName, alternatePhone, designation, qualification, joiningDate, officeExtension, emergencyContact, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
 
         const admin = await this.getHospitalAdminById(id); // Ensures they exist and are an admin
+        const employee = admin.employee;
+        const primaryAssignment = employee.assignments.find((a) => !a.branchId) || employee.assignments[0];
 
         try {
-            const result = await prisma.$transaction(async (tx) => {
+            await prisma.$transaction(async (tx) => {
                 // 1. Update User
-                const updatedUser = await tx.user.update({
+                await tx.user.update({
                     where: { id },
                     data: {
                         firstName: firstName !== undefined ? firstName : admin.firstName,
@@ -165,32 +191,55 @@ class HospitalAdminService {
                     }
                 });
 
-                // 2. Update Profile
-                const updatedProfile = await tx.hospitalAdmin.update({
-                    where: { userId: id },
+                // 2. Update authentication state
+                if (status !== undefined || isEmailVerified !== undefined || isPhoneVerified !== undefined) {
+                    await tx.userCredential.update({
+                        where: { userId: id },
+                        data: {
+                            ...(status !== undefined ? { status } : {}),
+                            ...(isEmailVerified !== undefined ? { isEmailVerified } : {}),
+                            ...(isPhoneVerified !== undefined ? { isPhoneVerified } : {}),
+                        }
+                    });
+                }
+                if (mfaEnabled !== undefined) {
+                    await tx.userMfaSetting.update({
+                        where: { userId: id },
+                        data: { isEnabled: mfaEnabled },
+                    });
+                }
+
+                // 3. Update employment record
+                await tx.employee.update({
+                    where: { id: employee.id },
                     data: {
-                        employeeCode: employeeCode !== undefined ? employeeCode : admin.hospitalAdmin?.employeeCode,
-                        status: status !== undefined ? status : admin.hospitalAdmin?.status,
-                        middleName: middleName !== undefined ? middleName : admin.hospitalAdmin?.middleName,
-                        displayName: displayName !== undefined ? displayName : admin.hospitalAdmin?.displayName,
-                        designation: designation !== undefined ? designation : admin.hospitalAdmin?.designation,
-                        department: department !== undefined ? department : admin.hospitalAdmin?.department,
-                        qualification: qualification !== undefined ? qualification : admin.hospitalAdmin?.qualification,
-                        joiningDate: joiningDate !== undefined ? (joiningDate ? new Date(joiningDate) : null) : admin.hospitalAdmin?.joiningDate,
-                        officeExtension: officeExtension !== undefined ? officeExtension : admin.hospitalAdmin?.officeExtension,
-                        alternatePhone: alternatePhone !== undefined ? alternatePhone : admin.hospitalAdmin?.alternatePhone,
-                        emergencyContact: emergencyContact !== undefined ? emergencyContact : admin.hospitalAdmin?.emergencyContact,
-                        isEmailVerified: isEmailVerified !== undefined ? isEmailVerified : admin.hospitalAdmin?.isEmailVerified,
-                        isPhoneVerified: isPhoneVerified !== undefined ? isPhoneVerified : admin.hospitalAdmin?.isPhoneVerified,
-                        mfaEnabled: mfaEnabled !== undefined ? mfaEnabled : admin.hospitalAdmin?.mfaEnabled,
+                        employeeCode: employeeCode !== undefined ? employeeCode : employee.employeeCode,
+                        middleName: middleName !== undefined ? middleName : employee.middleName,
+                        displayName: displayName !== undefined ? displayName : employee.displayName,
+                        joiningDate: joiningDate !== undefined ? (joiningDate ? new Date(joiningDate) : null) : employee.joiningDate,
+                        officeExtension: officeExtension !== undefined ? officeExtension : employee.officeExtension,
+                        alternatePhone: alternatePhone !== undefined ? alternatePhone : employee.alternatePhone,
+                        emergencyContact: emergencyContact !== undefined ? emergencyContact : employee.emergencyContact,
                     }
                 });
 
-                return { updatedUser, updatedProfile };
+                // 4. Update placement / professional profile
+                if (designation !== undefined && primaryAssignment) {
+                    await tx.employmentAssignment.update({
+                        where: { id: primaryAssignment.id },
+                        data: { designation },
+                    });
+                }
+                if (qualification !== undefined) {
+                    await tx.professionalProfile.upsert({
+                        where: { employeeId: employee.id },
+                        update: { qualification },
+                        create: { employeeId: employee.id, qualification },
+                    });
+                }
             });
 
-            const { password, ...safeAdmin } = result.updatedUser;
-            return { ...safeAdmin, hospitalAdmin: result.updatedProfile };
+            return await this.getHospitalAdminById(id);
         } catch (error) {
             if (error.code === 'P2002') {
                 const target = error.meta?.target || [];
@@ -204,7 +253,9 @@ class HospitalAdminService {
     async deleteHospitalAdmin(id) {
         await this.getHospitalAdminById(id); // Verify existence
 
-        // We can just delete the User, and Cascade will delete the HospitalAdmin profile
+        // Deleting the User cascades to its UserCredential, UserMfaSetting,
+        // Employee (and the Employee's ProfessionalProfile,
+        // EmploymentAssignment(s), EmployeeDocument(s)), and UserRoleAssignment(s).
         await prisma.user.delete({ where: { id } });
         return null;
     }

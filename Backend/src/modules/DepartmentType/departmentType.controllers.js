@@ -3,9 +3,9 @@ import catchAsync from "../../utils/catchAsync.js";
 
 export const createDepartmentType = catchAsync(async (req, res) => {
     const payload = { ...req.body };
-    if (req.user?.branchAdmin?.branchId) {
-        payload.branchId = req.user.branchAdmin.branchId;
-        payload.hospitalId = req.user.branchAdmin.hospitalId;
+    if (req.user?.branchId) {
+        payload.branchId = req.user.branchId;
+        payload.hospitalId = req.user.hospitalId;
     } else if (req.user?.hospitalId) {
         payload.hospitalId = req.user.hospitalId;
     }

@@ -5,9 +5,9 @@ const feeService = new FeeService();
 
 export const createFee = catchAsync(async (req, res, next) => {
     const payload = { ...req.body };
-    if (req.user?.branchAdmin?.branchId) {
-        payload.branchId = req.user.branchAdmin.branchId;
-        payload.hospitalId = req.user.branchAdmin.hospitalId;
+    if (req.user?.branchId) {
+        payload.branchId = req.user.branchId;
+        payload.hospitalId = req.user.hospitalId;
     } else if (req.user?.hospitalId) {
         payload.hospitalId = req.user.hospitalId;
     }

@@ -53,9 +53,7 @@ export const login = catchAsync(async (req, res, next) => {
  * Returns the currently authenticated user's profile and roles.
  */
 export const getMe = catchAsync(async (req, res, next) => {
-  // Remove password from response just in case, though it shouldn't be selected typically
-  const user = { ...req.user };
-  delete user.password;
+  const user = req.user;
 
   res.status(200).json({
     status: "success",

@@ -60,7 +60,6 @@ class UsersService {
       const newUser = await tx.user.create({
         data: {
           email,
-          password: hashedPassword,
           firstName,
           lastName,
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
@@ -70,6 +69,10 @@ class UsersService {
           hospitalId: targetHospitalId,
           isActive: userData.isActive !== undefined ? userData.isActive : true,
         },
+      });
+
+      await tx.userCredential.create({
+        data: { userId: newUser.id, passwordHash: hashedPassword },
       });
 
       if (roleId) {
@@ -125,16 +128,21 @@ class UsersService {
     if (updateData.profilePhoto !== undefined) dataToUpdate.profilePhoto = updateData.profilePhoto;
     if (updateData.isActive !== undefined) dataToUpdate.isActive = updateData.isActive;
 
-    if (updateData.password && updateData.password.trim() !== '') {
-      const bcrypt = await import("bcrypt");
-      dataToUpdate.password = await bcrypt.default.hash(updateData.password, 10);
-    }
-
     return await prisma.$transaction(async (tx) => {
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: dataToUpdate,
       });
+
+      if (updateData.password && updateData.password.trim() !== '') {
+        const bcrypt = await import("bcrypt");
+        const passwordHash = await bcrypt.default.hash(updateData.password, 10);
+        await tx.userCredential.upsert({
+          where: { userId },
+          update: { passwordHash },
+          create: { userId, passwordHash },
+        });
+      }
 
       if (updateData.roleId) {
         await tx.userRoleAssignment.deleteMany({ where: { userId } });

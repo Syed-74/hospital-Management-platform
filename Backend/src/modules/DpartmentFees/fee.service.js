@@ -34,9 +34,9 @@ class FeeService {
 
     async getAllFees(user, query) {
         let whereClause = {};
-        if (user?.branchAdmin?.branchId) {
-            whereClause.hospitalId = user.branchAdmin.hospitalId;
-            whereClause.branchId = user.branchAdmin.branchId;
+        if (user?.branchId) {
+            whereClause.hospitalId = user.hospitalId;
+            whereClause.branchId = user.branchId;
         } else if (user?.hospitalId) {
             whereClause.hospitalId = user.hospitalId;
             if (query?.branchId) whereClause.branchId = query.branchId;
@@ -51,9 +51,9 @@ class FeeService {
 
     async getFeeById(id, user) {
         let whereClause = { id };
-        if (user?.branchAdmin?.branchId) {
-            whereClause.hospitalId = user.branchAdmin.hospitalId;
-            whereClause.branchId = user.branchAdmin.branchId;
+        if (user?.branchId) {
+            whereClause.hospitalId = user.hospitalId;
+            whereClause.branchId = user.branchId;
         } else if (user?.hospitalId) {
             whereClause.hospitalId = user.hospitalId;
         }

@@ -1,3 +1,20 @@
+// ==========================================================
+// TENANT ORGANIZATION & OPERATIONS
+// ==========================================================
+// This schema owns the organizational structure each hospital tenant is
+// built from, and the operational configuration hung off it:
+//   - Organization:  Hospital, HospitalTheme, BranchManage
+//   - Infrastructure: BranchFloor, BranchRoom, BranchWard
+//   - Departments:    DepartmentType, ManageDepartment, ManageFee
+//
+// Identity, authentication, employment, and authorization (who works here
+// and what they're allowed to do) live in identity.prisma and are only
+// referenced here by id.
+
+// ==========================================
+// ORGANIZATION
+// ==========================================
+
 model Hospital {
   id String @id @default(cuid())
 
@@ -39,65 +56,20 @@ model Hospital {
   isActive  Boolean @default(true)
   isDeleted Boolean @default(false)
 
-  users         User[]
-  hospitalTheme HospitalTheme?
-  branches      BranchManage[]
-  branchAdmins  BranchAdmin[]
-  hospitalAdmins HospitalAdmin[]
-  roles         Role[]
-  roleAssignments UserRoleAssignment[]
+  // Identity, employment & authorization (identity.prisma)
+  users                 User[]
+  employees             Employee[]
+  employmentAssignments EmploymentAssignment[]
+  roles                 Role[]
+  roleAssignments       UserRoleAssignment[]
+  documentRequirements  DocumentRequirement[]
 
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  // Organization & operations (this file)
+  hospitalTheme     HospitalTheme?
+  branches          BranchManage[]
   manageDepartments ManageDepartment[]
   manageFees        ManageFee[]
   departmentTypes   DepartmentType[]
-}
-
-model HospitalAdmin {
-  id String @id @default(cuid())
-
-  // Link to Global Identity
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Tenant Link
-  hospitalId String?
-  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-
-  // Identity & Professional Attributes
-  employeeCode String?   @unique
-  middleName   String?
-  displayName  String?
-  designation  String?
-  department   String?
-  qualification String?
-  joiningDate  DateTime?
-
-  // Contact & Office Information
-  phone            String?
-  alternatePhone   String?
-  profileImageUrl  String?
-  officeExtension  String?
-  emergencyContact String?
-
-  // Account Status
-  status          AccountStatus @default(PENDING)
-  isEmailVerified Boolean       @default(false)
-  isPhoneVerified Boolean       @default(false)
-
-  // Login Security
-  lastLoginAt         DateTime?
-  lastLoginIp         String?
-  failedLoginAttempts Int       @default(0)
-  lockedUntil         DateTime?
-
-  // MFA
-  mfaEnabled Boolean @default(false)
-
-  // Audit
-  createdBy String?
-  updatedBy String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -182,125 +154,160 @@ model BranchManage {
   licenseNumber String?
   isActive      Boolean @default(true)
 
-  branchAdmins BranchAdmin[]
-  roleAssignments UserRoleAssignment[]
-  branchFloors BranchFloor[]
-  branchRooms BranchRoom[]
-  branchWards BranchWard[]
+  // Identity, employment & authorization (identity.prisma)
+  employmentAssignments EmploymentAssignment[]
+  roleAssignments       UserRoleAssignment[]
 
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  // Infrastructure & operations (this file)
+  branchFloors      BranchFloor[]
+  branchRooms       BranchRoom[]
+  branchWards       BranchWard[]
   manageDepartments ManageDepartment[]
   manageFees        ManageFee[]
   departmentTypes   DepartmentType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model BranchAdmin {
-  id                   String        @id @default(cuid())
-  // Link to Global Identity
-  userId               String        @unique
-  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  // Personal Information
-  middleName           String?
-  fullName             String?
-  employeeId           String?       @unique
-  // Contact Information
-  alternatePhoneNumber String?
-  // Documents
-  identityDocument     String?
-  addressProof         String?
-  employmentProof      String?
-  otherDocuments       String?
-  // Credentials
-  license              String?
-  qualification        String?
-  certification        String?
-  // Organization
-  hospitalId           String
-  hospital             Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
-  branchId             String
-  branch               BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  departmentId         String?
-  designation          String?
-  reportingManagerId   String?
-  // Role & Permission
-  // Denormalized "primary role" pointer for display/UX convenience only.
-  // Actual authorization is always derived from User.roles -> RolePermission,
-  // never from this field directly.
-  roleId               String?
-  role                 Role?         @relation(fields: [roleId], references: [id], onDelete: SetNull)
-  isSuperBranchAdmin   Boolean       @default(false)
-  // Address
-  addressLine1         String?
-  addressLine2         String?
-  city                 String?
-  state                String?
-  country              String?
-  postalCode           String?
-  status               String        @default("Active")
-  accountStatus        AccountStatus @default(PENDING)
-  joiningDate          DateTime?
-  relievingDate        DateTime?
-  // Security
-  twoFactorEnabled     Boolean       @default(false)
-  passwordChangedAt    DateTime?
-  failedLoginAttempts  Int           @default(0)
-  accountLockedUntil   DateTime?
-  // Audit
-  createdBy            String?
-  updatedBy            String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-  deletedAt            DateTime?
-}
+// ==========================================
+// INFRASTRUCTURE
+// ==========================================
 
 model BranchFloor {
-    id                 String    @id @default(cuid())
-    branchId           String
-    branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    name               String
-    code               String?   // e.g., "OPD-001"
-    type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
-    isAvailable        Boolean   @default(true)
-    capacity           Int       @default(1)
-    status             String    @default("Active")
-    rooms              BranchRoom[]
-    wards              BranchWard[]
-    createdAt          DateTime  @default(now())
-    updatedAt          DateTime  @updatedAt
+  id          String       @id @default(cuid())
+  branchId    String
+  branch      BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  name        String
+  code        String? // e.g., "OPD-001"
+  type        String // e.g., "General Ward", "ICU", "Consultation", "Private"
+  isAvailable Boolean      @default(true)
+  capacity    Int          @default(1)
+  status      String       @default("Active")
+  rooms       BranchRoom[]
+  wards       BranchWard[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model BranchRoom {
-  id                 String    @id @default(cuid())
-  branchId           String
-  branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  floorId            String?
-  floor              BranchFloor?  @relation(fields: [floorId], references: [id], onDelete: SetNull)
-  name               String
-  code               String?   // e.g., "OPD-001"
-  type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
-  isAvailable        Boolean   @default(true)
-  capacity           Int       @default(1)
-  status             String    @default("Active")
-  wards              BranchWard[]
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id          String       @id @default(cuid())
+  branchId    String
+  branch      BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorId     String?
+  floor       BranchFloor? @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  name        String
+  code        String? // e.g., "OPD-001"
+  type        String // e.g., "General Ward", "ICU", "Consultation", "Private"
+  isAvailable Boolean      @default(true)
+  capacity    Int          @default(1)
+  status      String       @default("Active")
+  wards       BranchWard[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model BranchWard {
-    id                 String    @id @default(cuid())
-    branchId           String
-    branch             BranchManage  @relation(fields: [branchId], references: [id], onDelete: Cascade)
-    floorId            String?
-    floor              BranchFloor?  @relation(fields: [floorId], references: [id], onDelete: SetNull)
-    roomId             String?
-    room               BranchRoom?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
-    name               String
-    code               String?   // e.g., "OPD-001"
-    type               String    // e.g., "General Ward", "ICU", "Consultation", "Private"
-    isAvailable        Boolean   @default(true)
-    capacity           Int       @default(1)
-    status             String    @default("Active")
-    createdAt          DateTime  @default(now())
-    updatedAt          DateTime  @updatedAt
+  id          String       @id @default(cuid())
+  branchId    String
+  branch      BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  floorId     String?
+  floor       BranchFloor? @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  roomId      String?
+  room        BranchRoom?  @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  name        String
+  code        String? // e.g., "OPD-001"
+  type        String // e.g., "General Ward", "ICU", "Consultation", "Private"
+  isAvailable Boolean      @default(true)
+  capacity    Int          @default(1)
+  status      String       @default("Active")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ==========================================
+// DEPARTMENTS
+// ==========================================
+
+model DepartmentType {
+  id String @id @default(cuid())
+
+  hospitalId String
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  typeName        String
+  isRevenueCenter Boolean @default(false)
+  isActive        Boolean @default(true)
+
+  departments ManageDepartment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, branchId, typeName])
+}
+
+model ManageDepartment {
+  id String @id @default(cuid())
+
+  hospitalId String
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId   String
+  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  manageFees ManageFee[]
+
+  // Important Core Attributes
+  departmentName   String
+  departmentCode   String          @unique
+  departmentTypeId String?
+  departmentType   DepartmentType? @relation(fields: [departmentTypeId], references: [id], onDelete: SetNull)
+
+  // Optional but useful attributes
+  description String? // Optional: Details about the department
+
+  // Status and Flags
+  isActive Boolean @default(true) // Replaces generic 'status String'
+
+  // Staff placed in this department (identity.prisma)
+  employmentAssignments EmploymentAssignment[]
+
+  // Audit and Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([hospitalId, branchId, departmentName])
+}
+
+model ManageFee {
+  id String @id @default(cuid())
+
+  hospitalId   String
+  hospital     Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  branchId     String
+  branch       BranchManage     @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   ManageDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  // Important Core Attributes
+  feeName String
+  feeCode String
+  amount  Float
+  tax     Float? @default(0)
+
+  // Optional but useful attributes
+  description String? // Optional: Details about the fee
+
+  // Status and Flags
+  isActive Boolean @default(true) // Replaces generic 'status String'
+
+  // Audit and Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([hospitalId, branchId, feeCode])
+  @@unique([hospitalId, branchId, departmentId, feeName])
 }

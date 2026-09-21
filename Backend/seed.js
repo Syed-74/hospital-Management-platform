@@ -118,10 +118,20 @@ async function main() {
     update: {},
     create: {
       email: 'superadmin@gmail.com',
-      password: hashedPassword,
       firstName: 'Syed',
       lastName: 'Nusrath',
       isActive: true,
+    }
+  });
+
+  await prisma.userCredential.upsert({
+    where: { userId: superadmin.id },
+    update: {},
+    create: {
+      userId: superadmin.id,
+      passwordHash: hashedPassword,
+      status: 'ACTIVE',
+      isEmailVerified: true,
     }
   });
 

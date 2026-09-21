@@ -3,7 +3,7 @@ import AppError from "../utils/AppError.js";
 import { verifyToken } from "../utils/jwt.js";
 import { ENV } from "../config/env.js";
 import { prisma } from "../config/db.js";
-import { attachDerivedRoleView } from "../utils/authz.js";
+import { attachDerivedRoleView, attachEmploymentContext } from "../utils/authz.js";
 
 /**
  * Middleware to protect routes.
@@ -29,11 +29,12 @@ export const protect = catchAsync(async (req, res, next) => {
     where: { id: decoded.id },
     include: {
       hospital: true,
-      hospitalAdmin: true,
-      branchAdmin: {
+      // Employment placement (which hospital/branch/department a staff
+      // member works in). A platform-only user has no Employee record.
+      employee: {
         include: {
-          branch: true,
-        }
+          assignments: { include: { branch: true, department: true } },
+        },
       },
       // Authorization source of truth: each row grants a Role's
       // permissions bounded to a scope (GLOBAL / TENANT / BRANCH).
@@ -59,6 +60,7 @@ export const protect = catchAsync(async (req, res, next) => {
   }
 
   attachDerivedRoleView(currentUser);
+  attachEmploymentContext(currentUser);
 
   // Attach user to request for downstream middlewares and controllers
   req.user = currentUser;

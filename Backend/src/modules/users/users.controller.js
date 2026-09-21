@@ -2,11 +2,10 @@ import catchAsync from "../../utils/catchAsync.js";
 import usersService from "./users.service.js";
 
 export const getMe = (req, res, next) => {
-  // req.user is set by auth.middleware.js
+  // req.user is set by auth.middleware.js — no credential/password data is
+  // ever included on it (see auth.middleware.js), so there's nothing to strip.
   const user = req.user;
-  // Make sure not to send password back
-  delete user.password;
-  
+
   res.status(200).json({
     status: "success",
     data: { user },

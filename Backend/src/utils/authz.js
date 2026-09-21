@@ -71,3 +71,24 @@ export function grantedHospitalIds(user, action) {
   const scopes = getGrantingScopes(user, action);
   return scopes.map((s) => s.hospitalId);
 }
+
+/**
+ * Derives flattened `employeeId`/`branchId`/`departmentId` convenience
+ * fields from `user.employee.assignments` and attaches them to the user
+ * object. Requires `employee: { include: { assignments: true } }` to have
+ * been included on the query that fetched `user`.
+ *
+ * This replaces the old `user.branchAdmin.branchId` / `.hospitalId` shape:
+ * `hospitalId` already lives directly on User, and `branchId` is now
+ * derived from the employee's primary EmploymentAssignment instead of a
+ * role-specific profile model.
+ */
+export function attachEmploymentContext(user) {
+  const assignments = user.employee?.assignments || [];
+  const primary = assignments.find((a) => a.isPrimary) || assignments[0] || null;
+
+  user.employeeId = user.employee?.id ?? null;
+  user.branchId = primary?.branchId ?? null;
+  user.departmentId = primary?.departmentId ?? null;
+  return user;
+}
