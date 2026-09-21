@@ -64,10 +64,8 @@ export default function BranchLayout() {
       category: 'People & Access',
       icon: Users,
       items: [
-        { name: 'Staff', href: '/branch/staff', requiredPermissions: ['branch:access'] },
-        { name: 'Users', href: '/branch/users', requiredPermissions: ['branch:access'] },
-        { name: 'Roles', href: '/branch/roles', requiredPermissions: ['branch:access'] },
-        { name: 'Permissions', href: '/branch/permissions', requiredPermissions: ['branch:access'] }
+        { name: 'Staff Management', href: '/branch/staff', requiredPermissions: ['branch:access'] },
+        { name: 'Roles & Permissions', href: '/branch/permissions', requiredPermissions: ['branch:access'] }
       ]
     },
     {

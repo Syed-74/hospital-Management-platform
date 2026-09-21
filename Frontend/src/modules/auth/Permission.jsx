@@ -53,7 +53,7 @@ export default function Permission({ mode = "tenant" }) {
 
       // Determine initial active role
       let initialRole = null;
-      if (mode === "platform" && routeRoleId) {
+      if (routeRoleId) {
         initialRole = fetchedRoles.find(r => r.id === routeRoleId);
       }
       if (!initialRole && fetchedRoles.length > 0) {
@@ -208,9 +208,9 @@ export default function Permission({ mode = "tenant" }) {
       scopes: ["GLOBAL"]
     },
 
-    // 1. Hospital Administration & Operations
+    // 1. Hospital & Branch Administration
     {
-      group: "Hospital Administration & Operations",
+      group: "Hospital & Branch Administration",
       label: "Hospital Dashboard Access",
       read: "hospital:access",
       create: "hospital:access",
@@ -220,7 +220,17 @@ export default function Permission({ mode = "tenant" }) {
       scopes: ["HOSPITAL"]
     },
     {
-      group: "Hospital Administration & Operations",
+      group: "Hospital & Branch Administration",
+      label: "Branch Management (Manage Branches)",
+      read: "branch:read",
+      create: "branch:manage",
+      update: "branch:manage",
+      delete: "branch:manage",
+      description: "Create, view, update, and delete hospital branches.",
+      scopes: ["HOSPITAL"]
+    },
+    {
+      group: "Hospital & Branch Administration",
       label: "Branch Admin Management",
       read: "branchAdmins:read",
       create: "branchAdmins:manage",
@@ -230,14 +240,44 @@ export default function Permission({ mode = "tenant" }) {
       scopes: ["HOSPITAL"]
     },
     {
-      group: "Hospital Administration & Operations",
+      group: "Hospital & Branch Administration",
+      label: "Department & Fee Configuration",
+      read: "departments:read",
+      create: "departments:create",
+      update: "departments:update",
+      delete: "departments:delete",
+      description: "Manage hospital departments, specialties, and consultation fee structures.",
+      scopes: ["HOSPITAL", "BRANCH"]
+    },
+    {
+      group: "Hospital & Branch Administration",
+      label: "Hospital Theme & Customization",
+      read: "themes:read",
+      create: "themes:manage",
+      update: "themes:manage",
+      delete: "themes:manage",
+      description: "Configure hospital branding, logos, color palettes, and layout themes.",
+      scopes: ["HOSPITAL"]
+    },
+    {
+      group: "Hospital & Branch Administration",
       label: "Business Rules & Policies",
       read: "hospital_policies:read",
       create: "hospital_policies:manage",
       update: "hospital_policies:manage",
       delete: "hospital_policies:manage",
       description: "Configure approval workflows and business rules.",
-      scopes: ["HOSPITAL"]
+      scopes: ["HOSPITAL", "BRANCH"]
+    },
+    {
+      group: "Hospital & Branch Administration",
+      label: "Branch Dashboard Access",
+      read: "branch:access",
+      create: "branch:access",
+      update: "branch:access",
+      delete: "branch:access",
+      description: "Access the Branch Admin dashboard and branch operations.",
+      scopes: ["HOSPITAL", "BRANCH"]
     },
 
     // 2. Identity & Access Management
@@ -263,19 +303,39 @@ export default function Permission({ mode = "tenant" }) {
     },
     {
       group: "Identity & Access Management",
+      label: "Staff & User Management",
+      read: "users:read",
+      create: "users:manage",
+      update: "users:manage",
+      delete: "users:manage",
+      description: "Manage branch staff members and operational user accounts.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Identity & Access Management",
       label: "Patient Management",
       read: "patients:read",
       create: "patients:manage",
       update: "patients:manage",
       delete: "patients:manage",
-      description: "Manage patient registration and records.",
+      description: "Manage patient registration and medical records.",
       scopes: ["HOSPITAL","BRANCH"]
     },
 
-    // 3. Clinical & Medical Management
+    // 3. Clinical & Medical Operations
     {
-      group: "Clinical & Medical Management",
-      label: "Clinical Management",
+      group: "Clinical & Medical Operations",
+      label: "Doctor Management",
+      read: "doctors:read",
+      create: "doctors:manage",
+      update: "doctors:manage",
+      delete: "doctors:manage",
+      description: "Manage doctor profiles, qualifications, and schedules.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Clinical & Medical Operations",
+      label: "Clinical Operations",
       read: "clinical_ops:read",
       create: "clinical_ops:manage",
       update: "clinical_ops:manage",
@@ -284,13 +344,43 @@ export default function Permission({ mode = "tenant" }) {
       scopes: ["HOSPITAL","BRANCH"]
     },
     {
-      group: "Clinical & Medical Management",
+      group: "Clinical & Medical Operations",
+      label: "Appointments & Scheduling",
+      read: "appointments:read",
+      create: "appointments:manage",
+      update: "appointments:manage",
+      delete: "appointments:manage",
+      description: "Schedule patient visits, consultations, and doctor availability.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Clinical & Medical Operations",
+      label: "Admissions & Discharges",
+      read: "admissions:read",
+      create: "admissions:manage",
+      update: "admissions:manage",
+      delete: "admissions:manage",
+      description: "Manage patient bed assignments, admissions, and discharges.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Clinical & Medical Operations",
       label: "Pharmacy",
       read: "pharmacy:read",
       create: "pharmacy:manage",
       update: "pharmacy:manage",
       delete: "pharmacy:manage",
       description: "Manage pharmacy and dispensaries.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Clinical & Medical Operations",
+      label: "Laboratory & Diagnostics",
+      read: "laboratory:read",
+      create: "laboratory:manage",
+      update: "laboratory:manage",
+      delete: "laboratory:manage",
+      description: "Order and process lab tests, diagnostic results.",
       scopes: ["HOSPITAL","BRANCH"]
     },
 
@@ -303,6 +393,36 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_billing:manage",
       delete: "hospital_billing:manage",
       description: "Manage billing, claims, and insurance processing.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Infrastructure (Wards & Rooms)",
+      read: "infrastructure:read",
+      create: "infrastructure:manage",
+      update: "infrastructure:manage",
+      delete: "infrastructure:manage",
+      description: "Manage branch departments, floors, rooms, and wards.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Inventory & Supplies",
+      read: "inventory:read",
+      create: "inventory:manage",
+      update: "inventory:manage",
+      delete: "inventory:manage",
+      description: "Manage stock levels, medical equipment, and procurement.",
+      scopes: ["HOSPITAL","BRANCH"]
+    },
+    {
+      group: "Financial & Administrative",
+      label: "Reports & Analytics",
+      read: "reports:read",
+      create: "reports:manage",
+      update: "reports:manage",
+      delete: "reports:manage",
+      description: "Access operational, financial, and clinical reports.",
       scopes: ["HOSPITAL","BRANCH"]
     }
   ];
@@ -321,14 +441,12 @@ export default function Permission({ mode = "tenant" }) {
 
   // Group definitions by category
   const groupedMatrix = MATRIX_DEFINITIONS.reduce((acc, current) => {
-    const roleScope = selectedRole?.scope || 'HOSPITAL';
-    if (current.scopes && !current.scopes.includes(roleScope)) {
+    const roleScope = selectedRole?.scope || (mode === "platform" ? "GLOBAL" : mode === "branch" ? "BRANCH" : "HOSPITAL");
+    if (current.scopes && !current.scopes.includes(roleScope) && !current.scopes.includes("GLOBAL")) {
       return acc;
     }
 
-    let dynamicGroup = "Hospital Admin Permissions";
-    if (roleScope === "GLOBAL") dynamicGroup = "Platform Admin Permissions";
-    if (roleScope === "BRANCH") dynamicGroup = "Branch Admin Permissions";
+    let dynamicGroup = current.group || (roleScope === "GLOBAL" ? "Platform Admin Permissions" : roleScope === "BRANCH" ? "Branch Admin Permissions" : "Hospital Admin Permissions");
 
     if (!acc[dynamicGroup]) acc[dynamicGroup] = [];
     acc[dynamicGroup].push(current);

@@ -22,6 +22,22 @@ export const getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
+export const createUser = catchAsync(async (req, res, next) => {
+  const user = await usersService.createUser(req.user, req.body);
+  res.status(201).json({
+    status: "success",
+    data: { user },
+  });
+});
+
+export const updateUser = catchAsync(async (req, res, next) => {
+  const user = await usersService.updateUser(req.user, req.params.id, req.body);
+  res.status(200).json({
+    status: "success",
+    data: { user },
+  });
+});
+
 export const assignRoles = catchAsync(async (req, res, next) => {
   const { userId } = req.params;
   const { roleIds } = req.body; // Expecting an array of role UUIDs

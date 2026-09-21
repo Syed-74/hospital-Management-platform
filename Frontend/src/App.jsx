@@ -100,6 +100,7 @@ function App() {
             <Route path="overview" element={<Overview />} />
             <Route path="manage-admin" element={<ManageAdmin />} />
             <Route path="hospital-management" element={<CreatingHospital/>} />
+            <Route path="permissions" element={<Permission mode="platform" />} />
             <Route path="roles/:roleId/permissions" element={<Permission mode="platform" />} />
             <Route path="settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/platformAdmin/overview" replace />} />
@@ -120,6 +121,8 @@ function App() {
             <Route index element={<Navigate to="/hospital/overview" replace />} />
             <Route path="overview" element={<HospitalOverview />} />
             <Route path="roles-permissions" element={<Permission mode="tenant" />} />
+            <Route path="permissions" element={<Permission mode="tenant" />} />
+            <Route path="roles/:roleId/permissions" element={<Permission mode="tenant" />} />
             <Route path="branch/manage" element={<ManageBranch />} />
             <Route path="manage-branch-admin" element={<ManageBranchAdmin/>} />
             <Route path="*" element={<Navigate to="/hospital/overview" replace />} />
@@ -148,9 +151,10 @@ function App() {
             
             {/* People & Access Management */}
             <Route path="staff" element={<ManageStaff />} />
-            <Route path="users" element={<ManageUsers />} />
             <Route path="roles" element={<ManageRoles />} />
-            <Route path="permissions" element={<ManagePermissions />} />
+            <Route path="permissions" element={<Permission mode="branch" />} />
+            <Route path="roles-permissions" element={<Permission mode="branch" />} />
+            <Route path="roles/:roleId/permissions" element={<Permission mode="branch" />} />
             
             {/* Operations Management */}
             <Route path="patients" element={<ManagePatients />} />

@@ -51,8 +51,8 @@ app.use(
   })
 );
 app.use(morgan("dev")); // HTTP request logger
-app.use(express.json()); // Parse JSON payloads
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
+app.use(express.json({ limit: "50mb" })); // Parse JSON payloads (supports base64 image uploads)
+app.use(express.urlencoded({ limit: "50mb", extended: true })); // Parse URL-encoded payloads
 app.use(cookieParser()); // Parse cookies
 
 // Serve static files from the public directory (for uploaded images)

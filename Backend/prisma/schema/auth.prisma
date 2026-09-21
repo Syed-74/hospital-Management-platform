@@ -12,6 +12,16 @@ enum RoleScope {
   GLOBAL
   HOSPITAL
   BRANCH
+  DOCTOR
+  NURSE
+  PHARMACIST
+  LABORATORY
+  ACCOUNTANT
+  RECEPTIONIST
+  ADMINISTRATOR_HR
+  ADMINISTRATOR_OPERATIONS
+  ADMINISTRATOR_CLINICAL
+  ADMINISTRATOR_SUPPORT
 }
 
 // ==========================================
@@ -20,12 +30,16 @@ enum RoleScope {
 
 // User Model
 model User {
-  id        String  @id @default(uuid())
-  email     String  @unique
-  password  String // Hashed password
-  firstName String
-  lastName  String
-  isActive  Boolean @default(true)
+  id           String    @id @default(uuid())
+  email        String    @unique
+  password     String // Hashed password
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime?
+  gender       String?
+  mobileNumber String?
+  profilePhoto String?
+  isActive     Boolean   @default(true)
 
   // Tenant isolation (optional for Platform Admins)
   hospitalId String?
@@ -75,11 +89,6 @@ model Role {
 // ==========================================
 // SCOPED ROLE ASSIGNMENTS (authorization source of truth)
 // ==========================================
-// Binds a reusable Role to a specific user AT a specific scope. This is the
-// actual authorization boundary used by the backend: Role defines WHAT a
-// user can do; UserRoleAssignment defines WHERE (which hospital/branch)
-// that grant applies. A user can hold multiple assignments — e.g. the same
-// "Branch Admin" role for both Branch A and Branch B (multi-branch users).
 model UserRoleAssignment {
   id     String @id @default(uuid())
   userId String

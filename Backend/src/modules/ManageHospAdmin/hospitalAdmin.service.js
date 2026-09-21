@@ -48,19 +48,28 @@ class HospitalAdminService {
                         firstName,
                         lastName,
                         hospitalId,
+                        mobileNumber: data.phone || data.mobileNumber || null,
+                        profilePhoto: data.profileImageUrl || data.profilePhoto || null,
+                        dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+                        gender: data.gender || null,
                     }
                 });
 
-                // 2. Create Profile
+                // 2. Create HospitalAdmin Profile
                 const hospitalAdmin = await tx.hospitalAdmin.create({
                     data: {
                         userId: user.id,
+                        hospitalId,
                         employeeCode,
-                        phone,
                         middleName,
                         displayName,
-                        alternatePhone,
-                        profileImageUrl,
+                        designation: data.designation || null,
+                        department: data.department || null,
+                        qualification: data.qualification || null,
+                        joiningDate: data.joiningDate ? new Date(data.joiningDate) : null,
+                        officeExtension: data.officeExtension || null,
+                        alternatePhone: alternatePhone || null,
+                        emergencyContact: data.emergencyContact || null,
                         status: status || 'PENDING',
                         isEmailVerified: isEmailVerified || false,
                         isPhoneVerified: isPhoneVerified || false,
@@ -136,7 +145,7 @@ class HospitalAdminService {
     }
 
     async updateHospitalAdmin(id, data) {
-        const { firstName, lastName, phone, employeeCode, isActive, status, middleName, displayName, alternatePhone, profileImageUrl, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
+        const { firstName, lastName, phone, mobileNumber, dateOfBirth, gender, profilePhoto, profileImageUrl, employeeCode, isActive, status, middleName, displayName, alternatePhone, designation, department, qualification, joiningDate, officeExtension, emergencyContact, isEmailVerified, isPhoneVerified, mfaEnabled } = data;
 
         const admin = await this.getHospitalAdminById(id); // Ensures they exist and are an admin
 
@@ -148,6 +157,10 @@ class HospitalAdminService {
                     data: {
                         firstName: firstName !== undefined ? firstName : admin.firstName,
                         lastName: lastName !== undefined ? lastName : admin.lastName,
+                        mobileNumber: phone !== undefined || mobileNumber !== undefined ? (phone || mobileNumber) : admin.mobileNumber,
+                        dateOfBirth: dateOfBirth !== undefined ? (dateOfBirth ? new Date(dateOfBirth) : null) : admin.dateOfBirth,
+                        gender: gender !== undefined ? gender : admin.gender,
+                        profilePhoto: profilePhoto !== undefined || profileImageUrl !== undefined ? (profilePhoto || profileImageUrl) : admin.profilePhoto,
                         isActive: isActive !== undefined ? isActive : admin.isActive
                     }
                 });
@@ -156,13 +169,17 @@ class HospitalAdminService {
                 const updatedProfile = await tx.hospitalAdmin.update({
                     where: { userId: id },
                     data: {
-                        phone: phone !== undefined ? phone : admin.hospitalAdmin?.phone,
                         employeeCode: employeeCode !== undefined ? employeeCode : admin.hospitalAdmin?.employeeCode,
                         status: status !== undefined ? status : admin.hospitalAdmin?.status,
                         middleName: middleName !== undefined ? middleName : admin.hospitalAdmin?.middleName,
                         displayName: displayName !== undefined ? displayName : admin.hospitalAdmin?.displayName,
+                        designation: designation !== undefined ? designation : admin.hospitalAdmin?.designation,
+                        department: department !== undefined ? department : admin.hospitalAdmin?.department,
+                        qualification: qualification !== undefined ? qualification : admin.hospitalAdmin?.qualification,
+                        joiningDate: joiningDate !== undefined ? (joiningDate ? new Date(joiningDate) : null) : admin.hospitalAdmin?.joiningDate,
+                        officeExtension: officeExtension !== undefined ? officeExtension : admin.hospitalAdmin?.officeExtension,
                         alternatePhone: alternatePhone !== undefined ? alternatePhone : admin.hospitalAdmin?.alternatePhone,
-                        profileImageUrl: profileImageUrl !== undefined ? profileImageUrl : admin.hospitalAdmin?.profileImageUrl,
+                        emergencyContact: emergencyContact !== undefined ? emergencyContact : admin.hospitalAdmin?.emergencyContact,
                         isEmailVerified: isEmailVerified !== undefined ? isEmailVerified : admin.hospitalAdmin?.isEmailVerified,
                         isPhoneVerified: isPhoneVerified !== undefined ? isPhoneVerified : admin.hospitalAdmin?.isPhoneVerified,
                         mfaEnabled: mfaEnabled !== undefined ? mfaEnabled : admin.hospitalAdmin?.mfaEnabled,

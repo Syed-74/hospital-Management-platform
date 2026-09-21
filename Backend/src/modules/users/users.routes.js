@@ -1,8 +1,8 @@
 import express from "express";
-import { getMe, getAllUsers, assignRoles } from "./users.controller.js";
+import { getMe, getAllUsers, createUser, updateUser, assignRoles } from "./users.controller.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import { requirePermission } from "../../middlewares/rbac.middleware.js";
-import { USER_VIEW, USER_ASSIGN_ROLES } from "../auth/permissions.js";
+import { USER_VIEW, USER_ASSIGN_ROLES, USER_MANAGE } from "../auth/permissions.js";
 
 const router = express.Router();
 
@@ -13,6 +13,9 @@ router.get("/me", protect, getMe);
 router.use(protect);
 
 router.get("/", requirePermission(USER_VIEW), getAllUsers);
+router.post("/", requirePermission(USER_MANAGE), createUser);
+router.put("/:id", requirePermission(USER_MANAGE), updateUser);
+router.patch("/:id", requirePermission(USER_MANAGE), updateUser);
 router.post("/:userId/roles", requirePermission(USER_ASSIGN_ROLES), assignRoles);
 
 export default router;

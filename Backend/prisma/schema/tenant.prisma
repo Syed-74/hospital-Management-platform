@@ -43,6 +43,7 @@ model Hospital {
   hospitalTheme HospitalTheme?
   branches      BranchManage[]
   branchAdmins  BranchAdmin[]
+  hospitalAdmins HospitalAdmin[]
   roles         Role[]
   roleAssignments UserRoleAssignment[]
 
@@ -60,15 +61,25 @@ model HospitalAdmin {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Identity
-  employeeCode String? @unique
+  // Tenant Link
+  hospitalId String?
+  hospital   Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+
+  // Identity & Professional Attributes
+  employeeCode String?   @unique
   middleName   String?
   displayName  String?
+  designation  String?
+  department   String?
+  qualification String?
+  joiningDate  DateTime?
 
-  // Contact
-  phone           String
-  alternatePhone  String?
-  profileImageUrl String?
+  // Contact & Office Information
+  phone            String?
+  alternatePhone   String?
+  profileImageUrl  String?
+  officeExtension  String?
+  emergencyContact String?
 
   // Account Status
   status          AccountStatus @default(PENDING)
@@ -190,18 +201,20 @@ model BranchAdmin {
   userId               String        @unique
   user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   // Personal Information
-  firstName            String
   middleName           String?
-  lastName             String
   fullName             String?
   employeeId           String?       @unique
-  profilePhoto         String?
-  gender               String?
-  dateOfBirth          DateTime?
   // Contact Information
-  email                String        @unique
-  phoneNumber          String?
   alternatePhoneNumber String?
+  // Documents
+  identityDocument     String?
+  addressProof         String?
+  employmentProof      String?
+  otherDocuments       String?
+  // Credentials
+  license              String?
+  qualification        String?
+  certification        String?
   // Organization
   hospitalId           String
   hospital             Hospital      @relation(fields: [hospitalId], references: [id], onDelete: Cascade)

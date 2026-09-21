@@ -17,6 +17,7 @@ export const ROLE_MANAGE = "roles:manage";
 export const PERMISSION_MANAGE = "permissions:manage";
 export const USER_VIEW = "users:read";
 export const USER_ASSIGN_ROLES = "users:assign_roles";
+export const USER_MANAGE = "users:manage";
 export const BRANCH_ADMIN_VIEW = "branchAdmins:read";
 export const BRANCH_ADMIN_MANAGE = "branchAdmins:manage";
 
