@@ -83,7 +83,6 @@ export default function ManageAdmin() {
     officeExtension: '',
     emergencyContact: '',
     roleId: '',
-    isActive: true,
     status: 'PENDING',
     isEmailVerified: false,
     isPhoneVerified: false,
@@ -108,7 +107,7 @@ export default function ManageAdmin() {
       const [adminsRes, hospitalsRes, rolesRes] = await Promise.all([
         getAllHospAdmins(),
         getAllHospitals(),
-        axios.get('/roles?scope=HOSPITAL')
+        axios.get('/roles?scope=ORGANIZATION_ADMIN')
       ]);
 
       if (adminsRes.success) setAdmins(adminsRes.data || []);
@@ -162,9 +161,8 @@ export default function ManageAdmin() {
       joiningDate: '', 
       officeExtension: '', 
       emergencyContact: '', 
-      roleId: '', 
-      isActive: true, 
-      status: 'PENDING', 
+      roleId: '',
+      status: 'PENDING',
       isEmailVerified: false, 
       isPhoneVerified: false, 
       mfaEnabled: false
@@ -179,37 +177,40 @@ export default function ManageAdmin() {
     setEditId(admin.id);
     setShowPassword(false);
     
-    // Find the role ID from the admin's roles array if it exists
-    const roleId = admin.roles && admin.roles.length > 0 ? admin.roles[0].id : '';
-    const photo = admin.profilePhoto || admin.hospitalAdmin?.profileImageUrl || '';
+    // Find the role ID from the admin's roleAssignments (HOSPITAL_ADMIN_INCLUDE
+    // includes { roleAssignments: { include: { role: true } } } — there is
+    // no flattened `admin.roles`, only on the logged-in user's own req.user).
+    const roleId = admin.roleAssignments && admin.roleAssignments.length > 0 ? admin.roleAssignments[0].role?.id : '';
+    const photo = admin.profilePhoto || '';
+    const employee = admin.employee || {};
+    const primaryAssignment = employee.assignments?.find(a => a.isPrimary) || employee.assignments?.[0] || {};
 
     setFormData({
-      hospitalId: admin.hospitalId || admin.hospitalAdmin?.hospitalId || '',
+      hospitalId: admin.hospitalId || '',
       firstName: admin.firstName || '',
       lastName: admin.lastName || '',
-      middleName: admin.hospitalAdmin?.middleName || '',
-      displayName: admin.hospitalAdmin?.displayName || '',
+      middleName: employee.middleName || '',
+      displayName: employee.displayName || '',
       email: admin.email || '',
       password: '', // Leave empty on edit
-      phone: admin.mobileNumber || admin.hospitalAdmin?.alternatePhone || '',
-      alternatePhone: admin.hospitalAdmin?.alternatePhone || '',
-      employeeCode: admin.hospitalAdmin?.employeeCode || '',
+      phone: admin.mobileNumber || '',
+      alternatePhone: employee.alternatePhone || '',
+      employeeCode: employee.employeeCode || '',
       profilePhoto: photo,
       profileImageUrl: photo,
       dateOfBirth: admin.dateOfBirth ? new Date(admin.dateOfBirth).toISOString().split('T')[0] : '',
       gender: admin.gender || '',
-      designation: admin.hospitalAdmin?.designation || '',
-      department: admin.hospitalAdmin?.department || '',
-      qualification: admin.hospitalAdmin?.qualification || '',
-      joiningDate: admin.hospitalAdmin?.joiningDate ? new Date(admin.hospitalAdmin.joiningDate).toISOString().split('T')[0] : '',
-      officeExtension: admin.hospitalAdmin?.officeExtension || '',
-      emergencyContact: admin.hospitalAdmin?.emergencyContact || '',
+      designation: primaryAssignment.designation || '',
+      department: primaryAssignment.department?.departmentName || '',
+      qualification: employee.professionalProfile?.qualification || '',
+      joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().split('T')[0] : '',
+      officeExtension: employee.officeExtension || '',
+      emergencyContact: employee.emergencyContact || '',
       roleId: roleId,
-      isActive: admin.isActive !== undefined ? admin.isActive : true,
-      status: admin.hospitalAdmin?.status || 'PENDING',
-      isEmailVerified: admin.hospitalAdmin?.isEmailVerified || false,
-      isPhoneVerified: admin.hospitalAdmin?.isPhoneVerified || false,
-      mfaEnabled: admin.hospitalAdmin?.mfaEnabled || false
+      status: admin.credential?.status || 'PENDING',
+      isEmailVerified: admin.credential?.isEmailVerified || false,
+      isPhoneVerified: admin.credential?.isPhoneVerified || false,
+      mfaEnabled: admin.mfaSetting?.isEnabled || false
     });
     setError('');
     setStep(1);
@@ -266,14 +267,15 @@ export default function ManageAdmin() {
 
   // Filtered List
   const filteredAdmins = admins.filter(admin => {
+    const primaryAssignment = admin.employee?.assignments?.find(a => a.isPrimary) || admin.employee?.assignments?.[0];
     const adminName = `${admin.firstName || ''} ${admin.lastName || ''}`.toLowerCase();
     const email = (admin.email || '').toLowerCase();
-    const empCode = (admin.hospitalAdmin?.employeeCode || '').toLowerCase();
+    const empCode = (admin.employee?.employeeCode || '').toLowerCase();
     const hospName = (admin.hospital?.hospitalName || '').toLowerCase();
-    const designation = (admin.hospitalAdmin?.designation || '').toLowerCase();
-    const department = (admin.hospitalAdmin?.department || '').toLowerCase();
+    const designation = (primaryAssignment?.designation || '').toLowerCase();
+    const department = (primaryAssignment?.department?.departmentName || '').toLowerCase();
 
-    const matchesSearch = 
+    const matchesSearch =
       !searchTerm ||
       adminName.includes(searchTerm.toLowerCase()) ||
       email.includes(searchTerm.toLowerCase()) ||
@@ -282,24 +284,24 @@ export default function ManageAdmin() {
       designation.includes(searchTerm.toLowerCase()) ||
       department.includes(searchTerm.toLowerCase());
 
-    const matchesHospital = 
-      hospitalFilter === 'All' || 
+    const matchesHospital =
+      hospitalFilter === 'All' ||
       admin.hospitalId === hospitalFilter;
 
-    const matchesStatus = 
-      statusFilter === 'All' || 
-      (statusFilter === 'Active' && admin.isActive !== false) ||
-      (statusFilter === 'Inactive' && admin.isActive === false);
+    const matchesStatus =
+      statusFilter === 'All' ||
+      (statusFilter === 'Active' && admin.credential?.status === 'ACTIVE') ||
+      (statusFilter === 'Inactive' && admin.credential?.status !== 'ACTIVE');
 
-    const matchesRole = 
-      roleFilter === 'All' || 
-      (admin.roles && admin.roles.some(r => r.id === roleFilter || r.name === roleFilter));
+    const matchesRole =
+      roleFilter === 'All' ||
+      (admin.roleAssignments && admin.roleAssignments.some(a => a.role?.id === roleFilter || a.role?.name === roleFilter));
 
     return matchesSearch && matchesHospital && matchesStatus && matchesRole;
   });
 
-  const activeCount = admins.filter(a => a.isActive !== false).length;
-  const inactiveCount = admins.filter(a => a.isActive === false).length;
+  const activeCount = admins.filter(a => a.credential?.status === 'ACTIVE').length;
+  const inactiveCount = admins.filter(a => a.credential?.status !== 'ACTIVE').length;
   const hospitalsWithAdminsCount = new Set(admins.map(a => a.hospitalId).filter(Boolean)).size;
 
   if (isLoading) {
@@ -502,8 +504,16 @@ export default function ManageAdmin() {
                     const avatarBgs = ['bg-teal-100 text-teal-700', 'bg-purple-100 text-purple-700', 'bg-emerald-100 text-emerald-700', 'bg-amber-100 text-amber-700'];
                     const avatarClass = avatarBgs[idx % avatarBgs.length];
 
-                    const profilePhotoUrl = admin.profilePhoto || admin.hospitalAdmin?.profileImageUrl;
-                    const phoneNum = admin.mobileNumber || admin.hospitalAdmin?.phone || admin.hospitalAdmin?.alternatePhone;
+                    const primaryAssignment = admin.employee?.assignments?.find(a => a.isPrimary) || admin.employee?.assignments?.[0];
+                    const profilePhotoUrl = admin.profilePhoto;
+                    const phoneNum = admin.mobileNumber || admin.employee?.alternatePhone;
+                    const accountStatus = admin.credential?.status || 'PENDING';
+                    const statusStyles = {
+                      ACTIVE: { badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60', dot: 'bg-emerald-500' },
+                      PENDING: { badge: 'bg-amber-50 text-amber-700 border border-amber-200/60', dot: 'bg-amber-500' },
+                      INACTIVE: { badge: 'bg-slate-100 text-slate-600 border border-slate-200', dot: 'bg-slate-400' },
+                      SUSPENDED: { badge: 'bg-red-50 text-red-700 border border-red-200/60', dot: 'bg-red-500' },
+                    }[accountStatus] || { badge: 'bg-slate-100 text-slate-600 border border-slate-200', dot: 'bg-slate-400' };
 
                     return (
                       <tr key={admin.id} className="hover:bg-slate-50/80 transition-colors">
@@ -539,12 +549,12 @@ export default function ManageAdmin() {
                             <div>
                               <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                                 {admin.firstName} {admin.lastName}
-                                {admin.hospitalAdmin?.displayName && (
-                                  <span className="text-[10px] text-slate-400 font-normal">({admin.hospitalAdmin.displayName})</span>
+                                {admin.employee?.displayName && (
+                                  <span className="text-[10px] text-slate-400 font-normal">({admin.employee.displayName})</span>
                                 )}
                               </p>
                               <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                                ID: {admin.hospitalAdmin?.employeeCode || `EMP-${(admin.firstName || 'ADM').substring(0,4).toUpperCase()}-00${idx+1}`}
+                                ID: {admin.employee?.employeeCode || `EMP-${(admin.firstName || 'ADM').substring(0,4).toUpperCase()}-00${idx+1}`}
                               </p>
                             </div>
                           </div>
@@ -553,10 +563,10 @@ export default function ManageAdmin() {
                         {/* Designation / Dept */}
                         <td className="py-4 px-4 whitespace-nowrap">
                           <p className="text-xs font-bold text-slate-800">
-                            {admin.hospitalAdmin?.designation || 'Hospital Admin'}
+                            {primaryAssignment?.designation || 'Hospital Admin'}
                           </p>
                           <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-                            {admin.hospitalAdmin?.department ? `Dept: ${admin.hospitalAdmin.department}` : 'General Admin'}
+                            {primaryAssignment?.department?.departmentName ? `Dept: ${primaryAssignment.department.departmentName}` : 'General Admin'}
                           </p>
                         </td>
 
@@ -581,21 +591,15 @@ export default function ManageAdmin() {
                             <span>{admin.hospital?.hospitalName || 'Enterprise Hospital'}</span>
                           </div>
                           <p className="text-[11px] text-slate-400 font-medium mt-0.5 pl-5">
-                            Role: {admin.roles && admin.roles.length > 0 ? admin.roles[0].name : 'Hospital Admin'}
+                            Role: {admin.roleAssignments && admin.roleAssignments.length > 0 ? admin.roleAssignments[0].role?.name : 'Hospital Admin'}
                           </p>
                         </td>
 
                         {/* Status */}
                         <td className="py-4 px-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                            admin.isActive !== false 
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' 
-                              : 'bg-slate-100 text-slate-600 border border-slate-200'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                              admin.isActive !== false ? 'bg-emerald-500' : 'bg-slate-400'
-                            }`} />
-                            {admin.isActive !== false ? 'Active' : 'Inactive'}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusStyles.badge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${statusStyles.dot}`} />
+                            {accountStatus.charAt(0) + accountStatus.slice(1).toLowerCase()}
                           </span>
                         </td>
 
@@ -690,7 +694,9 @@ export default function ManageAdmin() {
       )}
 
       {/* VIEW DETAILS MODAL */}
-      {viewAdmin && (
+      {viewAdmin && (() => {
+        const viewPrimaryAssignment = viewAdmin.employee?.assignments?.find(a => a.isPrimary) || viewAdmin.employee?.assignments?.[0];
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
           <div 
             className="fixed inset-0 bg-slate-900/60 transition-opacity" 
@@ -707,10 +713,10 @@ export default function ManageAdmin() {
               </button>
 
               <div className="flex items-center space-x-4">
-                {(viewAdmin.profilePhoto || viewAdmin.hospitalAdmin?.profileImageUrl) ? (
-                  <img 
-                    src={viewAdmin.profilePhoto || viewAdmin.hospitalAdmin?.profileImageUrl} 
-                    alt={`${viewAdmin.firstName} ${viewAdmin.lastName}`} 
+                {viewAdmin.profilePhoto ? (
+                  <img
+                    src={viewAdmin.profilePhoto}
+                    alt={`${viewAdmin.firstName} ${viewAdmin.lastName}`}
                     className="w-16 h-16 rounded-2xl object-cover border-2 border-white/40 shadow-md shrink-0"
                   />
                 ) : (
@@ -720,12 +726,12 @@ export default function ManageAdmin() {
                 )}
                 <div>
                   <h3 className="text-xl font-extrabold">{viewAdmin.firstName} {viewAdmin.lastName}</h3>
-                  {viewAdmin.hospitalAdmin?.displayName && (
-                    <p className="text-xs text-teal-100">DisplayName: {viewAdmin.hospitalAdmin.displayName}</p>
+                  {viewAdmin.employee?.displayName && (
+                    <p className="text-xs text-teal-100">DisplayName: {viewAdmin.employee.displayName}</p>
                   )}
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="bg-white/20 text-white text-[11px] px-2.5 py-0.5 rounded-full font-semibold">
-                      {viewAdmin.hospitalAdmin?.designation || 'Hospital Admin'}
+                      {viewPrimaryAssignment?.designation || 'Hospital Admin'}
                     </span>
                     <span className="bg-emerald-400/20 text-emerald-200 text-[11px] px-2.5 py-0.5 rounded-full font-semibold border border-emerald-400/30">
                       {viewAdmin.hospital?.hospitalName || 'Enterprise Hospital'}
@@ -746,7 +752,7 @@ export default function ManageAdmin() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                   <div>
                     <span className="text-slate-400 block font-medium">Full Name</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.firstName} {viewAdmin.hospitalAdmin?.middleName || ''} {viewAdmin.lastName}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.firstName} {viewAdmin.employee?.middleName || ''} {viewAdmin.lastName}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Date of Birth</span>
@@ -769,29 +775,29 @@ export default function ManageAdmin() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
                   <div>
                     <span className="text-slate-400 block font-medium">Employee Code</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.employeeCode || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.employee?.employeeCode || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Department</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.department || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewPrimaryAssignment?.department?.departmentName || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Qualification</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.qualification || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.employee?.professionalProfile?.qualification || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Joining Date</span>
                     <span className="font-bold text-slate-800">
-                      {viewAdmin.hospitalAdmin?.joiningDate ? new Date(viewAdmin.hospitalAdmin.joiningDate).toLocaleDateString() : 'N/A'}
+                      {viewAdmin.employee?.joiningDate ? new Date(viewAdmin.employee.joiningDate).toLocaleDateString() : 'N/A'}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Office Extension</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.officeExtension || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.employee?.officeExtension || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Account Status</span>
-                    <span className="font-bold text-teal-700">{viewAdmin.hospitalAdmin?.status || 'PENDING'}</span>
+                    <span className="font-bold text-teal-700">{viewAdmin.credential?.status || 'PENDING'}</span>
                   </div>
                 </div>
               </div>
@@ -808,15 +814,15 @@ export default function ManageAdmin() {
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Primary Phone (Mobile)</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.mobileNumber || viewAdmin.hospitalAdmin?.alternatePhone || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.mobileNumber || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Alternate Phone</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.alternatePhone || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.employee?.alternatePhone || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-slate-400 block font-medium">Emergency Contact</span>
-                    <span className="font-bold text-slate-800">{viewAdmin.hospitalAdmin?.emergencyContact || 'N/A'}</span>
+                    <span className="font-bold text-slate-800">{viewAdmin.employee?.emergencyContact || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -827,17 +833,17 @@ export default function ManageAdmin() {
                   <ShieldCheck className="w-4 h-4 text-teal-700" /> Security & Verification
                 </h4>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.isActive !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
-                    {viewAdmin.isActive !== false ? '✓ Account Active' : '✕ Account Disabled'}
+                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.credential?.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
+                    {viewAdmin.credential?.status === 'ACTIVE' ? '✓ Account Active' : `✕ Account ${viewAdmin.credential?.status || 'PENDING'}`}
                   </span>
-                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.hospitalAdmin?.isEmailVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                    {viewAdmin.hospitalAdmin?.isEmailVerified ? '✓ Email Verified' : '⚠ Email Unverified'}
+                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.credential?.isEmailVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    {viewAdmin.credential?.isEmailVerified ? '✓ Email Verified' : '⚠ Email Unverified'}
                   </span>
-                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.hospitalAdmin?.isPhoneVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                    {viewAdmin.hospitalAdmin?.isPhoneVerified ? '✓ Phone Verified' : '⚠ Phone Unverified'}
+                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.credential?.isPhoneVerified ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                    {viewAdmin.credential?.isPhoneVerified ? '✓ Phone Verified' : '⚠ Phone Unverified'}
                   </span>
-                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.hospitalAdmin?.mfaEnabled ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                    {viewAdmin.hospitalAdmin?.mfaEnabled ? '🔐 MFA Enabled' : 'MFA Off'}
+                  <span className={`px-3 py-1 rounded-xl font-bold border ${viewAdmin.mfaSetting?.isEnabled ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                    {viewAdmin.mfaSetting?.isEnabled ? '🔐 MFA Enabled' : 'MFA Off'}
                   </span>
                 </div>
               </div>
@@ -846,7 +852,7 @@ export default function ManageAdmin() {
 
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-100 flex justify-end gap-3 bg-white">
-              <button 
+              <button
                 onClick={() => {
                   const adminToEdit = viewAdmin;
                   setViewAdmin(null);
@@ -856,7 +862,7 @@ export default function ManageAdmin() {
               >
                 <Edit2 className="w-3.5 h-3.5" /> Edit Profile
               </button>
-              <button 
+              <button
                 onClick={() => setViewAdmin(null)}
                 className="px-4 py-2 border border-slate-200 text-slate-700 font-semibold rounded-xl text-xs hover:bg-slate-50 transition-colors cursor-pointer"
               >
@@ -865,7 +871,8 @@ export default function ManageAdmin() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* CREATE / EDIT FORM MODAL */}
       {isModalOpen && (
@@ -1347,12 +1354,7 @@ export default function ManageAdmin() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-2 border-t border-slate-100">
-                        <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer">
-                          <input type="checkbox" id="isActive" name="isActive" checked={formData.isActive} onChange={handleInputChange}
-                            className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" />
-                          <span>Login Active</span>
-                        </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4 pt-2 border-t border-slate-100">
                         <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer">
                           <input type="checkbox" id="mfaEnabled" name="mfaEnabled" checked={formData.mfaEnabled} onChange={handleInputChange}
                             className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 cursor-pointer" />

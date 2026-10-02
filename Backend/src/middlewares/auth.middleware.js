@@ -29,6 +29,10 @@ export const protect = catchAsync(async (req, res, next) => {
     where: { id: decoded.id },
     include: {
       hospital: true,
+      // UserCredential.status is the SOLE source of truth for whether this
+      // account can authenticate — see identity.prisma. There is no
+      // separate isActive flag on User to drift out of sync with it.
+      credential: { select: { status: true } },
       // Employment placement (which hospital/branch/department a staff
       // member works in). A platform-only user has no Employee record.
       employee: {
@@ -54,8 +58,12 @@ export const protect = catchAsync(async (req, res, next) => {
     return next(new AppError("The user belonging to this token no longer exists.", 401));
   }
 
-  // 4. Check if user is active
-  if (!currentUser.isActive) {
+  // 4. Check the account can still authenticate. PENDING accounts (not yet
+  // verified/activated) are allowed through, same as before — only a
+  // deliberate SUSPENDED/INACTIVE status (or a missing credential, which
+  // should never happen) blocks login.
+  const accountStatus = currentUser.credential?.status;
+  if (!accountStatus || accountStatus === "SUSPENDED" || accountStatus === "INACTIVE") {
     return next(new AppError("Your account has been deactivated. Please contact support.", 401));
   }
 

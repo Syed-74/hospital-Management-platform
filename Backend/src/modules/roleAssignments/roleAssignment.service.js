@@ -33,11 +33,11 @@ class RoleAssignmentService {
     if (role.scope === "GLOBAL") {
       resolvedHospitalId = null;
       resolvedBranchId = null;
-    } else if (role.scope === "HOSPITAL") {
+    } else if (role.scope === "ORGANIZATION_ADMIN") {
       resolvedHospitalId = role.hospitalId || hospitalId || null;
       resolvedBranchId = null;
       if (!resolvedHospitalId) {
-        throw new AppError("hospitalId is required to assign a HOSPITAL scope role.", 400);
+        throw new AppError("hospitalId is required to assign an ORGANIZATION_ADMIN scope role.", 400);
       }
     } else if (role.scope === "BRANCH") {
       resolvedHospitalId = role.hospitalId || hospitalId || null;

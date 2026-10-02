@@ -56,8 +56,20 @@ export default function ManageBranchAdmin() {
     designation: "",
     roleId: "",
     password: "",
+    accountStatus: "",
     twoFactorEnabled: false,
     hospitalId: hospitalId || ""
+  };
+
+  // AccountStatus enum (identity.prisma) — the sole source of truth for
+  // whether this admin's account can authenticate, replacing the old flat
+  // `isActive` boolean.
+  const ACCOUNT_STATUSES = ["PENDING", "ACTIVE", "INACTIVE", "SUSPENDED"];
+  const STATUS_BADGE_STYLES = {
+    PENDING: "bg-amber-50 text-amber-700 border-amber-200",
+    ACTIVE: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    INACTIVE: "bg-slate-100 text-slate-600 border-slate-200",
+    SUSPENDED: "bg-red-50 text-red-700 border-red-200",
   };
 
   const [formData, setFormData] = useState(defaultFormData);
@@ -126,28 +138,36 @@ export default function ManageBranchAdmin() {
     setIsEditing(true);
     setCurrentAdminId(admin.id);
     setCurrentStep(1);
+    // The admin's branch/department/designation live on its PRIMARY
+    // EmploymentAssignment, not flat on the Employee record itself.
+    const primaryAssignment = admin.assignments?.find((a) => a.isPrimary) || admin.assignments?.[0] || null;
     setFormData({
-      firstName: admin.firstName || admin.user?.firstName || "",
+      firstName: admin.user?.firstName || "",
       middleName: admin.middleName || "",
-      lastName: admin.lastName || admin.user?.lastName || "",
-      dateOfBirth: admin.dateOfBirth ? admin.dateOfBirth.split("T")[0] : "",
-      gender: admin.gender || "",
-      email: admin.email || admin.user?.email || "",
-      phone: admin.phoneNumber || "",
-      alternatePhoneNumber: admin.alternatePhoneNumber || "",
+      lastName: admin.user?.lastName || "",
+      dateOfBirth: admin.user?.dateOfBirth ? admin.user.dateOfBirth.split("T")[0] : "",
+      gender: admin.user?.gender || "",
+      email: admin.user?.email || "",
+      phone: admin.user?.mobileNumber || "",
+      alternatePhoneNumber: admin.alternatePhone || "",
       addressLine1: admin.addressLine1 || "",
       addressLine2: admin.addressLine2 || "",
       city: admin.city || "",
       state: admin.state || "",
       country: admin.country || "",
       postalCode: admin.postalCode || "",
-      branchId: admin.branchId || "",
-      employeeId: admin.employeeId || "",
-      departmentId: admin.departmentId || "",
-      designation: admin.designation || "",
-      roleId: admin.roleId || "",
+      branchId: primaryAssignment?.branchId || "",
+      employeeId: admin.employeeCode || "",
+      departmentId: primaryAssignment?.departmentId || "",
+      designation: primaryAssignment?.designation || "",
+      // BRANCH_ADMIN_INCLUDE now includes user.roleAssignments, so the
+      // current role grant can be preselected. Omitting `roleId` on update
+      // (if left blank) leaves the admin's existing role grant untouched
+      // server-side.
+      roleId: admin.user?.roleAssignments?.[0]?.role?.id || "",
       password: "", // Keep empty for edit unless they want to change
-      twoFactorEnabled: admin.twoFactorEnabled || false,
+      accountStatus: admin.user?.credential?.status || "",
+      twoFactorEnabled: admin.user?.mfaSetting?.isEnabled || false,
       hospitalId: admin.hospitalId || hospitalId
     });
     setError("");
@@ -210,6 +230,12 @@ export default function ManageBranchAdmin() {
     if (isEditing && !payload.password) {
       delete payload.password; // Don't send empty password on update
     }
+    if (!payload.accountStatus) {
+      // "" isn't a valid AccountStatus enum value — omit entirely so the
+      // backend falls back to its own default (create) or leaves the
+      // existing status untouched (update).
+      delete payload.accountStatus;
+    }
 
     let result;
     if (isEditing) {
@@ -246,10 +272,10 @@ export default function ManageBranchAdmin() {
     }
   };
 
-  const filteredAdmins = branchAdmins.filter(admin => 
-    (admin.firstName || admin.user?.firstName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (admin.lastName || admin.user?.lastName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (admin.email || admin.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAdmins = branchAdmins.filter(admin =>
+    (admin.user?.firstName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (admin.user?.lastName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (admin.user?.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -304,24 +330,32 @@ export default function ManageBranchAdmin() {
                   <th className="p-4 font-semibold border-b">Name</th>
                   <th className="p-4 font-semibold border-b">Email</th>
                   <th className="p-4 font-semibold border-b">Phone</th>
+                  <th className="p-4 font-semibold border-b">Status</th>
                   <th className="p-4 font-semibold border-b text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAdmins.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="p-8 text-center text-gray-500">
+                    <td colSpan="5" className="p-8 text-center text-gray-500">
                       No branch admins found.
                     </td>
                   </tr>
                 ) : (
-                  filteredAdmins.map((admin) => (
+                  filteredAdmins.map((admin) => {
+                    const status = admin.user?.credential?.status || "PENDING";
+                    return (
                     <tr key={admin.id} className="border-b hover:bg-gray-50">
                       <td className="p-4">
-                        {admin.firstName || admin.user?.firstName} {admin.lastName || admin.user?.lastName}
+                        {admin.user?.firstName} {admin.user?.lastName}
                       </td>
-                      <td className="p-4">{admin.email || admin.user?.email}</td>
-                      <td className="p-4">{admin.phoneNumber}</td>
+                      <td className="p-4">{admin.user?.email}</td>
+                      <td className="p-4">{admin.user?.mobileNumber}</td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${STATUS_BADGE_STYLES[status] || STATUS_BADGE_STYLES.PENDING}`}>
+                          {status}
+                        </span>
+                      </td>
                       <td className="p-4 flex justify-end gap-2">
                         <button 
                           onClick={() => openEditModal(admin)}
@@ -339,7 +373,8 @@ export default function ManageBranchAdmin() {
                         </button>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -515,11 +550,25 @@ export default function ManageBranchAdmin() {
                           className="w-full px-3.5 py-2.5 border-slate-200 rounded-lg text-sm focus:ring-teal-500"
                         />
                       </div>
+                      <div className="space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">Account Status</label>
+                        <select
+                          name="accountStatus"
+                          value={formData.accountStatus}
+                          onChange={handleInputChange}
+                          className="w-full border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white"
+                        >
+                          <option value="">{isEditing ? "Leave unchanged" : "Default (Pending)"}</option>
+                          {ACCOUNT_STATUSES.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                     <div className="flex items-center mt-6 pt-4 border-t border-slate-100">
                       <label className="flex items-center space-x-2.5 cursor-pointer select-none">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           name="twoFactorEnabled"
                           checked={formData.twoFactorEnabled}
                           onChange={handleInputChange}

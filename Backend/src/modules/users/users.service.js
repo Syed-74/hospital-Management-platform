@@ -23,7 +23,7 @@ class UsersService {
         gender: true,
         mobileNumber: true,
         profilePhoto: true,
-        isActive: true,
+        credential: { select: { status: true } },
         hospitalId: true,
         roleAssignments: {
           select: {
@@ -55,6 +55,10 @@ class UsersService {
 
     const hashedPassword = await bcrypt.default.hash(password || "Staff@123!", 10);
     const targetHospitalId = actingUser?.hospitalId || userData.hospitalId || null;
+    // Staff created here start immediately usable (matching the old
+    // isActive-defaults-true behavior) unless the caller explicitly opts
+    // them out — credential.status is now the sole gate for this.
+    const initialStatus = userData.isActive === false ? "INACTIVE" : "ACTIVE";
 
     return await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
@@ -67,12 +71,11 @@ class UsersService {
           mobileNumber: mobileNumber || phone || null,
           profilePhoto: profilePhoto || null,
           hospitalId: targetHospitalId,
-          isActive: userData.isActive !== undefined ? userData.isActive : true,
         },
       });
 
       await tx.userCredential.create({
-        data: { userId: newUser.id, passwordHash: hashedPassword },
+        data: { userId: newUser.id, passwordHash: hashedPassword, status: initialStatus },
       });
 
       if (roleId) {
@@ -98,7 +101,7 @@ class UsersService {
           gender: true,
           mobileNumber: true,
           profilePhoto: true,
-          isActive: true,
+          credential: { select: { status: true } },
           hospitalId: true,
           roleAssignments: { include: { role: true } },
         },
@@ -126,7 +129,6 @@ class UsersService {
       dataToUpdate.mobileNumber = updateData.mobileNumber || updateData.phone;
     }
     if (updateData.profilePhoto !== undefined) dataToUpdate.profilePhoto = updateData.profilePhoto;
-    if (updateData.isActive !== undefined) dataToUpdate.isActive = updateData.isActive;
 
     return await prisma.$transaction(async (tx) => {
       const updatedUser = await tx.user.update({
@@ -141,6 +143,17 @@ class UsersService {
           where: { userId },
           update: { passwordHash },
           create: { userId, passwordHash },
+        });
+      }
+
+      // isActive is now expressed via credential.status, the sole gate for
+      // whether this account can authenticate (see identity.prisma).
+      // UserCredential always exists by this point — it is created
+      // unconditionally alongside every User in this codebase.
+      if (updateData.isActive !== undefined) {
+        await tx.userCredential.update({
+          where: { userId },
+          data: { status: updateData.isActive ? "ACTIVE" : "INACTIVE" },
         });
       }
 
@@ -168,7 +181,7 @@ class UsersService {
           gender: true,
           mobileNumber: true,
           profilePhoto: true,
-          isActive: true,
+          credential: { select: { status: true } },
           hospitalId: true,
           roleAssignments: { include: { role: true } },
         },

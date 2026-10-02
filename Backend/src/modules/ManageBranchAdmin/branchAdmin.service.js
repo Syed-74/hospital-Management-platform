@@ -9,7 +9,20 @@ import bcrypt from "bcrypt";
 // used throughout this module is the Employee's id (matching the old
 // BranchAdmin.id contract, distinct from the User's id).
 const BRANCH_ADMIN_INCLUDE = {
-    user: { select: { id: true, email: true, firstName: true, lastName: true, mobileNumber: true, profilePhoto: true, gender: true, dateOfBirth: true, isActive: true } },
+    user: {
+        select: {
+            id: true, email: true, firstName: true, lastName: true, mobileNumber: true, profilePhoto: true, gender: true, dateOfBirth: true,
+            // credential.status is the sole gate for whether this account can
+            // authenticate (see identity.prisma) — there is no isActive flag
+            // on User anymore.
+            credential: { select: { status: true, isEmailVerified: true, isPhoneVerified: true } },
+            mfaSetting: { select: { isEnabled: true } },
+            // The role granted alongside creation (see role grant below) —
+            // without this the frontend has no way to display or preselect
+            // the admin's role.
+            roleAssignments: { include: { role: true } },
+        },
+    },
     professionalProfile: true,
     documents: true,
     assignments: { include: { branch: { select: { branchName: true, branchCode: true } }, department: true } },
@@ -98,7 +111,11 @@ export default class BranchAdminService {
         if (existingUser) throw new AppError("Email is already registered", 409);
 
         if (employeeId) {
-            const existingEmployee = await prisma.employee.findUnique({ where: { employeeCode: employeeId } });
+            // employeeCode is unique per hospital, not globally (see
+            // identity.prisma) — look it up via the composite key.
+            const existingEmployee = await prisma.employee.findUnique({
+                where: { hospitalId_employeeCode: { hospitalId, employeeCode: employeeId } },
+            });
             if (existingEmployee) throw new AppError("Employee ID already exists", 409);
         }
 
@@ -117,7 +134,8 @@ export default class BranchAdminService {
 
         // 4. Create User, credential, Employee (+ placement, documents,
         // professional profile), and scoped role grant in one transaction
-        return await prisma.$transaction(async (tx) => {
+        try {
+            return await prisma.$transaction(async (tx) => {
             const newUser = await tx.user.create({
                 data: {
                     email,
@@ -170,7 +188,6 @@ export default class BranchAdminService {
                         : {}),
                     assignments: {
                         create: {
-                            hospitalId,
                             branchId,
                             departmentId: departmentId || null,
                             designation: designation || null,
@@ -196,6 +213,14 @@ export default class BranchAdminService {
 
             return newEmployee;
         });
+        } catch (error) {
+            if (error.code === 'P2002') {
+                const target = error.meta?.target || [];
+                const field = Array.isArray(target) ? target.join(', ') : String(target) || 'unique field';
+                throw new AppError(`A record with this ${field} already exists.`, 409);
+            }
+            throw error;
+        }
     }
 
     static async getAllBranchAdmins(hospitalId) {
@@ -295,6 +320,7 @@ export default class BranchAdminService {
 
         const userId = admin.user.id;
 
+        try {
         return await prisma.$transaction(async (tx) => {
             // Update User fields
             const userUpdate = {};
@@ -437,6 +463,14 @@ export default class BranchAdminService {
                 include: BRANCH_ADMIN_INCLUDE,
             });
         });
+        } catch (error) {
+            if (error.code === 'P2002') {
+                const target = error.meta?.target || [];
+                const field = Array.isArray(target) ? target.join(', ') : String(target) || 'unique field';
+                throw new AppError(`A record with this ${field} already exists.`, 409);
+            }
+            throw error;
+        }
     }
 
     static async deleteBranchAdmin(id) {

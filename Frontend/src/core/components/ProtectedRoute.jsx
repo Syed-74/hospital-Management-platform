@@ -27,9 +27,17 @@ export default function ProtectedRoute({ children, requiredPermissions }) {
     
     if (!hasPermission) {
       // User is authenticated but lacks required permission.
-      // Redirect to a safe fallback defined in the database (defaultPath).
-      const roleWithDashboard = user.roles?.find(role => role.roleDashboards?.length > 0);
-      const redirectPath = roleWithDashboard?.roleDashboards[0]?.dashboard?.path || '/login';
+      // Redirect to the dashboard matching the broadest scope they hold
+      // (mirrors the redirect resolution in AuthContext's login()).
+      const scopes = user.roles?.map(role => role.scope) || [];
+      let redirectPath = '/login';
+      if (scopes.includes('GLOBAL')) {
+        redirectPath = '/platformAdmin/overview';
+      } else if (scopes.includes('ORGANIZATION_ADMIN')) {
+        redirectPath = '/hospital/overview';
+      } else if (scopes.includes('BRANCH')) {
+        redirectPath = '/branch/dashboard';
+      }
       
       // Prevent infinite redirect loop if they are already on their default path but lack specific permissions
       if (location.pathname.startsWith(redirectPath) || location.pathname === redirectPath) {

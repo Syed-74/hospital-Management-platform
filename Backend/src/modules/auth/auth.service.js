@@ -37,7 +37,6 @@ class AuthService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      isActive: user.isActive,
       createdAt: user.createdAt,
     };
   }
@@ -79,8 +78,11 @@ class AuthService {
       throw new AppError("Incorrect email or password", 401);
     }
 
-    // 3. Check if active
-    if (!user.isActive) {
+    // 3. Check the account can still authenticate. PENDING accounts (not
+    // yet verified/activated) are allowed through — only a deliberate
+    // SUSPENDED/INACTIVE status blocks login. credential.status is the
+    // SOLE source of truth for this (see identity.prisma).
+    if (user.credential.status === "SUSPENDED" || user.credential.status === "INACTIVE") {
       throw new AppError("Your account is deactivated", 401);
     }
 

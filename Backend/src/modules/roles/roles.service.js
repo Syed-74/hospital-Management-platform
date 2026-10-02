@@ -10,9 +10,9 @@ class RolesService {
    * instead of being duplicated per branch.
    */
   async createRole(data) {
-    const { name, description, scope = 'HOSPITAL', hospitalId = null } = data;
+    const { name, description, scope = 'ORGANIZATION_ADMIN', hospitalId = null } = data;
 
-    if (!['GLOBAL', 'HOSPITAL', 'BRANCH'].includes(scope)) {
+    if (!['GLOBAL', 'ORGANIZATION_ADMIN', 'BRANCH'].includes(scope)) {
       throw new AppError("Invalid role scope.", 400);
     }
     if (scope === 'GLOBAL' && hospitalId) {

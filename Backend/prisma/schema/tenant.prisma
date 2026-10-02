@@ -10,6 +10,15 @@
 // Identity, authentication, employment, and authorization (who works here
 // and what they're allowed to do) live in identity.prisma and are only
 // referenced here by id.
+//
+// Every model below that has both a `hospitalId` and a `branchId` (or a
+// `branchId`/`floorId`/`roomId`) exposes a `@@unique([..., id])` anchor so
+// identity.prisma (and models within this file) can point back to it with
+// a COMPOSITE foreign key instead of a lone scalar — e.g.
+// `ManageDepartment.branch` is keyed on (hospitalId, branchId), not just
+// branchId, so a department can never be attached to a branch belonging to
+// a different hospital. This is what makes Hospital → Branch → Department
+// integrity a database guarantee rather than an application-layer hope.
 
 // ==========================================
 // ORGANIZATION
@@ -130,7 +139,10 @@ model BranchManage {
 
   // Basic Info
   branchName   String
-  branchCode   String  @unique // Unique code per branch (e.g. OWAISI-SEC-01)
+  // Unique per hospital, not globally — two different hospitals must be
+  // free to each run their own "MAIN"/"OWAISI-SEC-01"-style code scheme
+  // without colliding with each other.
+  branchCode   String
   isMainBranch Boolean @default(false)
 
   // Contact Info
@@ -154,7 +166,8 @@ model BranchManage {
   licenseNumber String?
   isActive      Boolean @default(true)
 
-  // Identity, employment & authorization (identity.prisma)
+  // Identity, employment & authorization (identity.prisma) — both keyed on
+  // (hospitalId, branchId) composite FKs against @@unique([hospitalId, id]) below.
   employmentAssignments EmploymentAssignment[]
   roleAssignments       UserRoleAssignment[]
 
@@ -168,6 +181,11 @@ model BranchManage {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([hospitalId, branchCode])
+  // Anchor for every composite FK elsewhere that points at "a branch that
+  // must belong to this specific hospital".
+  @@unique([hospitalId, id])
 }
 
 // ==========================================
@@ -188,6 +206,10 @@ model BranchFloor {
   wards       BranchWard[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  // Anchor so BranchRoom/BranchWard can reference "a floor that must
+  // belong to this specific branch" via a composite FK.
+  @@unique([branchId, id])
 }
 
 model BranchRoom {
@@ -195,7 +217,12 @@ model BranchRoom {
   branchId    String
   branch      BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
   floorId     String?
-  floor       BranchFloor? @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  // Composite FK to BranchFloor(branchId, id): a room's floor must belong
+  // to the SAME branch as the room itself. Skipped when floorId is null.
+  // Restrict, not SetNull: a composite FK's SetNull would null EVERY local
+  // column (including the required branchId), which Postgres rejects — a
+  // floor that still has rooms must have them reassigned first.
+  floor       BranchFloor? @relation(fields: [branchId, floorId], references: [branchId, id], onDelete: Restrict)
   name        String
   code        String? // e.g., "OPD-001"
   type        String // e.g., "General Ward", "ICU", "Consultation", "Private"
@@ -205,6 +232,10 @@ model BranchRoom {
   wards       BranchWard[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  // Anchor so BranchWard can reference "a room that must belong to this
+  // specific branch" via a composite FK.
+  @@unique([branchId, id])
 }
 
 model BranchWard {
@@ -212,9 +243,13 @@ model BranchWard {
   branchId    String
   branch      BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
   floorId     String?
-  floor       BranchFloor? @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  // Composite FK to BranchFloor(branchId, id) — same-branch guarantee.
+  // Restrict, not SetNull — see BranchRoom.floor above.
+  floor       BranchFloor? @relation(fields: [branchId, floorId], references: [branchId, id], onDelete: Restrict)
   roomId      String?
-  room        BranchRoom?  @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  // Composite FK to BranchRoom(branchId, id) — same-branch guarantee.
+  // Restrict, not SetNull — see BranchRoom.floor above.
+  room        BranchRoom?  @relation(fields: [branchId, roomId], references: [branchId, id], onDelete: Restrict)
   name        String
   code        String? // e.g., "OPD-001"
   type        String // e.g., "General Ward", "ICU", "Consultation", "Private"
@@ -233,9 +268,11 @@ model DepartmentType {
   id String @id @default(cuid())
 
   hospitalId String
-  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   branchId   String
-  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  // Composite FK to BranchManage(hospitalId, id): this type's branch must
+  // belong to this same hospital.
+  branch     BranchManage @relation(fields: [hospitalId, branchId], references: [hospitalId, id], onDelete: Cascade)
 
   typeName        String
   isRevenueCenter Boolean @default(false)
@@ -247,22 +284,34 @@ model DepartmentType {
   updatedAt DateTime @updatedAt
 
   @@unique([hospitalId, branchId, typeName])
+  // Anchor for ManageDepartment.departmentType's composite FK.
+  @@unique([hospitalId, branchId, id])
 }
 
 model ManageDepartment {
   id String @id @default(cuid())
 
   hospitalId String
-  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   branchId   String
-  branch     BranchManage @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  hospital   Hospital     @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  // Composite FK to BranchManage(hospitalId, id): this department's branch
+  // must belong to this same hospital.
+  branch     BranchManage @relation(fields: [hospitalId, branchId], references: [hospitalId, id], onDelete: Cascade)
   manageFees ManageFee[]
 
   // Important Core Attributes
   departmentName   String
-  departmentCode   String          @unique
+  // Unique per hospital, not globally — see BranchManage.branchCode for
+  // the same reasoning.
+  departmentCode   String
   departmentTypeId String?
-  departmentType   DepartmentType? @relation(fields: [departmentTypeId], references: [id], onDelete: SetNull)
+  // Composite FK to DepartmentType(hospitalId, branchId, id): the type
+  // must belong to the SAME hospital+branch as this department. Skipped
+  // when departmentTypeId is null. Restrict, not SetNull — a composite
+  // FK's SetNull would null EVERY local column (including the required
+  // hospitalId/branchId), which Postgres rejects; a type still in use must
+  // be reassigned off its departments before it can be deleted.
+  departmentType   DepartmentType? @relation(fields: [hospitalId, branchId, departmentTypeId], references: [hospitalId, branchId, id], onDelete: Restrict)
 
   // Optional but useful attributes
   description String? // Optional: Details about the department
@@ -278,18 +327,26 @@ model ManageDepartment {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  @@unique([hospitalId, departmentCode])
   @@unique([hospitalId, branchId, departmentName])
+  // Anchor for EmploymentAssignment.department / ManageFee.department's
+  // composite FKs.
+  @@unique([hospitalId, branchId, id])
 }
 
 model ManageFee {
   id String @id @default(cuid())
 
   hospitalId   String
-  hospital     Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
   branchId     String
-  branch       BranchManage     @relation(fields: [branchId], references: [id], onDelete: Cascade)
   departmentId String
-  department   ManageDepartment @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  hospital     Hospital         @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+  // Composite FK to BranchManage(hospitalId, id): this fee's branch must
+  // belong to this same hospital.
+  branch       BranchManage     @relation(fields: [hospitalId, branchId], references: [hospitalId, id], onDelete: Cascade)
+  // Composite FK to ManageDepartment(hospitalId, branchId, id): this fee's
+  // department must belong to the SAME hospital+branch as the fee itself.
+  department   ManageDepartment @relation(fields: [hospitalId, branchId, departmentId], references: [hospitalId, branchId, id], onDelete: Cascade)
 
   // Important Core Attributes
   feeName String

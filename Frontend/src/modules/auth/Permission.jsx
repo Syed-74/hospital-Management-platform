@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../core/context/AuthContext";
-import { 
+import {
   Shield, Plus, CheckCircle2, AlertCircle, Search, Save, X, ChevronDown, 
   ChevronRight, CheckSquare, Square, Info, ShieldCheck, Database, Calendar, User,
   Users, Loader2, RefreshCw, Layers, History, Copy, Trash2, Building2, Edit2,
@@ -14,7 +13,6 @@ import axios from "../../core/api/axios";
 export default function Permission({ mode = "tenant" }) {
   const { roleId: routeRoleId } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
 
   const [roles, setRoles] = useState([]);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -127,7 +125,7 @@ export default function Permission({ mode = "tenant" }) {
   const openAddModal = () => {
     setNewRoleName("");
     setNewRoleDesc("");
-    setNewRoleScope(mode === "platform" ? "HOSPITAL" : "BRANCH");
+    setNewRoleScope(mode === "platform" ? "ORGANIZATION_ADMIN" : mode === "branch" ? "BRANCH" : "ORGANIZATION_ADMIN");
     setModalError("");
     setIsModalOpen(true);
   };
@@ -145,7 +143,7 @@ export default function Permission({ mode = "tenant" }) {
       const payload = {
         name: newRoleName,
         description: newRoleDesc,
-        scope: newRoleScope || (mode === "platform" ? "HOSPITAL" : "BRANCH")
+        scope: newRoleScope || (mode === "platform" ? "ORGANIZATION_ADMIN" : mode === "branch" ? "BRANCH" : "ORGANIZATION_ADMIN")
       };
 
       const response = await axios.post("/roles", payload);
@@ -168,7 +166,9 @@ export default function Permission({ mode = "tenant" }) {
   // Filter roles based on search and category tab
   const filteredRoles = roles.filter(r => {
     const matchesSearch = r.name.toLowerCase().includes(roleSearchTerm.toLowerCase());
-    const isSystemRole = r.scope === 'GLOBAL' || r.isSystem;
+    // GLOBAL scope is the only real "system role" signal the backend
+    // provides — Role has no separate isSystem/isActive flag.
+    const isSystemRole = r.scope === 'GLOBAL';
     
     if (roleCategoryFilter === 'System') return matchesSearch && isSystemRole;
     if (roleCategoryFilter === 'Custom') return matchesSearch && !isSystemRole;
@@ -217,7 +217,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital:access",
       delete: "hospital:access",
       description: "Access the Hospital Admin dashboard and key modules.",
-      scopes: ["HOSPITAL"]
+      scopes: ["ORGANIZATION_ADMIN"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -227,7 +227,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:manage",
       delete: "branch:manage",
       description: "Create, view, update, and delete hospital branches.",
-      scopes: ["HOSPITAL"]
+      scopes: ["ORGANIZATION_ADMIN"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -237,7 +237,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branchAdmins:manage",
       delete: "branchAdmins:manage",
       description: "Manage administrators for individual hospital branches.",
-      scopes: ["HOSPITAL"]
+      scopes: ["ORGANIZATION_ADMIN"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -247,7 +247,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "departments:update",
       delete: "departments:delete",
       description: "Manage hospital departments, specialties, and consultation fee structures.",
-      scopes: ["HOSPITAL", "BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN", "BRANCH"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -257,7 +257,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "themes:manage",
       delete: "themes:manage",
       description: "Configure hospital branding, logos, color palettes, and layout themes.",
-      scopes: ["HOSPITAL"]
+      scopes: ["ORGANIZATION_ADMIN"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -267,7 +267,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_policies:manage",
       delete: "hospital_policies:manage",
       description: "Configure approval workflows and business rules.",
-      scopes: ["HOSPITAL", "BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN", "BRANCH"]
     },
     {
       group: "Hospital & Branch Administration",
@@ -277,7 +277,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "branch:access",
       delete: "branch:access",
       description: "Access the Branch Admin dashboard and branch operations.",
-      scopes: ["HOSPITAL", "BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN", "BRANCH"]
     },
 
     // 2. Identity & Access Management
@@ -289,7 +289,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "roles:manage",
       delete: "roles:manage",
       description: "Create and manage hospital and branch-level roles.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Identity & Access Management",
@@ -299,7 +299,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "users:assign_roles",
       delete: "users:assign_roles",
       description: "Assign roles to hospital and branch users.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Identity & Access Management",
@@ -309,7 +309,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "users:manage",
       delete: "users:manage",
       description: "Manage branch staff members and operational user accounts.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Identity & Access Management",
@@ -319,7 +319,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "patients:manage",
       delete: "patients:manage",
       description: "Manage patient registration and medical records.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
 
     // 3. Clinical & Medical Operations
@@ -331,7 +331,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "doctors:manage",
       delete: "doctors:manage",
       description: "Manage doctor profiles, qualifications, and schedules.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Clinical & Medical Operations",
@@ -341,7 +341,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "clinical_ops:manage",
       delete: "clinical_ops:manage",
       description: "Access clinical modules (OPD, IPD, EMR).",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Clinical & Medical Operations",
@@ -351,7 +351,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "appointments:manage",
       delete: "appointments:manage",
       description: "Schedule patient visits, consultations, and doctor availability.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Clinical & Medical Operations",
@@ -361,7 +361,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "admissions:manage",
       delete: "admissions:manage",
       description: "Manage patient bed assignments, admissions, and discharges.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Clinical & Medical Operations",
@@ -371,7 +371,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "pharmacy:manage",
       delete: "pharmacy:manage",
       description: "Manage pharmacy and dispensaries.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Clinical & Medical Operations",
@@ -381,7 +381,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "laboratory:manage",
       delete: "laboratory:manage",
       description: "Order and process lab tests, diagnostic results.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
 
     // 4. Financial & Administrative
@@ -393,7 +393,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "hospital_billing:manage",
       delete: "hospital_billing:manage",
       description: "Manage billing, claims, and insurance processing.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Financial & Administrative",
@@ -403,7 +403,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "infrastructure:manage",
       delete: "infrastructure:manage",
       description: "Manage branch departments, floors, rooms, and wards.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Financial & Administrative",
@@ -413,7 +413,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "inventory:manage",
       delete: "inventory:manage",
       description: "Manage stock levels, medical equipment, and procurement.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     },
     {
       group: "Financial & Administrative",
@@ -423,7 +423,7 @@ export default function Permission({ mode = "tenant" }) {
       update: "reports:manage",
       delete: "reports:manage",
       description: "Access operational, financial, and clinical reports.",
-      scopes: ["HOSPITAL","BRANCH"]
+      scopes: ["ORGANIZATION_ADMIN","BRANCH"]
     }
   ];
 
@@ -441,7 +441,7 @@ export default function Permission({ mode = "tenant" }) {
 
   // Group definitions by category
   const groupedMatrix = MATRIX_DEFINITIONS.reduce((acc, current) => {
-    const roleScope = selectedRole?.scope || (mode === "platform" ? "GLOBAL" : mode === "branch" ? "BRANCH" : "HOSPITAL");
+    const roleScope = selectedRole?.scope || (mode === "platform" ? "GLOBAL" : mode === "branch" ? "BRANCH" : "ORGANIZATION_ADMIN");
     if (current.scopes && !current.scopes.includes(roleScope) && !current.scopes.includes("GLOBAL")) {
       return acc;
     }
@@ -493,10 +493,13 @@ export default function Permission({ mode = "tenant" }) {
     );
   }
 
-  const activeRolesCount = roles.filter(r => r.isActive !== false).length;
-  const inactiveRolesCount = roles.filter(r => r.isActive === false).length;
-  const systemRolesCount = roles.filter(r => r.scope === 'GLOBAL' || r.isSystem).length;
-  const customRolesCount = roles.filter(r => r.scope !== 'GLOBAL' && !r.isSystem).length;
+  // Role has no active/inactive concept in the schema — every role a
+  // caller can see is usable. Report something real instead: how many
+  // roles actually have permissions mapped vs are still empty templates.
+  const rolesWithPermissionsCount = roles.filter(r => (r.rolePermissions?.length || 0) > 0).length;
+  const emptyRolesCount = roles.filter(r => (r.rolePermissions?.length || 0) === 0).length;
+  const systemRolesCount = roles.filter(r => r.scope === 'GLOBAL').length;
+  const customRolesCount = roles.filter(r => r.scope !== 'GLOBAL').length;
 
   return (
     <div className="w-full max-w-[1400px] mx-auto space-y-6 pb-12 text-left">
@@ -555,32 +558,32 @@ export default function Permission({ mode = "tenant" }) {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500">Total Roles</p>
-            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{roles.length || 2}</h3>
+            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{roles.length}</h3>
             <p className="text-[11px] font-medium text-slate-400 mt-0.5">System roles & custom roles</p>
           </div>
         </div>
 
-        {/* Active Roles */}
+        {/* Roles With Permissions */}
         <div className="bg-white rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-200/70 flex items-center space-x-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500">Active Roles</p>
-            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{activeRolesCount || 2}</h3>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Currently active</p>
+            <p className="text-xs font-bold text-slate-500">Roles With Permissions</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{rolesWithPermissionsCount}</h3>
+            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Have at least one permission mapped</p>
           </div>
         </div>
 
-        {/* Inactive Roles */}
+        {/* Empty Roles */}
         <div className="bg-white rounded-2xl p-5 shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-slate-200/70 flex items-center space-x-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
             <span className="w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-white" />
           </div>
           <div>
-            <p className="text-xs font-bold text-slate-500">Inactive Roles</p>
-            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{inactiveRolesCount || 0}</h3>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">Temporarily disabled</p>
+            <p className="text-xs font-bold text-slate-500">Empty Roles</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{emptyRolesCount}</h3>
+            <p className="text-[11px] font-medium text-slate-400 mt-0.5">No permissions mapped yet</p>
           </div>
         </div>
 
@@ -591,7 +594,7 @@ export default function Permission({ mode = "tenant" }) {
           </div>
           <div>
             <p className="text-xs font-bold text-slate-500">Total Permissions</p>
-            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{allPermissions.length || 48}</h3>
+            <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">{allPermissions.length}</h3>
             <p className="text-[11px] font-medium text-slate-400 mt-0.5">Across all modules</p>
           </div>
         </div>
@@ -673,9 +676,8 @@ export default function Permission({ mode = "tenant" }) {
           <div className="space-y-3 max-h-[580px] overflow-y-auto pr-0.5">
             {filteredRoles.map((roleItem, idx) => {
               const isSelected = selectedRole?.id === roleItem.id;
-              const isSystem = roleItem.scope === 'GLOBAL' || roleItem.isSystem;
-              const permCount = roleItem.rolePermissions?.length || (roleItem.name.includes('Yashoda') ? 6 : 7);
-              const adminCount = roleItem.assignedUsersCount !== undefined ? roleItem.assignedUsersCount : (roleItem.name.includes('Yashoda') ? 2 : 0);
+              const isSystem = roleItem.scope === 'GLOBAL';
+              const permCount = roleItem.rolePermissions?.length || 0;
 
               return (
                 <div
@@ -697,9 +699,8 @@ export default function Permission({ mode = "tenant" }) {
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 rounded-md">
                           {isSystem ? 'System Role' : 'Custom Role'}
                         </span>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
-                          Active
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-md">
+                          {roleItem.scope}
                         </span>
                       </div>
                     </div>
@@ -708,15 +709,11 @@ export default function Permission({ mode = "tenant" }) {
                   <p className="text-[11px] text-slate-400 font-medium leading-relaxed line-clamp-2">
                     {roleItem.description || "Established in hospital system as an authority role profile."}
                   </p>
-                  
+
                   <div className="pt-1 flex items-center gap-2">
                     <span className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-lg flex items-center gap-1.5">
                       <Key className="w-3 h-3 text-slate-400" />
                       {permCount} Permissions
-                    </span>
-                    <span className="px-2.5 py-1 text-[10px] font-bold bg-slate-100 text-slate-600 rounded-lg flex items-center gap-1.5">
-                      <Users className="w-3 h-3 text-slate-400" />
-                      {adminCount} Admins
                     </span>
                   </div>
                 </div>
@@ -914,9 +911,8 @@ export default function Permission({ mode = "tenant" }) {
                     <span className="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 rounded-md">
                       {selectedRole.scope === 'GLOBAL' ? 'System Role' : 'Custom Role'}
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
-                      Active
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-md">
+                      {selectedRole.scope}
                     </span>
                   </div>
                 </div>
@@ -942,18 +938,12 @@ export default function Permission({ mode = "tenant" }) {
 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-medium flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
-                    Assigned Admins
-                  </span>
-                  <span className="font-extrabold text-slate-900">{selectedRole.assignedUsersCount || 2}</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-medium flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
                     Created On
                   </span>
-                  <span className="font-semibold text-slate-800">Sep 2, 2026, 10:24 AM</span>
+                  <span className="font-semibold text-slate-800">
+                    {selectedRole.createdAt ? new Date(selectedRole.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                  </span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -961,15 +951,9 @@ export default function Permission({ mode = "tenant" }) {
                     <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
                     Last Updated
                   </span>
-                  <span className="font-semibold text-slate-800">Sep 2, 2026, 10:24 AM</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-medium flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-slate-400" />
-                    Updated By
+                  <span className="font-semibold text-slate-800">
+                    {selectedRole.updatedAt ? new Date(selectedRole.updatedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                   </span>
-                  <span className="font-semibold text-slate-800 truncate max-w-[120px]">{currentUser?.email || "superadmin@gmail.com"}</span>
                 </div>
               </div>
 
@@ -1086,9 +1070,12 @@ export default function Permission({ mode = "tenant" }) {
                     >
                       <option value="" disabled>Select Role Scope</option>
                       {mode === "platform" ? (
-                        <option value="HOSPITAL">Hospital Level (HOSPITAL)</option>
+                        <option value="ORGANIZATION_ADMIN">Organization Admin Level (ORGANIZATION_ADMIN)</option>
                       ) : (
-                        <option value="BRANCH">Branch Admin (reusable across every branch)</option>
+                        <>
+                          <option value="ORGANIZATION_ADMIN">Organization Admin (reusable across every branch)</option>
+                          <option value="BRANCH">Branch-specific</option>
+                        </>
                       )}
                     </select>
                   </div>

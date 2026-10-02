@@ -33,9 +33,8 @@ export default function Overview() {
     async function fetchLiveMetrics() {
       try {
         // Asynchronously fetch real backend metrics with fallback protection
-        const [usersRes, branchRes, roomRes] = await Promise.allSettled([
+        const [usersRes, roomRes] = await Promise.allSettled([
           axios.get('/users'),
-          axios.get('/branches'),
           axios.get('/rooms')
         ]);
 

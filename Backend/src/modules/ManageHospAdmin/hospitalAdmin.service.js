@@ -7,6 +7,8 @@ import bcrypt from "bcrypt";
 // is no longer a distinct profile model, so every query below filters
 // through Employee/EmploymentAssignment instead of a dedicated table.
 const HOSPITAL_ADMIN_INCLUDE = {
+    credential: { select: { status: true, isEmailVerified: true, isPhoneVerified: true } },
+    mfaSetting: { select: { isEnabled: true } },
     employee: {
         include: {
             professionalProfile: true,
@@ -14,6 +16,9 @@ const HOSPITAL_ADMIN_INCLUDE = {
         },
     },
     hospital: { select: { id: true, hospitalName: true, hospitalCode: true } },
+    // The role granted alongside creation (see step 4 below) — without this
+    // the frontend has no way to display or preselect the admin's role.
+    roleAssignments: { include: { role: true } },
 };
 
 class HospitalAdminService {
@@ -103,7 +108,6 @@ class HospitalAdminService {
                             : {}),
                         assignments: {
                             create: {
-                                hospitalId,
                                 branchId: null,
                                 designation: data.designation || null,
                                 isPrimary: true,
@@ -187,16 +191,20 @@ class HospitalAdminService {
                         dateOfBirth: dateOfBirth !== undefined ? (dateOfBirth ? new Date(dateOfBirth) : null) : admin.dateOfBirth,
                         gender: gender !== undefined ? gender : admin.gender,
                         profilePhoto: profilePhoto !== undefined || profileImageUrl !== undefined ? (profilePhoto || profileImageUrl) : admin.profilePhoto,
-                        isActive: isActive !== undefined ? isActive : admin.isActive
                     }
                 });
 
-                // 2. Update authentication state
-                if (status !== undefined || isEmailVerified !== undefined || isPhoneVerified !== undefined) {
+                // 2. Update authentication state. `status` (an explicit
+                // AccountStatus) wins if given; otherwise `isActive` maps to
+                // ACTIVE/INACTIVE. credential.status is the sole gate for
+                // whether this account can authenticate (see identity.prisma)
+                // — there is no separate isActive flag on User anymore.
+                const resolvedStatus = status !== undefined ? status : (isActive !== undefined ? (isActive ? "ACTIVE" : "INACTIVE") : undefined);
+                if (resolvedStatus !== undefined || isEmailVerified !== undefined || isPhoneVerified !== undefined) {
                     await tx.userCredential.update({
                         where: { userId: id },
                         data: {
-                            ...(status !== undefined ? { status } : {}),
+                            ...(resolvedStatus !== undefined ? { status: resolvedStatus } : {}),
                             ...(isEmailVerified !== undefined ? { isEmailVerified } : {}),
                             ...(isPhoneVerified !== undefined ? { isPhoneVerified } : {}),
                         }

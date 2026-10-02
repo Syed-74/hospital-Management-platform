@@ -73,7 +73,7 @@ export default function ManageStaff() {
       const [usersRes, rolesRes, branchesRes, deptsRes] = await Promise.allSettled([
         axios.get('/users'),
         axios.get('/roles'),
-        axios.get('/branches'),
+        axios.get(`/branches/hospital/${currentUser?.hospitalId}`),
         axios.get('/department')
       ]);
 
@@ -94,7 +94,7 @@ export default function ManageStaff() {
       // Process Branches API Response
       let fetchedBranches = [];
       if (branchesRes.status === 'fulfilled' && branchesRes.value?.data?.status === 'success') {
-        fetchedBranches = branchesRes.value.data.data || branchesRes.value.data.data?.branches || [];
+        fetchedBranches = branchesRes.value.data.data?.branches || [];
       }
 
       // Process Departments API Response
@@ -172,8 +172,15 @@ export default function ManageStaff() {
       profilePhoto: user.profilePhoto || '',
       departmentId: user.departmentId || '',
       branchId: activeAssignment?.branchId || currentUser?.branchId || '',
-      roleId: activeAssignment?.roleId || rolesList[0]?.id || '',
-      isActive: user.isActive !== undefined ? user.isActive : true,
+      // roleId only exists nested under `role.id` in the API response
+      // (roleAssignments rows don't carry a flat roleId scalar) — see
+      // users.service.js getAllUsers.
+      roleId: activeAssignment?.role?.id || rolesList[0]?.id || '',
+      // credential.status is the sole source of truth for account status
+      // (see identity.prisma) — there is no flat isActive on the User the
+      // API returns. PENDING/ACTIVE can both still authenticate, so both
+      // map to the "active" checkbox state; INACTIVE/SUSPENDED don't.
+      isActive: !['INACTIVE', 'SUSPENDED'].includes(user.credential?.status),
     });
     setFieldErrors({});
     setError('');
@@ -265,17 +272,20 @@ export default function ManageStaff() {
     const userRoleName = user.roleAssignments?.[0]?.role?.name || 'No Role Assigned';
     const roleMatch = selectedRole === 'All Roles' || userRoleName === selectedRole;
     
+    // credential.status is the sole source of truth for account status
+    // (see identity.prisma) — PENDING/ACTIVE can both still authenticate.
+    const isUserActive = !['INACTIVE', 'SUSPENDED'].includes(user.credential?.status);
     let statusMatch = true;
-    if (selectedStatus === 'Active') statusMatch = user.isActive === true;
-    if (selectedStatus === 'Inactive') statusMatch = user.isActive === false;
+    if (selectedStatus === 'Active') statusMatch = isUserActive;
+    if (selectedStatus === 'Inactive') statusMatch = !isUserActive;
 
     return searchMatch && roleMatch && statusMatch;
   });
 
   // Calculate Real-Time Metrics
   const totalUsersCount = staffList.length;
-  const activeUsersCount = staffList.filter(u => u.isActive).length;
-  const inactiveUsersCount = staffList.filter(u => !u.isActive).length;
+  const activeUsersCount = staffList.filter(u => !['INACTIVE', 'SUSPENDED'].includes(u.credential?.status)).length;
+  const inactiveUsersCount = staffList.filter(u => ['INACTIVE', 'SUSPENDED'].includes(u.credential?.status)).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 text-left pb-12">
@@ -455,6 +465,10 @@ export default function ManageStaff() {
                   const roleName = roleObj?.name || 'Unassigned';
                   const roleScope = roleObj?.scope || 'BRANCH';
                   const branchName = assignment?.branch?.branchName || 'All Hospital Branches';
+                  // credential.status is the sole source of truth for
+                  // account status (see identity.prisma).
+                  const accountStatus = user.credential?.status || 'UNKNOWN';
+                  const isUserActive = !['INACTIVE', 'SUSPENDED'].includes(accountStatus);
 
                   return (
                     <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
@@ -499,12 +513,12 @@ export default function ManageStaff() {
                       {/* Account Status */}
                       <td className="py-3.5 px-3 text-center">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                          user.isActive 
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                          isUserActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             : 'bg-slate-100 text-slate-600 border-slate-200'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                          {user.isActive ? 'Active' : 'Inactive'}
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isUserActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                          {accountStatus}
                         </span>
                       </td>
 

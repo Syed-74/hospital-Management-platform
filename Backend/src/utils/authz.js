@@ -3,7 +3,7 @@
  *
  * A user's access is the union of their UserRoleAssignment rows. Each
  * assignment grants whatever permissions its Role carries, bounded to a
- * scope: GLOBAL (hospitalId = null, branchId = null), HOSPITAL (hospitalId
+ * scope: GLOBAL (hospitalId = null, branchId = null), ORGANIZATION_ADMIN (hospitalId
  * set, branchId = null — covers every branch of that hospital), or BRANCH
  * (hospitalId + branchId set — covers only that one branch).
  *

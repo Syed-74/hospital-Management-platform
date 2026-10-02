@@ -13,9 +13,10 @@ export default class BranchService {
             throw new AppError("Parent hospital not found", 404);
         }
 
-        // Verify unique branchCode
+        // Verify unique branchCode — unique per hospital, not globally
+        // (see tenant.prisma), so look it up via the composite key.
         const existingBranch = await prisma.branchManage.findUnique({
-            where: { branchCode: branchData.branchCode }
+            where: { hospitalId_branchCode: { hospitalId, branchCode: branchData.branchCode } }
         });
         if (existingBranch) {
             throw new AppError(`Branch with code '${branchData.branchCode}' already exists`, 409);
@@ -59,10 +60,11 @@ export default class BranchService {
             throw new AppError("Branch not found", 404);
         }
 
-        // Verify unique branchCode if changed
+        // Verify unique branchCode if changed — scoped to this branch's
+        // own hospital, not global.
         if (branchData.branchCode && branchData.branchCode !== branch.branchCode) {
             const existingCode = await prisma.branchManage.findUnique({
-                where: { branchCode: branchData.branchCode }
+                where: { hospitalId_branchCode: { hospitalId: branch.hospitalId, branchCode: branchData.branchCode } }
             });
             if (existingCode) {
                 throw new AppError(`Branch with code '${branchData.branchCode}' already exists`, 409);

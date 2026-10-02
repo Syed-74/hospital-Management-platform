@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
           
           if (scopes.includes("GLOBAL")) {
             redirectPath = "/platformAdmin/overview";
-          } else if (scopes.includes("HOSPITAL") || scopes.includes("TENANT")) {
+          } else if (scopes.includes("ORGANIZATION_ADMIN") || scopes.includes("TENANT")) {
             redirectPath = "/hospital/overview";
           } else if (scopes.includes("BRANCH")) {
             redirectPath = "/branch/dashboard";
